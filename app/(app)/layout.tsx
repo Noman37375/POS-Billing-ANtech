@@ -1,0 +1,24 @@
+import type { ReactNode } from "react"
+import { Header } from "@/components/header"
+import { Sidebar } from "@/components/sidebar"
+import { getSessionOrRedirect } from "@/lib/auth"
+import { Toaster } from "@/components/ui/sonner"
+
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const user = await getSessionOrRedirect("/login")
+  const businessName = user.name || "InvoSync"
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background flex">
+      <Sidebar user={user} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header businessName={businessName} userEmail={user.email} />
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8">
+          <div className="max-w-6xl mx-auto w-full space-y-4 sm:space-y-6">{children}</div>
+        </main>
+      </div>
+      <Toaster />
+    </div>
+  )
+}
+
