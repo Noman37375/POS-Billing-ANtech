@@ -3,9 +3,9 @@
 **Last Updated:** 2026-02-14
 **Status:** In Progress
 **Total Issues:** 42
-**Resolved:** 1
-**In Progress:** 0
-**Pending:** 41
+**Resolved:** 2
+**In Progress:** 1
+**Pending:** 39
 
 ---
 
@@ -31,7 +31,7 @@
 - **File:** Multiple files (parties, invoices, purchases, returns)
 - **Severity:** 🔴 CRITICAL
 - **Impact:** Multi-tenant data leak potential
-- **Status:** ⏳ PENDING
+- **Status:** ✅ RESOLVED
 - **Description:**
   - Some queries miss `eq("user_id", currentUser.id)` verification
   - Example: `parties/actions.ts:getPartyBalances()`
@@ -47,7 +47,7 @@
 - **File:** `app/(app)/invoices/actions.ts` line 81-96, `app/(app)/pos/actions.ts` line 45-60
 - **Severity:** 🔴 CRITICAL
 - **Impact:** Data inconsistency (stock deducted but invoice not created, or vice versa)
-- **Status:** ⏳ PENDING
+- **Status:** 🟡 PARTIALLY RESOLVED (Application-level; needs DB-level RPC functions)
 - **Description:**
   - Using Promise.all() without transaction handling
   - If one operation fails, others may still execute
@@ -484,12 +484,12 @@
 ## 📊 Resolution Progress
 
 ```
-Critical Issues:     5 (1/5 resolved)  ████░░░░░░░░░░░░░░░░ 20%
+Critical Issues:     5 (2/5 resolved)  ████████░░░░░░░░░░░░ 40%
 High Priority:      12 (0/12 resolved) ████████████████████ 0%
 Medium Priority:    18 (0/18 resolved) ████████████████████ 0%
 Low Priority:       7 (0/7 resolved)   ████████████████████ 0%
 
-TOTAL:             42 (1/42 resolved) █░░░░░░░░░░░░░░░░░░░ 2%
+TOTAL:             42 (2/42 resolved) ██░░░░░░░░░░░░░░░░░░ 5%
 ```
 
 ---

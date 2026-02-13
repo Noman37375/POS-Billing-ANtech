@@ -324,7 +324,7 @@ export async function updatePurchase(
     return { error: purchaseError.message }
   }
 
-  // Delete existing line items
+  // Delete existing line items (verified purchase belongs to user first)
   const { error: deleteError } = await supabase
     .from("purchase_invoice_lines")
     .delete()
@@ -499,6 +499,7 @@ export async function deletePurchase(purchaseId: string) {
   }
 
   // Delete purchase invoice lines first (cascade should handle this, but being explicit)
+  // Note: Already verified purchase belongs to user, so line items are implicitly owned by user
   const { error: lineError } = await supabase
     .from("purchase_invoice_lines")
     .delete()

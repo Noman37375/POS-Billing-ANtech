@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { getPurchases } from "@/app/(app)/purchases/actions"
 import { getAllPurchasePayments } from "@/app/(app)/purchases/actions"
 
@@ -83,6 +84,7 @@ export async function getPurchaseTrends(dateFrom?: string, dateTo?: string) {
 }
 
 export async function getTopVendors(limit: number = 10) {
+  const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -97,6 +99,7 @@ export async function getTopVendors(limit: number = 10) {
       )
     `,
     )
+    .eq("user_id", currentUser.id)
     .order("created_at", { ascending: false })
 
   if (error) {

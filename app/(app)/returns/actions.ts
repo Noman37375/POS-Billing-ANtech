@@ -132,6 +132,7 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
         amount: r.amount,
         method: r.method,
         reference: r.reference || null,
+        user_id: currentUser.id, // Add user_id for multi-tenant isolation
       }))
 
     if (refundRows.length > 0) {

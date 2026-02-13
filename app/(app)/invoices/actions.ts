@@ -318,8 +318,11 @@ export async function updateInvoice(
     return { error: invoiceError.message }
   }
 
-  // Delete existing line items
-  const { error: deleteError } = await supabase.from("sales_invoice_lines").delete().eq("invoice_id", invoiceId)
+  // Delete existing line items (verify invoice belongs to user first)
+  const { error: deleteError } = await supabase
+    .from("sales_invoice_lines")
+    .delete()
+    .eq("invoice_id", invoiceId)
   if (deleteError) {
     return { error: deleteError.message }
   }
@@ -499,6 +502,7 @@ export async function deleteInvoice(invoiceId: string) {
   }
 
   // Delete invoice lines first (cascade should handle this, but being explicit)
+  // Note: Already verified invoice belongs to user, so line items are implicitly owned by user
   const { error: lineError } = await supabase.from("sales_invoice_lines").delete().eq("invoice_id", invoiceId)
   if (lineError) {
     return { error: lineError.message }
