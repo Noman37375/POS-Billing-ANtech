@@ -18,7 +18,8 @@ export async function createInventoryItem(formData: FormData) {
 
     const name = String(formData.get("name") || "").trim()
     const stock = Number(formData.get("stock") || 0)
-    const unitPrice = Number(formData.get("unit_price") || 0)
+    const costPrice = Number(formData.get("cost_price") || 0)
+    const sellingPrice = Number(formData.get("selling_price") || 0)
     const minimumStockValue = formData.get("minimum_stock")
     const minimumStock = minimumStockValue && String(minimumStockValue).trim() ? Number(minimumStockValue) : null
     const maximumStockValue = formData.get("maximum_stock")
@@ -27,7 +28,8 @@ export async function createInventoryItem(formData: FormData) {
     const payload: any = {
       name,
       stock,
-      unit_price: unitPrice,
+      cost_price: costPrice,
+      selling_price: sellingPrice,
     }
 
     if (categoryId) {
@@ -86,8 +88,11 @@ export async function createInventoryItem(formData: FormData) {
       return { error: "Stock cannot be negative" }
     }
     
-    if (payload.unit_price <= 0) {
-      return { error: "Unit price must be greater than 0" }
+    if (payload.cost_price <= 0) {
+      return { error: "Cost price must be greater than 0" }
+    }
+    if (payload.selling_price <= 0) {
+      return { error: "Selling price must be greater than 0" }
     }
 
     // Validate category_id if provided (must belong to user)
@@ -139,14 +144,19 @@ export async function createInventoryItem(formData: FormData) {
 
     // Record initial stock movement if stock > 0
     if (newItem && payload.stock > 0) {
-      await recordStockMovement({
-        itemId: newItem.id,
-        movementType: "IN",
-        quantity: payload.stock,
-        referenceType: "Manual",
-        notes: "Initial stock",
-        userId: currentUser.id,
-      })
+      try {
+        await recordStockMovement({
+          itemId: newItem.id,
+          movementType: "IN",
+          quantity: payload.stock,
+          referenceType: "Manual",
+          notes: "Initial stock",
+          userId: currentUser.id,
+        })
+      } catch (movementError) {
+        console.error("Failed to record stock movement:", movementError)
+        return { error: "Item created but failed to record stock movement" }
+      }
     }
 
     revalidatePath("/stock-management/inventory")
@@ -171,7 +181,8 @@ export async function updateInventoryItem(formData: FormData) {
 
   const name = String(formData.get("name") || "").trim()
   const stock = Number(formData.get("stock") || 0)
-  const unitPrice = Number(formData.get("unit_price") || 0)
+  const costPrice = Number(formData.get("cost_price") || 0)
+  const sellingPrice = Number(formData.get("selling_price") || 0)
   const minimumStockValue = formData.get("minimum_stock")
   const minimumStock = minimumStockValue && String(minimumStockValue).trim() ? Number(minimumStockValue) : null
   const maximumStockValue = formData.get("maximum_stock")
@@ -180,7 +191,8 @@ export async function updateInventoryItem(formData: FormData) {
   const payload: any = {
     name,
     stock,
-    unit_price: unitPrice,
+    cost_price: costPrice,
+    selling_price: sellingPrice,
   }
 
   // Always set category_id (null if empty)
@@ -225,8 +237,8 @@ export async function updateInventoryItem(formData: FormData) {
     payload.barcode = null
   }
 
-  if (!id || !payload.name || payload.stock < 0 || payload.unit_price <= 0) {
-    return { error: "ID, name, stock, and unit price are required" }
+  if (!id || !payload.name || payload.stock < 0 || payload.cost_price <= 0 || payload.selling_price <= 0) {
+    return { error: "ID, name, stock, cost price, and selling price are required" }
   }
 
   // Get current stock to calculate difference (verify item belongs to user)
@@ -252,14 +264,19 @@ export async function updateInventoryItem(formData: FormData) {
 
   // Record stock movement if there's a difference
   if (stockDifference !== 0) {
-    await recordStockMovement({
-      itemId: id,
-      movementType: stockDifference > 0 ? "IN" : "OUT",
-      quantity: Math.abs(stockDifference),
-      referenceType: "Adjustment",
-      notes: `Stock adjusted from ${currentStock} to ${newStock}`,
-      userId: currentUser.id,
-    })
+    try {
+      await recordStockMovement({
+        itemId: id,
+        movementType: stockDifference > 0 ? "IN" : "OUT",
+        quantity: Math.abs(stockDifference),
+        referenceType: "Adjustment",
+        notes: `Stock adjusted from ${currentStock} to ${newStock}`,
+        userId: currentUser.id,
+      })
+    } catch (movementError) {
+      console.error("Failed to record stock movement:", movementError)
+      return { error: "Item updated but failed to record stock movement" }
+    }
   }
 
   revalidatePath("/stock-management/inventory")

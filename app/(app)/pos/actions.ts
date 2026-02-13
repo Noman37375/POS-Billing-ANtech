@@ -30,17 +30,19 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     return { error: "Party not found", data: null }
   }
 
-  // Verify all items belong to user
+  // Verify all items belong to user and fetch cost_price for gross profit
   const itemIds = payload.items.map((item) => item.itemId)
-  const { data: items } = await supabase
+  const { data: invItems } = await supabase
     .from("inventory_items")
-    .select("id")
+    .select("id, cost_price")
     .in("id", itemIds)
     .eq("user_id", currentUser.id)
 
-  if (!items || items.length !== itemIds.length) {
+  if (!invItems || invItems.length !== itemIds.length) {
     return { error: "One or more items not found", data: null }
   }
+
+  const costPriceByItemId = new Map(invItems.map((row) => [row.id, Number((row as { cost_price?: number }).cost_price ?? 0)]))
 
   const taxRate = payload.taxRate ?? 18
   const subtotal = payload.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
@@ -78,6 +80,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     quantity: item.quantity,
     unit_price: item.unitPrice,
     line_total: item.quantity * item.unitPrice,
+    cost_price: costPriceByItemId.get(item.itemId) ?? null,
   }))
 
   const { error: lineError } = await supabase.from("sales_invoice_lines").insert(lineItems)
@@ -102,20 +105,28 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     }
   }
 
-  await Promise.all(
-    payload.items.map(async (item) => {
-      await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
-      await recordStockMovement({
-        itemId: item.itemId,
-        movementType: "OUT",
-        quantity: item.quantity,
-        referenceType: "Invoice",
-        referenceId: invoice.id,
-        notes: `POS sale ${invoice.id.substring(0, 8).toUpperCase()}`,
-        userId: currentUser.id,
-      })
-    }),
-  )
+  try {
+    await Promise.all(
+      payload.items.map(async (item) => {
+        const { error: decrementError } = await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
+        if (decrementError) {
+          throw new Error(`Failed to decrement stock for item ${item.itemId}: ${decrementError.message}`)
+        }
+
+        await recordStockMovement({
+          itemId: item.itemId,
+          movementType: "OUT",
+          quantity: item.quantity,
+          referenceType: "Invoice",
+          referenceId: invoice.id,
+          notes: `POS sale ${invoice.id.substring(0, 8).toUpperCase()}`,
+          userId: currentUser.id,
+        })
+      }),
+    )
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Failed to process inventory", data: null }
+  }
 
   revalidatePath("/pos")
   revalidatePath("/pos/sales")

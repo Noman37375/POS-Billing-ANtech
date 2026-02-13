@@ -100,20 +100,28 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
   }
 
   // Reverse stock (add stock back) - Sale return means stock comes back IN
-  await Promise.all(
-    payload.items.map(async (item) => {
-      await supabase.rpc("increment_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
-      await recordStockMovement({
-        itemId: item.itemId,
-        movementType: "IN",
-        quantity: item.quantity,
-        referenceType: "SaleReturn",
-        referenceId: returnData.id,
-        notes: `Sale return ${returnData.return_number}`,
-        userId: currentUser.id,
-      })
-    }),
-  )
+  try {
+    await Promise.all(
+      payload.items.map(async (item) => {
+        const { error: incrementError } = await supabase.rpc("increment_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
+        if (incrementError) {
+          throw new Error(`Failed to restore stock for item ${item.itemId}: ${incrementError.message}`)
+        }
+
+        await recordStockMovement({
+          itemId: item.itemId,
+          movementType: "IN",
+          quantity: item.quantity,
+          referenceType: "SaleReturn",
+          referenceId: returnData.id,
+          notes: `Sale return ${returnData.return_number}`,
+          userId: currentUser.id,
+        })
+      }),
+    )
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Failed to process inventory", data: null }
+  }
 
   // Process refunds if provided
   if (payload.refunds && payload.refunds.length > 0) {
@@ -230,20 +238,28 @@ export async function createPurchaseReturn(payload: CreatePurchaseReturnInput) {
   }
 
   // Reverse stock (remove stock) - Purchase return means stock goes OUT
-  await Promise.all(
-    payload.items.map(async (item) => {
-      await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
-      await recordStockMovement({
-        itemId: item.itemId,
-        movementType: "OUT",
-        quantity: item.quantity,
-        referenceType: "PurchaseReturn",
-        referenceId: returnData.id,
-        notes: `Purchase return ${returnData.return_number}`,
-        userId: currentUser.id,
-      })
-    }),
-  )
+  try {
+    await Promise.all(
+      payload.items.map(async (item) => {
+        const { error: decrementError } = await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
+        if (decrementError) {
+          throw new Error(`Failed to decrement stock for item ${item.itemId}: ${decrementError.message}`)
+        }
+
+        await recordStockMovement({
+          itemId: item.itemId,
+          movementType: "OUT",
+          quantity: item.quantity,
+          referenceType: "PurchaseReturn",
+          referenceId: returnData.id,
+          notes: `Purchase return ${returnData.return_number}`,
+          userId: currentUser.id,
+        })
+      }),
+    )
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Failed to process inventory", data: null }
+  }
 
   // Process refunds if provided
   if (payload.refunds && payload.refunds.length > 0) {

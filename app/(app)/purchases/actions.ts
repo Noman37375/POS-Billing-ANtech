@@ -80,22 +80,30 @@ export async function createPurchase(payload: {
   }
 
   // Increase stock and record movements (opposite of sales)
-  await Promise.all(
-    payload.items.map(async (item) => {
-      // Increase stock
-      await supabase.rpc("increment_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
-      // Record stock movement
-      await recordStockMovement({
-        itemId: item.itemId,
-        movementType: "IN",
-        quantity: item.quantity,
-        referenceType: "Purchase",
-        referenceId: purchase.id,
-        notes: `Purchased via purchase invoice ${purchase.id.substring(0, 8).toUpperCase()}`,
-        userId: currentUser.id,
-      })
-    }),
-  )
+  try {
+    await Promise.all(
+      payload.items.map(async (item) => {
+        // Increase stock
+        const { error: incrementError } = await supabase.rpc("increment_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
+        if (incrementError) {
+          throw new Error(`Failed to increment stock for item ${item.itemId}: ${incrementError.message}`)
+        }
+
+        // Record stock movement
+        await recordStockMovement({
+          itemId: item.itemId,
+          movementType: "IN",
+          quantity: item.quantity,
+          referenceType: "Purchase",
+          referenceId: purchase.id,
+          notes: `Purchased via purchase invoice ${purchase.id.substring(0, 8).toUpperCase()}`,
+          userId: currentUser.id,
+        })
+      }),
+    )
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Failed to process inventory" }
+  }
 
   revalidatePath("/purchases")
   revalidatePath("/purchase-management")
@@ -258,31 +266,39 @@ export async function updatePurchase(
 
   // Restore stock for old line items (decrease stock back - opposite of sales) if purchase was not cancelled
   if (existingLines && existingLines.length > 0 && currentStatus !== "Cancelled") {
-    for (const line of existingLines) {
-      // Get current stock (verify item belongs to user)
-      const { data: item } = await supabase
-        .from("inventory_items")
-        .select("stock")
-        .eq("id", line.item_id)
-        .eq("user_id", currentUser.id)
-        .single()
-      if (item) {
-        // Restore stock by subtracting the old quantity (opposite of sales)
-        await supabase
+    try {
+      for (const line of existingLines) {
+        // Get current stock (verify item belongs to user)
+        const { data: item } = await supabase
           .from("inventory_items")
-          .update({ stock: Math.max(0, (item.stock || 0) - (line.quantity || 0)) })
+          .select("stock")
           .eq("id", line.item_id)
-        // Record stock movement
-        await recordStockMovement({
-          itemId: line.item_id,
-          movementType: "OUT",
-          quantity: line.quantity || 0,
-          referenceType: "Purchase",
-          referenceId: purchaseId,
-          notes: `Stock restored from purchase update`,
-          userId: currentUser.id,
-        })
+          .eq("user_id", currentUser.id)
+          .single()
+        if (item) {
+          // Restore stock by subtracting the old quantity (opposite of sales)
+          const { error: updateError } = await supabase
+            .from("inventory_items")
+            .update({ stock: Math.max(0, (item.stock || 0) - (line.quantity || 0)) })
+            .eq("id", line.item_id)
+          if (updateError) {
+            throw new Error(`Failed to update stock for item ${line.item_id}: ${updateError.message}`)
+          }
+
+          // Record stock movement
+          await recordStockMovement({
+            itemId: line.item_id,
+            movementType: "OUT",
+            quantity: line.quantity || 0,
+            referenceType: "Purchase",
+            referenceId: purchaseId,
+            notes: `Stock restored from purchase update`,
+            userId: currentUser.id,
+          })
+        }
       }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Failed to restore stock" }
     }
   }
 
@@ -333,28 +349,36 @@ export async function updatePurchase(
 
   // Increment stock for new line items (opposite of sales) only if status is not Cancelled
   if (newStatus !== "Cancelled") {
-    for (const item of payload.items) {
-      // Get current stock (verify item belongs to user)
-      const { data: invItem } = await supabase
-        .from("inventory_items")
-        .select("stock")
-        .eq("id", item.itemId)
-        .eq("user_id", currentUser.id)
-        .single()
-      if (invItem) {
-        // Increment stock by adding the new quantity
-        await supabase.rpc("increment_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
-        // Record stock movement
-        await recordStockMovement({
-          itemId: item.itemId,
-          movementType: "IN",
-          quantity: item.quantity,
-          referenceType: "Purchase",
-          referenceId: purchaseId,
-          notes: `Purchased via purchase invoice ${purchaseId.substring(0, 8).toUpperCase()}`,
-          userId: currentUser.id,
-        })
+    try {
+      for (const item of payload.items) {
+        // Get current stock (verify item belongs to user)
+        const { data: invItem } = await supabase
+          .from("inventory_items")
+          .select("stock")
+          .eq("id", item.itemId)
+          .eq("user_id", currentUser.id)
+          .single()
+        if (invItem) {
+          // Increment stock by adding the new quantity
+          const { error: incrementError } = await supabase.rpc("increment_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
+          if (incrementError) {
+            throw new Error(`Failed to increment stock for item ${item.itemId}: ${incrementError.message}`)
+          }
+
+          // Record stock movement
+          await recordStockMovement({
+            itemId: item.itemId,
+            movementType: "IN",
+            quantity: item.quantity,
+            referenceType: "Purchase",
+            referenceId: purchaseId,
+            notes: `Purchased via purchase invoice ${purchaseId.substring(0, 8).toUpperCase()}`,
+            userId: currentUser.id,
+          })
+        }
       }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Failed to process inventory" }
     }
   }
 
@@ -441,28 +465,36 @@ export async function deletePurchase(purchaseId: string) {
 
   // Restore stock (decrease stock back) if purchase was not cancelled
   if (existingLines && existingLines.length > 0 && purchase.status !== "Cancelled") {
-    for (const line of existingLines) {
-      const { data: item } = await supabase
-        .from("inventory_items")
-        .select("stock")
-        .eq("id", line.item_id)
-        .eq("user_id", currentUser.id)
-        .single()
-      if (item) {
-        await supabase
+    try {
+      for (const line of existingLines) {
+        const { data: item } = await supabase
           .from("inventory_items")
-          .update({ stock: Math.max(0, (item.stock || 0) - (line.quantity || 0)) })
+          .select("stock")
           .eq("id", line.item_id)
-        await recordStockMovement({
-          itemId: line.item_id,
-          movementType: "OUT",
-          quantity: line.quantity || 0,
-          referenceType: "Purchase",
-          referenceId: purchaseId,
-          notes: `Stock restored from purchase deletion`,
-          userId: currentUser.id,
-        })
+          .eq("user_id", currentUser.id)
+          .single()
+        if (item) {
+          const { error: updateError } = await supabase
+            .from("inventory_items")
+            .update({ stock: Math.max(0, (item.stock || 0) - (line.quantity || 0)) })
+            .eq("id", line.item_id)
+          if (updateError) {
+            throw new Error(`Failed to update stock for item ${line.item_id}: ${updateError.message}`)
+          }
+
+          await recordStockMovement({
+            itemId: line.item_id,
+            movementType: "OUT",
+            quantity: line.quantity || 0,
+            referenceType: "Purchase",
+            referenceId: purchaseId,
+            notes: `Stock restored from purchase deletion`,
+            userId: currentUser.id,
+          })
+        }
       }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Failed to restore stock" }
     }
   }
 

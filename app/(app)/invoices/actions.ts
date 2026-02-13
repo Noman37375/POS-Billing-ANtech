@@ -27,17 +27,19 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
     return { error: "Party not found" }
   }
 
-  // Verify all items belong to user
+  // Verify all items belong to user and fetch cost_price for gross profit
   const itemIds = payload.items.map((item) => item.itemId)
-  const { data: items } = await supabase
+  const { data: invItems } = await supabase
     .from("inventory_items")
-    .select("id")
+    .select("id, cost_price")
     .in("id", itemIds)
     .eq("user_id", currentUser.id)
 
-  if (!items || items.length !== itemIds.length) {
+  if (!invItems || invItems.length !== itemIds.length) {
     return { error: "One or more items not found" }
   }
+
+  const costPriceByItemId = new Map(invItems.map((row) => [row.id, Number((row as { cost_price?: number }).cost_price ?? 0)]))
 
   const taxRate = payload.taxRate || 18
   const subtotal = payload.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
@@ -67,6 +69,7 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
     quantity: item.quantity,
     unit_price: item.unitPrice,
     line_total: item.quantity * item.unitPrice,
+    cost_price: costPriceByItemId.get(item.itemId) ?? null,
   }))
 
   const { error: lineError } = await supabase.from("sales_invoice_lines").insert(lineItems)
@@ -75,22 +78,30 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
   }
 
   // Decrease stock and record movements
-  await Promise.all(
-    payload.items.map(async (item) => {
-      // Decrease stock
-      await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
-      // Record stock movement
-      await recordStockMovement({
-        itemId: item.itemId,
-        movementType: "OUT",
-        quantity: item.quantity,
-        referenceType: "Invoice",
-        referenceId: invoice.id,
-        notes: `Sold via invoice ${invoice.id.substring(0, 8).toUpperCase()}`,
-        userId: currentUser.id,
-      })
-    }),
-  )
+  try {
+    await Promise.all(
+      payload.items.map(async (item) => {
+        // Decrease stock
+        const { error: decrementError } = await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
+        if (decrementError) {
+          throw new Error(`Failed to decrement stock for item ${item.itemId}: ${decrementError.message}`)
+        }
+
+        // Record stock movement (this will throw if it fails)
+        await recordStockMovement({
+          itemId: item.itemId,
+          movementType: "OUT",
+          quantity: item.quantity,
+          referenceType: "Invoice",
+          referenceId: invoice.id,
+          notes: `Sold via invoice ${invoice.id.substring(0, 8).toUpperCase()}`,
+          userId: currentUser.id,
+        })
+      }),
+    )
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Failed to process inventory" }
+  }
 
   revalidatePath("/invoices")
   revalidatePath("/dashboard")
@@ -252,28 +263,36 @@ export async function updateInvoice(
 
   // Restore stock for old line items (increment stock back) if invoice was not cancelled
   if (existingLines && existingLines.length > 0 && currentStatus !== "Cancelled") {
-    for (const line of existingLines) {
-      // Get current stock (verify item belongs to user)
-      const { data: item } = await supabase
-        .from("inventory_items")
-        .select("stock")
-        .eq("id", line.item_id)
-        .eq("user_id", currentUser.id)
-        .single()
-      if (item) {
-        // Restore stock by adding back the old quantity
-        await supabase.rpc("increment_inventory_stock", { item_id: line.item_id, quantity: line.quantity || 0 })
-        // Record stock movement
-        await recordStockMovement({
-          itemId: line.item_id,
-          movementType: "IN",
-          quantity: line.quantity || 0,
-          referenceType: "Invoice",
-          referenceId: invoiceId,
-          notes: `Stock restored from invoice update`,
-          userId: currentUser.id,
-        })
+    try {
+      for (const line of existingLines) {
+        // Get current stock (verify item belongs to user)
+        const { data: item } = await supabase
+          .from("inventory_items")
+          .select("stock")
+          .eq("id", line.item_id)
+          .eq("user_id", currentUser.id)
+          .single()
+        if (item) {
+          // Restore stock by adding back the old quantity
+          const { error: incrementError } = await supabase.rpc("increment_inventory_stock", { item_id: line.item_id, quantity: line.quantity || 0 })
+          if (incrementError) {
+            throw new Error(`Failed to restore stock for item ${line.item_id}: ${incrementError.message}`)
+          }
+
+          // Record stock movement (this will throw if it fails)
+          await recordStockMovement({
+            itemId: line.item_id,
+            movementType: "IN",
+            quantity: line.quantity || 0,
+            referenceType: "Invoice",
+            referenceId: invoiceId,
+            notes: `Stock restored from invoice update`,
+            userId: currentUser.id,
+          })
+        }
       }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Failed to restore stock" }
     }
   }
 
@@ -305,6 +324,15 @@ export async function updateInvoice(
     return { error: deleteError.message }
   }
 
+  // Fetch cost_price for gross profit
+  const payloadItemIds = payload.items.map((item) => item.itemId)
+  const { data: invItems } = await supabase
+    .from("inventory_items")
+    .select("id, cost_price")
+    .in("id", payloadItemIds)
+    .eq("user_id", currentUser.id)
+  const costPriceByItemId = new Map((invItems || []).map((row) => [row.id, Number((row as { cost_price?: number }).cost_price ?? 0)]))
+
   // Insert new line items
   const lineItems = payload.items.map((item) => ({
     invoice_id: invoiceId,
@@ -312,6 +340,7 @@ export async function updateInvoice(
     quantity: item.quantity,
     unit_price: item.unitPrice,
     line_total: item.quantity * item.unitPrice,
+    cost_price: costPriceByItemId.get(item.itemId) ?? null,
   }))
 
   const { error: lineError } = await supabase.from("sales_invoice_lines").insert(lineItems)
@@ -321,28 +350,36 @@ export async function updateInvoice(
 
   // Decrement stock for new line items (only if status is not Cancelled)
   if (newStatus !== "Cancelled") {
-    for (const item of payload.items) {
-      // Get current stock (verify item belongs to user)
-      const { data: invItem } = await supabase
-        .from("inventory_items")
-        .select("stock")
-        .eq("id", item.itemId)
-        .eq("user_id", currentUser.id)
-        .single()
-      if (invItem) {
-        // Decrement stock by subtracting the new quantity
-        await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
-        // Record stock movement
-        await recordStockMovement({
-          itemId: item.itemId,
-          movementType: "OUT",
-          quantity: item.quantity,
-          referenceType: "Invoice",
-          referenceId: invoiceId,
-          notes: `Sold via invoice ${invoiceId.substring(0, 8).toUpperCase()}`,
-          userId: currentUser.id,
-        })
+    try {
+      for (const item of payload.items) {
+        // Get current stock (verify item belongs to user)
+        const { data: invItem } = await supabase
+          .from("inventory_items")
+          .select("stock")
+          .eq("id", item.itemId)
+          .eq("user_id", currentUser.id)
+          .single()
+        if (invItem) {
+          // Decrement stock by subtracting the new quantity
+          const { error: decrementError } = await supabase.rpc("decrement_inventory_stock", { item_id: item.itemId, quantity: item.quantity })
+          if (decrementError) {
+            throw new Error(`Failed to decrement stock for item ${item.itemId}: ${decrementError.message}`)
+          }
+
+          // Record stock movement (this will throw if it fails)
+          await recordStockMovement({
+            itemId: item.itemId,
+            movementType: "OUT",
+            quantity: item.quantity,
+            referenceType: "Invoice",
+            referenceId: invoiceId,
+            notes: `Sold via invoice ${invoiceId.substring(0, 8).toUpperCase()}`,
+            userId: currentUser.id,
+          })
+        }
       }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Failed to process inventory" }
     }
   }
 
@@ -428,28 +465,36 @@ export async function deleteInvoice(invoiceId: string) {
 
   // Restore stock for all line items (increment stock back) if invoice was not cancelled
   if (existingLines && existingLines.length > 0 && invoice.status !== "Cancelled") {
-    for (const line of existingLines) {
-      // Get current stock (verify item belongs to user)
-      const { data: item } = await supabase
-        .from("inventory_items")
-        .select("stock")
-        .eq("id", line.item_id)
-        .eq("user_id", currentUser.id)
-        .single()
-      if (item) {
-        // Restore stock by adding back the quantity
-        await supabase.rpc("increment_inventory_stock", { item_id: line.item_id, quantity: line.quantity || 0 })
-        // Record stock movement
-        await recordStockMovement({
-          itemId: line.item_id,
-          movementType: "IN",
-          quantity: line.quantity || 0,
-          referenceType: "Invoice",
-          referenceId: invoiceId,
-          notes: `Stock restored from invoice deletion`,
-          userId: currentUser.id,
-        })
+    try {
+      for (const line of existingLines) {
+        // Get current stock (verify item belongs to user)
+        const { data: item } = await supabase
+          .from("inventory_items")
+          .select("stock")
+          .eq("id", line.item_id)
+          .eq("user_id", currentUser.id)
+          .single()
+        if (item) {
+          // Restore stock by adding back the quantity
+          const { error: incrementError } = await supabase.rpc("increment_inventory_stock", { item_id: line.item_id, quantity: line.quantity || 0 })
+          if (incrementError) {
+            throw new Error(`Failed to restore stock for item ${line.item_id}: ${incrementError.message}`)
+          }
+
+          // Record stock movement (this will throw if it fails)
+          await recordStockMovement({
+            itemId: line.item_id,
+            movementType: "IN",
+            quantity: line.quantity || 0,
+            referenceType: "Invoice",
+            referenceId: invoiceId,
+            notes: `Stock restored from invoice deletion`,
+            userId: currentUser.id,
+          })
+        }
       }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Failed to restore stock" }
     }
   }
 

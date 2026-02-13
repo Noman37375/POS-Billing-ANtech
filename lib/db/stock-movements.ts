@@ -33,8 +33,8 @@ export async function recordStockMovement(input: StockMovementInput) {
 
   if (error) {
     console.error("Error recording stock movement:", error)
-    // Don't throw error, just log it - stock movement tracking shouldn't break main operations
+    throw new Error(`Failed to record stock movement: ${error.message}`)
   }
 
-  return { success: !error, error: error?.message }
+  return { success: true, error: null }
 }
