@@ -201,7 +201,7 @@ export async function isUserAccountLocked(userId: string): Promise<boolean> {
 /**
  * Clean up old rate limit entries (run periodically)
  */
-export function cleanupOldEntries(): void {
+export async function cleanupOldEntries(): Promise<void> {
   const now = new Date()
   const maxAge = 1000 * 60 * 60 * 24 // 24 hours
 
