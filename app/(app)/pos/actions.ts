@@ -195,7 +195,7 @@ export async function getPOSSales(dateFrom?: string, dateTo?: string) {
   }) as Sale[]
 }
 
-export type PrintFormat = "standard" | "a4"
+export type PrintFormat = "pos_thermal" | "pos_ncr" | "a4"
 
 const PRINT_FORMAT_KEY = "pos_default_print_format"
 
