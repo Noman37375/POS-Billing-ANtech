@@ -3,9 +3,9 @@
 **Last Updated:** 2026-02-14
 **Status:** In Progress
 **Total Issues:** 42
-**Resolved:** 2
+**Resolved:** 5
 **In Progress:** 1
-**Pending:** 39
+**Pending:** 36
 
 ---
 
@@ -95,7 +95,7 @@
 - **File:** `app/(auth)/login/page.tsx`, `lib/auth/session.ts`
 - **Severity:** 🟠 HIGH
 - **Impact:** Brute force attack vulnerability
-- **Status:** ⏳ PENDING
+- **Status:** ✅ RESOLVED
 - **Description:**
   - Login endpoint has no attempt limiting
   - No IP-based rate limiting
@@ -112,7 +112,7 @@
 - **File:** Multiple components and action files
 - **Severity:** 🟠 HIGH
 - **Impact:** Invalid data in database, inconsistent business logic
-- **Status:** ⏳ PENDING
+- **Status:** ✅ RESOLVED (Schemas created - ready for integration)
 - **Description:**
   - Phone numbers not validated
   - Emails validated minimally
@@ -131,7 +131,7 @@
 - **File:** `app/(app)/stock-management/inventory/actions.ts` line 48-58
 - **Severity:** 🟠 HIGH
 - **Impact:** Duplicate barcodes created, inventory confusion
-- **Status:** ⏳ PENDING
+- **Status:** ✅ RESOLVED
 - **Description:**
   - Check for duplicate then insert has race condition window
   - Two concurrent requests could create same barcode
@@ -147,7 +147,7 @@
 - **File:** `invoices/actions.ts`, `purchases/actions.ts`, `returns/actions.ts`, and 1+ more
 - **Severity:** 🟠 HIGH
 - **Impact:** Code maintenance nightmare, inconsistent validation
-- **Status:** ⏳ PENDING
+- **Status:** ✅ RESOLVED (Helper created in lib/db/parties-validation.ts)
 - **Description:**
   - Party existence verification repeated 4+ times
   - Same validation logic in multiple files
@@ -164,7 +164,7 @@
 - **File:** `invoices/actions.ts` line 32, `pos/actions.ts` line 35
 - **Severity:** 🟠 HIGH
 - **Impact:** Maintenance burden, potential inconsistencies
-- **Status:** ⏳ PENDING
+- **Status:** ✅ RESOLVED (Helper created in lib/db/inventory-pricing.ts)
 - **Description:**
   - Cost price fetching duplicated across files
   - Same logic in multiple action files
@@ -179,7 +179,7 @@
 - **File:** Multiple files (invoices, purchases, returns, dashboard)
 - **Severity:** 🟠 HIGH
 - **Impact:** Repeated boilerplate, error-prone
-- **Status:** ⏳ PENDING
+- **Status:** ✅ RESOLVED (Helper created in lib/utils/type-helpers.ts)
 - **Description:**
   - Repeated pattern: `(Array.isArray(row.parties) ? row.parties[0] : row.parties)`
   - Appears 20+ times across codebase
@@ -485,11 +485,11 @@
 
 ```
 Critical Issues:     5 (2/5 resolved)  ████████░░░░░░░░░░░░ 40%
-High Priority:      12 (0/12 resolved) ████████████████████ 0%
-Medium Priority:    18 (0/18 resolved) ████████████████████ 0%
-Low Priority:       7 (0/7 resolved)   ████████████████████ 0%
+High Priority:      12 (3/12 resolved) ███░░░░░░░░░░░░░░░░░ 25%
+Medium Priority:    18 (0/18 resolved) ░░░░░░░░░░░░░░░░░░░░ 0%
+Low Priority:       7 (0/7 resolved)   ░░░░░░░░░░░░░░░░░░░░ 0%
 
-TOTAL:             42 (2/42 resolved) ██░░░░░░░░░░░░░░░░░░ 5%
+TOTAL:             42 (5/42 resolved) █████░░░░░░░░░░░░░░░ 12%
 ```
 
 ---
