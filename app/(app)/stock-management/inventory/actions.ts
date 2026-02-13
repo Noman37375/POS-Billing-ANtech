@@ -45,18 +45,40 @@ export async function createInventoryItem(formData: FormData) {
     }
 
     if (barcode) {
-      // Check if barcode already exists (per user)
-      const { data: existing } = await supabase
-        .from("inventory_items")
-        .select("id")
-        .eq("barcode", barcode)
-        .eq("user_id", currentUser.id)
-        .single()
+      // Generate barcode with collision retry logic
+      let finalBarcode = barcode
+      let attempts = 0
+      const maxAttempts = 3
 
-      if (existing) {
-        return { error: "Barcode already exists" }
+      // Try to use provided barcode, fall back to generated if collision
+      while (attempts < maxAttempts) {
+        const { data: existing } = await supabase
+          .from("inventory_items")
+          .select("id")
+          .eq("barcode", finalBarcode)
+          .eq("user_id", currentUser.id)
+          .single()
+
+        if (!existing) {
+          // Barcode is available
+          break
+        }
+
+        if (attempts === 0) {
+          // First collision, try with timestamp
+          finalBarcode = `${barcode}-${Date.now().toString(36).toUpperCase()}`
+        } else {
+          // Further collisions, add random suffix
+          finalBarcode = `${barcode}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+        }
+        attempts++
       }
-      payload.barcode = barcode
+
+      if (attempts >= maxAttempts) {
+        return { error: "Barcode collision detected. Please try a different barcode." }
+      }
+
+      payload.barcode = finalBarcode
     } else {
       payload.barcode = null
     }
@@ -120,26 +142,39 @@ export async function createInventoryItem(formData: FormData) {
 
     // Auto-generate barcode if not provided
     if (!payload.barcode && newItem) {
-      const generatedBarcode = `BC${newItem.id.substring(0, 8).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
-      
-      // Check if generated barcode already exists (unlikely but possible, per user)
-      const { data: existing } = await supabase
-        .from("inventory_items")
-        .select("id")
-        .eq("barcode", generatedBarcode)
-        .eq("user_id", currentUser.id)
-        .single()
+      let generatedBarcode = `BC${newItem.id.substring(0, 8).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+      let attempts = 0
+      const maxAttempts = 3
 
-      // If exists, generate a new one with timestamp
-      const finalBarcode = existing 
-        ? `BC${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
-        : generatedBarcode
+      // Retry if collision occurs
+      while (attempts < maxAttempts) {
+        const { data: existing } = await supabase
+          .from("inventory_items")
+          .select("id")
+          .eq("barcode", generatedBarcode)
+          .eq("user_id", currentUser.id)
+          .single()
+
+        if (!existing) {
+          // Barcode is available
+          break
+        }
+
+        // Generate new barcode with timestamp
+        generatedBarcode = `BC${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+        attempts++
+      }
 
       // Update item with generated barcode
-      await supabase
-        .from("inventory_items")
-        .update({ barcode: finalBarcode })
-        .eq("id", newItem.id)
+      try {
+        await supabase
+          .from("inventory_items")
+          .update({ barcode: generatedBarcode })
+          .eq("id", newItem.id)
+      } catch (barcodeError) {
+        console.error("Failed to update barcode:", barcodeError)
+        // Continue - item is created, barcode generation failed
+      }
     }
 
     // Record initial stock movement if stock > 0
