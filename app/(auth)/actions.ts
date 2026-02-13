@@ -20,7 +20,7 @@ export async function signIn(formData: FormData) {
   const ipAddress = (headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown").split(",")[0].trim()
 
   // Check rate limit (5 attempts per 15 minutes)
-  const rateLimitResult = checkRateLimit(ipAddress, `login:${email}`, {
+  const rateLimitResult = await checkRateLimit(ipAddress, `login:${email}`, {
     maxAttempts: 5,
     windowMs: 15 * 60 * 1000,
     lockoutDurationMs: 30 * 60 * 1000,

@@ -30,15 +30,15 @@ const DEFAULT_CONFIG: RateLimitConfig = {
  * Check if an action is rate limited
  * Returns { allowed: boolean, remaining: number, retryAfter?: number }
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   identifier: string, // IP address, user ID, or combination
   action: string,
   config: Partial<RateLimitConfig> = {},
-): {
+): Promise<{
   allowed: boolean
   remaining: number
   retryAfter?: number
-} {
+}> {
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
   const key = `${identifier}:${action}`
   const now = new Date()
@@ -106,7 +106,7 @@ export function checkRateLimit(
 /**
  * Reset rate limit for an identifier
  */
-export function resetRateLimit(identifier: string, action: string): void {
+export async function resetRateLimit(identifier: string, action: string): Promise<void> {
   const key = `${identifier}:${action}`
   rateLimitStore.delete(key)
 }
