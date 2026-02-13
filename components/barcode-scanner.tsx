@@ -101,7 +101,7 @@ export function BarcodeScanner({ onScan, scannedItem, isPending }: BarcodeScanne
                 <span className="font-medium">{scannedItem.stock ?? 0}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Unit Price:</span>
+                <span className="text-sm text-muted-foreground">Selling Price:</span>
                 <span className="font-medium">
                   <CurrencyDisplay amount={scannedItem.unitPrice ?? 0} />
                 </span>

@@ -20,7 +20,7 @@ export default async function InventoryPage() {
     const supabase = createClient()
     const { data = [] } = await supabase
       .from("inventory_items")
-      .select("id, name, stock, unit_price, category_id, unit_id, barcode, minimum_stock, maximum_stock, created_at, categories:category_id(name), units:unit_id(name, symbol)")
+      .select("id, name, stock, cost_price, selling_price, category_id, unit_id, barcode, minimum_stock, maximum_stock, created_at, categories:category_id(name), units:unit_id(name, symbol)")
       .eq("user_id", currentUser.id)
       .order("created_at", { ascending: false })
     return data
@@ -45,18 +45,26 @@ export default async function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[30%]">Item</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Stock</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Unit Price</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Stock Value</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Actions</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[20%]">Item</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[10%]">Stock</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden md:table-cell w-[12%]">Cost Price</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden md:table-cell w-[12%]">Selling Price</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[12%]">Gross Profit</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[10%]">Gross Profit %</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[12%]">Stock Value</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Actions</th>
                 </tr>
               </thead>
               <tbody className="[&>tr:not(:last-child)]:border-b">
                 {(items || []).map((item) => {
                   const stock = Number(item.stock || 0)
                   const minStock = item.minimum_stock !== null ? Number(item.minimum_stock) : null
-                  
+                  const costPrice = Number((item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0)
+                  const sellingPrice = Number((item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0)
+                  const grossProfit = sellingPrice - costPrice
+                  const grossProfitPercent = sellingPrice > 0 ? Math.round((grossProfit / sellingPrice) * 100) : 0
+                  const stockValue = stock * costPrice
+
                   // Determine stock status
                   let stockStatus: { label: string; variant: "default" | "destructive" | "secondary" | "outline" } = {
                     label: "In Stock",
@@ -73,7 +81,7 @@ export default async function InventoryPage() {
                   
                   return (
                     <tr key={item.id} className="hover:bg-muted/50">
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[30%]">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[20%]">
                         <div className="flex flex-col min-w-0 overflow-hidden">
                           <span className="truncate break-words">{item.name}</span>
                           <div className="flex items-center gap-2 mt-1">
@@ -86,17 +94,17 @@ export default async function InventoryPage() {
                               <span className="text-[10px] text-muted-foreground">BC: {item.barcode}</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 sm:hidden mt-1">
+                          <div className="flex items-center gap-2 md:hidden mt-1">
                             <span className="text-[10px] text-muted-foreground">
-                              Price: <CurrencyDisplay amount={Number(item.unit_price || 0)} />
+                              Cost: <CurrencyDisplay amount={costPrice} /> | Sell: <CurrencyDisplay amount={sellingPrice} />
                             </span>
                           </div>
                           <span className="text-[10px] text-muted-foreground sm:hidden">
-                            Value: <CurrencyDisplay amount={(Number(item.stock || 0) * Number(item.unit_price || 0))} />
+                            Value: <CurrencyDisplay amount={stockValue} />
                           </span>
                         </div>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[15%]">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[10%]">
                         <div className="flex items-center gap-2">
                           <span className="whitespace-nowrap">{item.stock}</span>
                           {stockStatus.label !== "In Stock" && (
@@ -106,24 +114,38 @@ export default async function InventoryPage() {
                           )}
                         </div>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[20%]">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden md:table-cell w-[12%]">
                         <span className="truncate block">
-                          <CurrencyDisplay amount={Number(item.unit_price || 0)} />
+                          <CurrencyDisplay amount={costPrice} />
                         </span>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm hidden sm:table-cell w-[20%]">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden md:table-cell w-[12%]">
                         <span className="truncate block">
-                          <CurrencyDisplay amount={(Number(item.stock || 0) * Number(item.unit_price || 0))} />
+                          <CurrencyDisplay amount={sellingPrice} />
                         </span>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 w-[15%]">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden lg:table-cell w-[12%]">
+                        <span className="truncate block">
+                          <CurrencyDisplay amount={grossProfit} />
+                        </span>
+                      </td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden lg:table-cell w-[10%]">
+                        <span className="truncate block">{grossProfitPercent}%</span>
+                      </td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm hidden sm:table-cell w-[12%]">
+                        <span className="truncate block">
+                          <CurrencyDisplay amount={stockValue} />
+                        </span>
+                      </td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 w-[12%]">
                         <div className="flex items-center gap-1 sm:gap-2">
                           <InventoryDialog
                             item={{
                               id: item.id,
                               name: item.name,
                               stock: Number(item.stock || 0),
-                              unit_price: Number(item.unit_price || 0),
+                              cost_price: costPrice,
+                              selling_price: sellingPrice,
                               category_id: item.category_id,
                               unit_id: item.unit_id,
                               barcode: item.barcode,
@@ -144,7 +166,7 @@ export default async function InventoryPage() {
                 })}
                 {(!items || items.length === 0) && (
                   <tr>
-                    <td colSpan={5} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
+                    <td colSpan={8} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
                       No items yet. Add your first service or SKU.
                     </td>
                   </tr>

@@ -278,7 +278,7 @@ export function InvoiceForm({
                     <tr className="bg-secondary border-b">
                       <th className="px-4 py-3 text-left">Item</th>
                       <th className="px-4 py-3 text-left">Qty</th>
-                      <th className="px-4 py-3 text-left">Unit Price</th>
+                      <th className="px-4 py-3 text-left">Selling Price</th>
                       <th className="px-4 py-3 text-left">Amount</th>
                       <th className="px-4 py-3 text-center">Action</th>
                     </tr>

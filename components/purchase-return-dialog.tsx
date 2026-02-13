@@ -122,7 +122,7 @@ export function PurchaseReturnDialog({ purchaseInvoices, vendors }: PurchaseRetu
 
   const addItem = () => {
     if (!selectedItem || quantity <= 0 || unitPrice <= 0) {
-      toast.error("Please select an item and enter valid quantity and unit price")
+      toast.error("Please select an item and enter valid quantity and cost price")
       return
     }
 
@@ -298,7 +298,7 @@ export function PurchaseReturnDialog({ purchaseInvoices, vendors }: PurchaseRetu
                           />
                         </div>
                         <div className="flex flex-col">
-                          <Label className="text-xs">Price</Label>
+                          <Label className="text-xs">Cost Price</Label>
                           <Input
                             type="number"
                             min="0"

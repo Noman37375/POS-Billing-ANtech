@@ -57,7 +57,7 @@ export async function lookupItemByBarcode(barcode: string) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("inventory_items")
-    .select("id, name, stock, unit_price, barcode")
+    .select("id, name, stock, cost_price, selling_price, barcode")
     .eq("barcode", barcode)
     .eq("user_id", currentUser.id)
     .single()
@@ -66,13 +66,16 @@ export async function lookupItemByBarcode(barcode: string) {
     return { error: "Item not found", item: null }
   }
 
+  const row = data as { selling_price?: number; cost_price?: number; unit_price?: number }
+  const sellingPrice = Number(row.selling_price ?? row.unit_price ?? 0)
+
   return {
     error: null,
     item: {
       id: data.id,
       name: data.name,
       stock: Number(data.stock || 0),
-      unitPrice: Number(data.unit_price || 0),
+      unitPrice: sellingPrice,
       barcode: data.barcode,
     },
   }
@@ -100,7 +103,7 @@ export async function getAllItemsWithBarcodes() {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("inventory_items")
-    .select("id, name, barcode, stock, unit_price")
+    .select("id, name, barcode, stock, cost_price, selling_price")
     .not("barcode", "is", null)
     .eq("user_id", currentUser.id)
     .order("name", { ascending: true })
@@ -109,13 +112,17 @@ export async function getAllItemsWithBarcodes() {
     return []
   }
 
-  return (data || []).map((item) => ({
-    id: item.id,
-    name: item.name,
-    barcode: item.barcode,
-    stock: Number(item.stock || 0),
-    unitPrice: Number(item.unit_price || 0),
-  }))
+  return (data || []).map((item) => {
+    const row = item as { selling_price?: number; unit_price?: number }
+    const sellingPrice = Number(row.selling_price ?? row.unit_price ?? 0)
+    return {
+      id: item.id,
+      name: item.name,
+      barcode: item.barcode,
+      stock: Number(item.stock || 0),
+      unitPrice: sellingPrice,
+    }
+  })
 }
 
 export async function updateBarcode(itemId: string, newBarcode: string) {

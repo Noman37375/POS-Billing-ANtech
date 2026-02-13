@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
-import { Plus, Trash2, Loader2, Printer } from "lucide-react"
+import { useMemo, useState, useTransition, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Plus, Trash2, Loader2, Printer, ChevronDown } from "lucide-react"
 import { createPOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
 import { getInvoiceForPDF } from "@/app/(app)/invoices/actions"
 import { Button } from "@/components/ui/button"
@@ -9,19 +10,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { toast } from "sonner"
 import { useCurrency } from "@/contexts/currency-context"
 import type { PaymentMethod } from "@/lib/types/pos"
-
 type PartyOption = { id: string; name: string }
 type InventoryOption = { id: string; name: string; stock: number; unitPrice: number }
 
 interface POSNewSaleFormProps {
   parties: PartyOption[]
   inventory: InventoryOption[]
+  initialItemId?: string | null
 }
 
-export function POSNewSaleForm({ parties, inventory }: POSNewSaleFormProps) {
+export function POSNewSaleForm({ parties, inventory, initialItemId }: POSNewSaleFormProps) {
   const [partyId, setPartyId] = useState("")
   const [items, setItems] = useState<Array<{ itemId: string; quantity: number }>>([])
   const [taxRate, setTaxRate] = useState(18)
@@ -31,7 +34,28 @@ export function POSNewSaleForm({ parties, inventory }: POSNewSaleFormProps) {
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
   const [lastInvoiceId, setLastInvoiceId] = useState<string | null>(null)
+  const [customerOpen, setCustomerOpen] = useState(false)
+  const [itemOpen, setItemOpen] = useState(false)
+  const [customerQuery, setCustomerQuery] = useState("")
+  const [itemQuery, setItemQuery] = useState("")
+  const router = useRouter()
   const { formatCurrency } = useCurrency()
+
+  const selectedPartyName = partyId ? parties.find((p) => p.id === partyId)?.name ?? "" : ""
+  const selectedItemName = selectedItem
+    ? (() => {
+        const inv = inventory.find((i) => i.id === selectedItem)
+        return inv ? `${inv.name} (Stock: ${inv.stock})` : ""
+      })()
+    : ""
+
+  // Apply initial item from barcode redirect and clear URL param
+  useEffect(() => {
+    if (initialItemId && inventory.some((i) => i.id === initialItemId)) {
+      setSelectedItem(initialItemId)
+      router.replace("/pos", { scroll: false })
+    }
+  }, [initialItemId, inventory, router])
 
   const computed = useMemo(() => {
     const detailed = items.map((line) => {
@@ -148,18 +172,48 @@ export function POSNewSaleForm({ parties, inventory }: POSNewSaleFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Customer</Label>
-            <Select value={partyId} onValueChange={setPartyId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                {parties.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={customerOpen} onOpenChange={(open) => { setCustomerOpen(open); if (!open) setCustomerQuery("") }}>
+              <PopoverTrigger asChild>
+                <div className="relative flex">
+                  <Input
+                    placeholder="Type or select customer"
+                    value={customerOpen ? customerQuery : selectedPartyName || ""}
+                    onChange={(e) => {
+                      setCustomerQuery(e.target.value)
+                      setCustomerOpen(true)
+                      if (!e.target.value) setPartyId("")
+                    }}
+                    onFocus={() => setCustomerOpen(true)}
+                    className="pr-9"
+                  />
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandList className="max-h-[200px]">
+                    <CommandEmpty>No customer found.</CommandEmpty>
+                    <CommandGroup>
+                      {parties
+                        .filter((p) => !customerQuery || p.name.toLowerCase().includes(customerQuery.toLowerCase()))
+                        .map((p) => (
+                          <CommandItem
+                            key={p.id}
+                            value={p.name}
+                            onSelect={() => {
+                              setPartyId(p.id)
+                              setCustomerQuery("")
+                              setCustomerOpen(false)
+                            }}
+                          >
+                            {p.name}
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="space-y-2">
             <Label>Tax rate (%)</Label>
@@ -177,18 +231,52 @@ export function POSNewSaleForm({ parties, inventory }: POSNewSaleFormProps) {
         <div className="space-y-2">
           <Label>Add item</Label>
           <div className="flex flex-wrap gap-2">
-            <Select value={selectedItem} onValueChange={setSelectedItem}>
-              <SelectTrigger className="min-w-[180px]">
-                <SelectValue placeholder="Select item" />
-              </SelectTrigger>
-              <SelectContent>
-                {inventory.map((item) => (
-                  <SelectItem key={item.id} value={item.id} disabled={item.stock <= 0}>
-                    {item.name} (Stock: {item.stock})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={itemOpen} onOpenChange={(open) => { setItemOpen(open); if (!open) setItemQuery("") }}>
+              <PopoverTrigger asChild>
+                <div className="relative flex min-w-[180px]">
+                  <Input
+                    placeholder="Type or select item"
+                    value={itemOpen ? itemQuery : selectedItemName || ""}
+                    onChange={(e) => {
+                      setItemQuery(e.target.value)
+                      setItemOpen(true)
+                      if (!e.target.value) setSelectedItem("")
+                    }}
+                    onFocus={() => setItemOpen(true)}
+                    className="pr-9"
+                  />
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandList className="max-h-[200px]">
+                    <CommandEmpty>No item found.</CommandEmpty>
+                    <CommandGroup>
+                      {inventory
+                        .filter(
+                          (item) =>
+                            item.stock > 0 &&
+                            (!itemQuery || item.name.toLowerCase().includes(itemQuery.toLowerCase()))
+                        )
+                        .map((item) => (
+                          <CommandItem
+                            key={item.id}
+                            value={item.name}
+                            onSelect={() => {
+                              setSelectedItem(item.id)
+                              setItemQuery("")
+                              setItemOpen(false)
+                            }}
+                          >
+                            {item.name} (Stock: {item.stock})
+                          </CommandItem>
+                        ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <Input
               type="number"
               min={1}
@@ -211,7 +299,7 @@ export function POSNewSaleForm({ parties, inventory }: POSNewSaleFormProps) {
                 <tr className="bg-muted border-b">
                   <th className="px-4 py-2 text-left">Item</th>
                   <th className="px-4 py-2 text-left">Qty</th>
-                  <th className="px-4 py-2 text-left">Unit Price</th>
+                  <th className="px-4 py-2 text-left">Selling Price</th>
                   <th className="px-4 py-2 text-left">Amount</th>
                   <th className="px-4 py-2 w-10" />
                 </tr>

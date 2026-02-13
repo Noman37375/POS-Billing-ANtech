@@ -104,7 +104,7 @@ export default async function ReturnsReportsPage({ searchParams }: ReturnsReport
                     <tr className="text-left text-muted-foreground border-b">
                       <th className="py-2 px-4">Item</th>
                       <th className="py-2 px-4">Quantity</th>
-                      <th className="py-2 px-4">Unit Price</th>
+                      <th className="py-2 px-4">Price</th>
                       <th className="py-2 px-4">Total</th>
                     </tr>
                   </thead>

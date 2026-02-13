@@ -1,15 +1,17 @@
 "use client"
 
-import { TrendingUp, Users, AlertCircle } from "lucide-react"
+import { TrendingUp, Users, AlertCircle, DollarSign } from "lucide-react"
 import { useCurrency } from "@/contexts/currency-context"
 
 interface DashboardProps {
   parties: Array<{ id: number; name: string; type: string }>
   inventory: Array<{ id: number; stock: number; unitPrice: number }>
   invoices: Array<{ totalAmount: number; status: string }>
+  grossProfit?: number
+  grossProfitPercent?: number
 }
 
-export function Dashboard({ parties, inventory, invoices }: DashboardProps) {
+export function Dashboard({ parties, inventory, invoices, grossProfit = 0, grossProfitPercent = 0 }: DashboardProps) {
   const { formatCurrency } = useCurrency()
   const totalSalesYTD = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0)
   const totalCustomers = parties.filter((p) => p.type === "Customer").length
@@ -20,10 +22,16 @@ export function Dashboard({ parties, inventory, invoices }: DashboardProps) {
 
   const kpis = [
     {
-      title: "Total Sales YTD",
+      title: "Total Sales (MTD)",
       value: formatCurrency(totalSalesYTD),
       icon: TrendingUp,
       color: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    },
+    {
+      title: "Gross Profit",
+      value: `${formatCurrency(grossProfit)} (${grossProfitPercent}%)`,
+      icon: DollarSign,
+      color: "bg-green-50 text-green-700 ring-1 ring-green-200",
     },
     {
       title: "Total Customers",
@@ -53,7 +61,7 @@ export function Dashboard({ parties, inventory, invoices }: DashboardProps) {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
         {kpis.map((kpi, index) => {
           const Icon = kpi.icon
           return (

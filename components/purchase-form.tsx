@@ -76,7 +76,7 @@ export function PurchaseForm({
 
   const addLine = () => {
     if (!selectedItem || quantity <= 0 || unitPrice <= 0) {
-      toast.error("Please select an item and enter valid quantity and unit price")
+      toast.error("Please select an item and enter valid quantity and cost price")
       return
     }
 
@@ -236,7 +236,7 @@ export function PurchaseForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="unitPrice">Unit Price</Label>
+                <Label htmlFor="unitPrice">Cost Price</Label>
                 <Input
                   id="unitPrice"
                   type="number"
@@ -261,7 +261,7 @@ export function PurchaseForm({
                     <tr className="bg-secondary border-b">
                       <th className="px-4 py-3 text-left">Item</th>
                       <th className="px-4 py-3 text-left">Qty</th>
-                      <th className="px-4 py-3 text-left">Unit Price</th>
+                      <th className="px-4 py-3 text-left">Cost Price</th>
                       <th className="px-4 py-3 text-left">Amount</th>
                       <th className="px-4 py-3 text-center">Action</th>
                     </tr>

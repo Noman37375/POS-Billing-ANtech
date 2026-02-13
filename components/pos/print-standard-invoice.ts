@@ -1,5 +1,4 @@
 import type { InvoiceForPrint } from "@/lib/types/pos"
-import QRCode from "qrcode"
 
 const CURRENCY = "PKR"
 
@@ -14,20 +13,23 @@ function formatDate(dateStr: string) {
 
 function formatTime(dateStr: string) {
   const date = new Date(dateStr)
-  return date.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })
+  return date.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: true })
 }
 
+/**
+ * Generate POS Carbon Copy (NCR) Invoice
+ * Proper format for thermal printers and carbon copy machines
+ * Width: 3-4 inches (80-100mm) - standard POS machine size
+ */
 export async function printStandardInvoice(data: InvoiceForPrint) {
   const dateStr = data.date ? formatDate(data.date) : ""
   const timeStr = data.date ? formatTime(data.date) : ""
-  const transactionId = data.transactionId || `TXN-${data.id.substring(0, 8).toUpperCase()}`
   const invoiceNumber = data.invoiceNumber || data.id.substring(0, 8).toUpperCase()
 
   // Store info with fallbacks
-  const storeName = data.store?.name || "InvoSync"
+  const storeName = data.store?.name || "STORE"
   const storeAddress = data.store?.address || ""
   const storePhone = data.store?.phone || ""
-  const storeEmail = data.store?.email || ""
   const cashier = data.cashier || "—"
 
   // Payment method(s)
@@ -35,37 +37,22 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     ? [...new Set(data.payments.map((p) => p.method))].join(", ")
     : "—"
 
-  // Items table rows
-  const itemsRows = data.items
-    .map(
-      (item) =>
-        `<tr>
-          <td>${escapeHtml(item.name)}</td>
-          <td class="text-center">${item.quantity}</td>
-          <td class="text-right">${formatMoney(item.unitPrice)}</td>
-          <td class="text-right">${formatMoney(item.lineTotal)}</td>
-        </tr>`,
-    )
-    .join("")
-
-  // Current date/time for footer
-  const now = new Date()
-  const printedOn = `${formatDate(now.toISOString())}, ${formatTime(now.toISOString())}`
-
-  // Generate QR code as data URL
-  let qrCodeDataUrl = ""
-  try {
-    qrCodeDataUrl = await QRCode.toDataURL(transactionId, {
-      width: 100,
-      margin: 1,
-      color: {
-        dark: "#000000",
-        light: "#FFFFFF",
-      },
-    })
-  } catch (error) {
-    console.error("Failed to generate QR code:", error)
-    // Fallback: will show text if QR generation fails
+  // Build items rows
+  let itemsHTML = ""
+  for (const item of data.items) {
+    const qty = item.quantity || 0
+    const unitPrice = item.unitPrice || 0
+    const lineTotal = item.lineTotal || 0
+    itemsHTML += `
+      <div class="item-row">
+        <div class="item-name">${escapeHtml(item.name)}</div>
+        <div class="item-numbers">
+          <span class="qty">${qty}</span>
+          <span class="price">${formatMoney(unitPrice)}</span>
+          <span class="total">${formatMoney(lineTotal)}</span>
+        </div>
+      </div>
+    `
   }
 
   const html = `
@@ -75,263 +62,344 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
   <meta charset="utf-8">
   <title>Invoice ${escapeHtml(invoiceNumber)}</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     @page {
-      size: 5.5in 8.5in;
-      margin: 0.25in;
+      size: 80mm auto;
+      margin: 0;
+      padding: 0;
     }
-    body {
-      font-family: 'Courier New', monospace, system-ui, sans-serif;
-      font-size: 11px;
-      line-height: 1.4;
-      color: #000;
-      max-width: 5in;
-      margin: 0 auto;
-      padding: 8px;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-    .logo {
-      width: 50px;
-      height: 50px;
-      margin: 0 auto 6px;
-      background: #3b82f6;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 16px;
-      border-radius: 4px;
-    }
-    .store-name {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-    .store-info {
-      font-size: 10px;
-      color: #333;
-      margin-bottom: 2px;
-    }
-    .separator {
-      border-top: 1px dashed #000;
-      margin: 8px 0;
-      width: 100%;
-    }
-    .transaction-details {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      margin-bottom: 4px;
-    }
-    .transaction-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-    }
-    .transaction-label {
-      font-weight: bold;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 4px 0;
-      font-size: 10px;
-    }
-    th, td {
-      padding: 4px 6px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      font-weight: bold;
-      background: #f5f5f5;
-      border-bottom: 2px solid #000;
-    }
-    .text-center {
-      text-align: center;
-    }
-    .text-right {
-      text-align: right;
-    }
-    .totals {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      margin: 6px 0;
-      font-size: 10px;
-    }
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-    }
-    .total-final {
-      font-size: 12px;
-      font-weight: bold;
-      margin-top: 4px;
-      padding-top: 4px;
-      border-top: 2px solid #000;
-    }
-    .payment-method {
-      display: flex;
-      justify-content: space-between;
-      margin: 6px 0;
-      font-size: 10px;
-    }
-    .payment-label {
-      font-weight: bold;
-    }
-    .qr-box {
-      width: 120px;
-      height: 120px;
-      margin: 8px auto;
-      border: 2px solid #000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #f9f9f9;
-      font-size: 9px;
-      text-align: center;
-      padding: 8px;
-    }
-    .qr-label {
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-    .qr-code {
-      font-size: 8px;
-      word-break: break-all;
-      color: #666;
-    }
-    .qr-image {
-      width: 100px;
-      height: 100px;
-      object-fit: contain;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 9px;
-    }
-    .footer-title {
-      font-weight: bold;
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-    .footer-text {
-      margin: 2px 0;
-      color: #555;
-    }
+
     @media print {
       body {
+        width: 80mm;
+        margin: 0;
+        padding: 0;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-      .separator {
-        border-top: 1px dashed #000;
+      .page-break {
+        page-break-after: always;
       }
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.3;
+      width: 80mm;
+      margin: 0 auto;
+      padding: 0;
+      color: #000;
+      background: #fff;
+    }
+
+    .receipt {
+      width: 80mm;
+      padding: 3mm;
+      text-align: center;
+    }
+
+    .header {
+      border-bottom: 1px dashed #000;
+      padding-bottom: 3mm;
+      margin-bottom: 3mm;
+    }
+
+    .store-name {
+      font-weight: bold;
+      font-size: 12px;
+      margin-bottom: 2mm;
+    }
+
+    .store-details {
+      font-size: 9px;
+      line-height: 1.2;
+      margin-bottom: 2mm;
+    }
+
+    .invoice-info {
+      font-size: 10px;
+      margin-bottom: 3mm;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 3mm;
+      text-align: left;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 1.5mm 0;
+      font-size: 10px;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    .items-section {
+      margin: 3mm 0;
+      border-top: 1px dashed #000;
+      border-bottom: 1px dashed #000;
+      padding: 2mm 0;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      font-size: 9px;
+      padding: 1mm 0;
+      border-bottom: 1px solid #000;
+      margin-bottom: 2mm;
+    }
+
+    .item-header-col1 {
+      flex: 1;
+      text-align: left;
+    }
+
+    .item-header-col2 {
+      width: 10mm;
+      text-align: right;
+    }
+
+    .item-header-col3 {
+      width: 12mm;
+      text-align: right;
+    }
+
+    .item-header-col4 {
+      width: 12mm;
+      text-align: right;
+    }
+
+    .item-row {
+      margin-bottom: 2mm;
+      font-size: 9px;
+    }
+
+    .item-name {
+      text-align: left;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      margin-bottom: 1mm;
+      font-size: 10px;
+    }
+
+    .item-numbers {
+      display: flex;
+      justify-content: space-between;
+      text-align: right;
+    }
+
+    .qty {
+      width: 10mm;
+    }
+
+    .price {
+      width: 12mm;
+    }
+
+    .total {
+      width: 12mm;
+      font-weight: bold;
+    }
+
+    .totals-section {
+      margin: 3mm 0;
+      padding: 2mm 0;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 2mm 0;
+      font-size: 10px;
+    }
+
+    .subtotal {
+      border-top: 1px solid #000;
+      padding-top: 2mm;
+    }
+
+    .final-total {
+      font-size: 12px;
+      font-weight: bold;
+      border-top: 2px solid #000;
+      border-bottom: 2px solid #000;
+      padding: 2mm 0;
+      margin: 2mm 0;
+    }
+
+    .payment-section {
+      margin: 2mm 0;
+      padding: 2mm 0;
+      font-size: 10px;
+      border-bottom: 1px dashed #000;
+    }
+
+    .footer {
+      text-align: center;
+      margin: 3mm 0;
+      font-size: 10px;
+      padding-bottom: 3mm;
+    }
+
+    .thank-you {
+      font-weight: bold;
+      margin: 2mm 0;
+    }
+
+    .copy-mark {
+      font-size: 9px;
+      color: #666;
+      margin-top: 5mm;
+      padding-top: 3mm;
+      border-top: 1px dashed #999;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <!-- Header: Logo + Store Info -->
-  <div class="header">
-    <div class="logo">POS</div>
-    <div class="store-name">${escapeHtml(storeName)}</div>
-    ${storeAddress ? `<div class="store-info">${escapeHtml(storeAddress)}</div>` : ""}
-    ${storePhone ? `<div class="store-info">${escapeHtml(storePhone)}</div>` : ""}
-    ${storeEmail ? `<div class="store-info">${escapeHtml(storeEmail)}</div>` : ""}
+  <!-- MERCHANT COPY -->
+  <div class="receipt">
+    <div class="header">
+      <div class="store-name">${escapeHtml(storeName)}</div>
+      <div class="store-details">
+        ${storeAddress ? escapeHtml(storeAddress) + '<br>' : ''}
+        ${storePhone ? escapeHtml(storePhone) : ''}
+      </div>
+    </div>
+
+    <div class="invoice-info">
+      <div class="info-row">
+        <span class="label">INV #:</span>
+        <span>${escapeHtml(invoiceNumber)}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">DATE:</span>
+        <span>${escapeHtml(dateStr)}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">TIME:</span>
+        <span>${escapeHtml(timeStr)}</span>
+      </div>
+      ${data.party?.name ? `<div class="info-row">
+        <span class="label">CUSTOMER:</span>
+        <span>${escapeHtml(data.party.name)}</span>
+      </div>` : ''}
+      <div class="info-row">
+        <span class="label">CASHIER:</span>
+        <span>${escapeHtml(cashier)}</span>
+      </div>
+    </div>
+
+    <div class="items-section">
+      <div class="item-header">
+        <div class="item-header-col1">ITEM</div>
+        <div class="item-header-col2">QTY</div>
+        <div class="item-header-col3">PRICE</div>
+        <div class="item-header-col4">TOTAL</div>
+      </div>
+      ${itemsHTML}
+    </div>
+
+    <div class="totals-section">
+      <div class="total-row subtotal">
+        <span class="label">SUBTOTAL:</span>
+        <span>${formatMoney(data.subtotal)}</span>
+      </div>
+      ${data.tax > 0 ? `<div class="total-row">
+        <span class="label">TAX:</span>
+        <span>${formatMoney(data.tax)}</span>
+      </div>` : ''}
+      <div class="total-row final-total">
+        <span>TOTAL</span>
+        <span>${formatMoney(data.total)}</span>
+      </div>
+    </div>
+
+    <div class="payment-section">
+      <div class="label">Payment: ${escapeHtml(paymentMethods)}</div>
+    </div>
+
+    <div class="footer">
+      <div class="thank-you">THANK YOU!</div>
+      <div>*** MERCHANT COPY ***</div>
+    </div>
   </div>
 
-  <div class="separator"></div>
+  <!-- PAGE BREAK FOR CUSTOMER COPY -->
+  <div class="page-break"></div>
 
-  <!-- Transaction Details -->
-  <div class="transaction-details">
-    <div class="transaction-row">
-      <span class="transaction-label">INVOICE #:</span>
-      <span>${escapeHtml(invoiceNumber)}</span>
+  <!-- CUSTOMER COPY -->
+  <div class="receipt">
+    <div class="header">
+      <div class="store-name">${escapeHtml(storeName)}</div>
+      <div class="store-details">
+        ${storeAddress ? escapeHtml(storeAddress) + '<br>' : ''}
+        ${storePhone ? escapeHtml(storePhone) : ''}
+      </div>
     </div>
-    <div class="transaction-row">
-      <span class="transaction-label">TRANSACTION ID:</span>
-      <span>${escapeHtml(transactionId)}</span>
+
+    <div class="invoice-info">
+      <div class="info-row">
+        <span class="label">INV #:</span>
+        <span>${escapeHtml(invoiceNumber)}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">DATE:</span>
+        <span>${escapeHtml(dateStr)}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">TIME:</span>
+        <span>${escapeHtml(timeStr)}</span>
+      </div>
+      ${data.party?.name ? `<div class="info-row">
+        <span class="label">CUSTOMER:</span>
+        <span>${escapeHtml(data.party.name)}</span>
+      </div>` : ''}
     </div>
-    <div class="transaction-row">
-      <span class="transaction-label">DATE:</span>
-      <span>${escapeHtml(dateStr)}</span>
+
+    <div class="items-section">
+      <div class="item-header">
+        <div class="item-header-col1">ITEM</div>
+        <div class="item-header-col2">QTY</div>
+        <div class="item-header-col3">PRICE</div>
+        <div class="item-header-col4">TOTAL</div>
+      </div>
+      ${itemsHTML}
     </div>
-    <div class="transaction-row">
-      <span class="transaction-label">TIME:</span>
-      <span>${escapeHtml(timeStr)}</span>
+
+    <div class="totals-section">
+      <div class="total-row subtotal">
+        <span class="label">SUBTOTAL:</span>
+        <span>${formatMoney(data.subtotal)}</span>
+      </div>
+      ${data.tax > 0 ? `<div class="total-row">
+        <span class="label">TAX:</span>
+        <span>${formatMoney(data.tax)}</span>
+      </div>` : ''}
+      <div class="total-row final-total">
+        <span>TOTAL</span>
+        <span>${formatMoney(data.total)}</span>
+      </div>
     </div>
-    <div class="transaction-row">
-      <span class="transaction-label">CASHIER:</span>
-      <span>${escapeHtml(cashier)}</span>
+
+    <div class="payment-section">
+      <div class="label">Payment: ${escapeHtml(paymentMethods)}</div>
     </div>
-  </div>
 
-  <div class="separator"></div>
-
-  <!-- Items Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>ITEM</th>
-        <th class="text-center">QTY</th>
-        <th class="text-right">PRICE</th>
-        <th class="text-right">TOTAL</th>
-      </tr>
-    </thead>
-    <tbody>${itemsRows}</tbody>
-  </table>
-
-  <div class="separator"></div>
-
-  <!-- Totals -->
-  <div class="totals">
-    <div class="total-row">
-      <span>SUBTOTAL:</span>
-      <span>${formatMoney(data.subtotal)}</span>
+    <div class="footer">
+      <div class="thank-you">THANK YOU!</div>
+      <div>*** CUSTOMER COPY ***</div>
+      <div style="font-size: 8px; margin-top: 2mm;">Please retain for your records</div>
     </div>
-    <div class="total-row">
-      <span>TAX:</span>
-      <span>${formatMoney(data.tax)}</span>
-    </div>
-    <div class="total-row total-final">
-      <span>TOTAL:</span>
-      <span>${formatMoney(data.total)}</span>
-    </div>
-  </div>
-
-  <div class="separator"></div>
-
-  <!-- Payment Method -->
-  <div class="payment-method">
-    <span class="payment-label">PAYMENT METHOD:</span>
-    <span>${escapeHtml(paymentMethods)}</span>
-  </div>
-
-  <!-- QR Code -->
-  <div class="qr-box">
-    <div class="qr-label">QR CODE</div>
-    ${
-      qrCodeDataUrl
-        ? `<img src="${qrCodeDataUrl}" alt="QR Code" class="qr-image" />`
-        : `<div class="qr-code">${escapeHtml(transactionId)}</div>`
-    }
-  </div>
-
-  <div class="separator"></div>
-
-  <!-- Footer -->
-  <div class="footer">
-    <div class="footer-title">THANK YOU FOR YOUR BUSINESS!</div>
-    <div class="footer-text">Please keep this receipt for your records</div>
-    ${storePhone ? `<div class="footer-text">For support, contact: ${escapeHtml(storePhone)}</div>` : ""}
-    <div class="footer-text" style="margin-top: 6px;">Printed on: ${escapeHtml(printedOn)}</div>
   </div>
 </body>
 </html>`

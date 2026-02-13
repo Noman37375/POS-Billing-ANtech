@@ -11,7 +11,7 @@ export default async function PurchaseCreatePage() {
     return (
       <PurchaseForm
         parties={mockParties.filter((p) => p.type === "Vendor").map((p) => ({ id: p.id, name: p.name }))}
-        inventory={mockInventory.map((i) => ({ id: i.id, name: i.name, stock: i.stock, unitPrice: i.unit_price }))}
+        inventory={mockInventory.map((i) => ({ id: i.id, name: i.name, stock: i.stock, unitPrice: (i as { cost_price?: number }).cost_price ?? i.unit_price }))}
       />
     )
   }
@@ -21,14 +21,14 @@ export default async function PurchaseCreatePage() {
   const supabase = createClient()
   const [{ data: parties = [] }, { data: inventory = [] }] = await Promise.all([
     supabase.from("parties").select("id, name, type").eq("type", "Vendor").eq("user_id", currentUser.id),
-    supabase.from("inventory_items").select("id, name, stock, unit_price").eq("user_id", currentUser.id),
+    supabase.from("inventory_items").select("id, name, stock, cost_price").eq("user_id", currentUser.id),
   ])
 
   const normalizedInventory = (inventory || []).map((item) => ({
     id: item.id,
     name: item.name || "",
     stock: item.stock || 0,
-    unitPrice: item.unit_price ?? 0,
+    unitPrice: (item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0,
   }))
 
   return (

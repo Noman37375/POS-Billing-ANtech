@@ -23,7 +23,7 @@ export default async function PurchaseEditPage({ params }: { params: Promise<{ i
           {
             itemId: mockInventory[0]?.id || "",
             quantity: 1,
-            unitPrice: mockInventory[0]?.unit_price || 0,
+            unitPrice: (mockInventory[0] as { cost_price?: number })?.cost_price ?? mockInventory[0]?.unit_price ?? 0,
           },
         ],
       }
@@ -54,19 +54,19 @@ export default async function PurchaseEditPage({ params }: { params: Promise<{ i
 
   const inventory = await (async () => {
     if (!isSupabaseReady())
-      return mockInventory.map((i) => ({ id: i.id, name: i.name, stock: i.stock, unitPrice: i.unit_price }))
+      return mockInventory.map((i) => ({ id: i.id, name: i.name, stock: i.stock, unitPrice: (i as { cost_price?: number }).cost_price ?? i.unit_price }))
     const { getSessionOrRedirect } = await import("@/lib/auth")
     const currentUser = await getSessionOrRedirect()
     const supabase = createClient()
     const { data = [] } = await supabase
       .from("inventory_items")
-      .select("id, name, stock, unit_price")
+      .select("id, name, stock, cost_price")
       .eq("user_id", currentUser.id)
     return (data || []).map((item) => ({
       id: item.id,
       name: item.name || "",
       stock: item.stock || 0,
-      unitPrice: item.unit_price ?? 0,
+      unitPrice: (item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0,
     }))
   })()
 

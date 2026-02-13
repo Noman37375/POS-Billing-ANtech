@@ -122,7 +122,7 @@ export function SalesReturnDialog({ salesInvoices, customers }: SalesReturnDialo
 
   const addItem = () => {
     if (!selectedItem || quantity <= 0 || unitPrice <= 0) {
-      toast.error("Please select an item and enter valid quantity and unit price")
+      toast.error("Please select an item and enter valid quantity and selling price")
       return
     }
 
@@ -298,7 +298,7 @@ export function SalesReturnDialog({ salesInvoices, customers }: SalesReturnDialo
                           />
                         </div>
                         <div className="flex flex-col">
-                          <Label className="text-xs">Price</Label>
+                          <Label className="text-xs">Selling Price</Label>
                           <Input
                             type="number"
                             min="0"

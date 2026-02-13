@@ -5,9 +5,9 @@ export const mockParties = [
 ]
 
 export const mockInventory = [
-  { id: "i1", name: "Software License", stock: 50, unit_price: 5000 },
-  { id: "i2", name: "Consulting Hours", stock: 100, unit_price: 2000 },
-  { id: "i3", name: "Support Package", stock: 30, unit_price: 10000 },
+  { id: "i1", name: "Software License", stock: 50, unit_price: 5000, cost_price: 4000, selling_price: 5000 },
+  { id: "i2", name: "Consulting Hours", stock: 100, unit_price: 2000, cost_price: 1500, selling_price: 2000 },
+  { id: "i3", name: "Support Package", stock: 30, unit_price: 10000, cost_price: 8000, selling_price: 10000 },
 ]
 
 export const mockInvoices = [

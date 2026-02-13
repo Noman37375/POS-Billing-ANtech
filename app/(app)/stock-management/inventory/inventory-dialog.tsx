@@ -18,7 +18,8 @@ interface InventoryItem {
   id: string
   name: string
   stock: number
-  unit_price: number
+  cost_price: number
+  selling_price: number
   category_id?: string | null
   unit_id?: string | null
   barcode?: string | null
@@ -188,15 +189,28 @@ export default function InventoryDialog({ item, trigger }: InventoryDialogProps)
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unit_price">Unit Price (PKR)</Label>
+              <Label htmlFor="cost_price">Cost Price (PKR)</Label>
               <Input
-                id="unit_price"
-                name="unit_price"
+                id="cost_price"
+                name="cost_price"
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="1500"
+                defaultValue={item?.cost_price ?? (item as { unit_price?: number })?.unit_price ?? ""}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="selling_price">Selling Price (PKR)</Label>
+              <Input
+                id="selling_price"
+                name="selling_price"
                 type="number"
                 min="0.01"
                 step="0.01"
                 placeholder="2000"
-                defaultValue={item?.unit_price || ""}
+                defaultValue={item?.selling_price ?? (item as { unit_price?: number })?.unit_price ?? ""}
                 required
               />
             </div>

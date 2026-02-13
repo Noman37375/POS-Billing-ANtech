@@ -102,7 +102,7 @@ export default async function InventoryReportsPage() {
                 <tr className="text-left text-muted-foreground border-b">
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">Item</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">Stock</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell">Unit Price</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell">Cost Price</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell">Value</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">Status</th>
                 </tr>

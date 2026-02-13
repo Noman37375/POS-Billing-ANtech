@@ -59,7 +59,7 @@ export function InvoicesList({ invoices, onUpdateStatus }: InvoicesListProps) {
                   <tr className="border-b border-border">
                     <th className="px-4 py-2 text-left text-foreground">Item</th>
                     <th className="px-4 py-2 text-left text-foreground">Qty</th>
-                    <th className="px-4 py-2 text-left text-foreground">Unit Price</th>
+                    <th className="px-4 py-2 text-left text-foreground">Selling Price</th>
                     <th className="px-4 py-2 text-left text-foreground">Amount</th>
                   </tr>
                 </thead>

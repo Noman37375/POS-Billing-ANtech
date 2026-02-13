@@ -77,13 +77,13 @@ export function InventoryModule({ inventory, onAddItem }: InventoryModuleProps) 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Unit Price (PKR)</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Cost Price (PKR)</label>
                 <input
                   type="number"
                   value={formData.unitPrice}
                   onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
                   className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Enter unit price"
+                  placeholder="Enter cost price"
                 />
               </div>
               <div className="flex gap-2 pt-4">
@@ -114,7 +114,7 @@ export function InventoryModule({ inventory, onAddItem }: InventoryModuleProps) 
               <tr className="bg-secondary border-b border-border">
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Item Name</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Current Stock</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Unit Price</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Cost Price</th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Stock Value</th>
               </tr>
             </thead>

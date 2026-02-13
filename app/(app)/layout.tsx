@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Header } from "@/components/header"
 import { Sidebar } from "@/components/sidebar"
 import { getSessionOrRedirect } from "@/lib/auth"
+import { BarcodeScanToPOS } from "@/components/barcode-scan-to-pos"
 import { Toaster } from "@/components/ui/sonner"
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <div className="max-w-6xl mx-auto w-full space-y-4 sm:space-y-6">{children}</div>
         </main>
       </div>
+      <BarcodeScanToPOS />
       <Toaster />
     </div>
   )
