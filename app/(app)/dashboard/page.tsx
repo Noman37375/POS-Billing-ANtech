@@ -8,11 +8,16 @@ export default async function DashboardPage() {
   // Check if user has dashboard privilege
   await requirePrivilege("dashboard")
   if (!isSupabaseReady()) {
+    const mockTotalSales = mockInvoices.reduce((s, i) => s + (i.total ?? 0), 0)
+    const mockGrossProfit = mockTotalSales * 0.2
+    const mockGrossPercent = mockTotalSales > 0 ? Math.round((mockGrossProfit / mockTotalSales) * 100) : 0
     return (
       <Dashboard
         parties={mockParties}
-        inventory={mockInventory.map((i) => ({ id: i.id, stock: i.stock, unitPrice: i.unit_price }))}
+        inventory={mockInventory.map((i) => ({ id: i.id, stock: i.stock, unitPrice: (i as { cost_price?: number }).cost_price ?? i.unit_price }))}
         invoices={mockInvoices.map((i) => ({ totalAmount: i.total, status: i.status }))}
+        grossProfit={mockGrossProfit}
+        grossProfitPercent={mockGrossPercent}
       />
     )
   }
@@ -27,17 +32,42 @@ export default async function DashboardPage() {
     .eq("user_id", currentUser.id)
     .order("created_at", { ascending: false })
 
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+
+  // Fetch inventory with pagination (dashboard shows top 10 by stock)
   const { data: inventory = [] } = await supabase
     .from("inventory_items")
-    .select("id, stock, unit_price")
+    .select("id, stock, cost_price")
     .eq("user_id", currentUser.id)
-    .order("created_at", { ascending: false })
+    .order("stock", { ascending: false })
+    .limit(10) // Limit to top 10 items by stock
 
+  // Fetch invoices for current month
   const { data: invoices = [] } = await supabase
     .from("sales_invoices")
-    .select("total, status, created_at")
+    .select("id, total, status, created_at")
     .eq("user_id", currentUser.id)
-    .gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+    .gte("created_at", monthStart)
+    .limit(100) // Reasonable limit for monthly data
+
+  // Gross profit from sales_invoice_lines (same period as invoices)
+  let grossProfit = 0
+  let totalSalesForPeriod = 0
+  const invoiceIds = (invoices || []).map((inv) => inv.id).filter(Boolean)
+  if (invoiceIds.length > 0) {
+    const { data: lines = [] } = await supabase
+      .from("sales_invoice_lines")
+      .select("quantity, unit_price, cost_price")
+      .in("invoice_id", invoiceIds)
+    for (const line of lines || []) {
+      const qty = Number(line.quantity || 0)
+      const selling = Number((line as { unit_price?: number }).unit_price ?? 0)
+      const cost = Number((line as { cost_price?: number }).cost_price ?? 0)
+      totalSalesForPeriod += selling * qty
+      grossProfit += (selling - cost) * qty
+    }
+  }
+  const grossProfitPercent = totalSalesForPeriod > 0 ? Math.round((grossProfit / totalSalesForPeriod) * 100) : 0
 
   // Ensure we have arrays (handle null cases)
   const safeInventory = Array.isArray(inventory) ? inventory : []
@@ -47,7 +77,7 @@ export default async function DashboardPage() {
   const normalizedInventory = safeInventory.map((item) => ({
     id: item.id,
     stock: item.stock,
-    unitPrice: item.unit_price ?? item.unitPrice ?? 0,
+    unitPrice: (item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0,
   }))
 
   const normalizedInvoices = safeInvoices.map((inv) => ({
@@ -55,6 +85,14 @@ export default async function DashboardPage() {
     status: inv.status ?? "Draft",
   }))
 
-  return <Dashboard parties={safeParties} inventory={normalizedInventory} invoices={normalizedInvoices} />
+  return (
+    <Dashboard
+      parties={safeParties}
+      inventory={normalizedInventory}
+      invoices={normalizedInvoices}
+      grossProfit={grossProfit}
+      grossProfitPercent={grossProfitPercent}
+    />
+  )
 }
 
