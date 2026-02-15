@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { getPartyBalances } from "../actions"
 import { CurrencyDisplay } from "@/components/currency-display"
 import { isSupabaseReady } from "@/lib/supabase/config"
@@ -13,12 +14,14 @@ import Link from "next/link"
 export default async function PartyReportsPage() {
   await requirePrivilege("parties")
 
+  const currentUser = await getSessionOrRedirect()
   const parties = await (async () => {
     if (!isSupabaseReady()) return mockParties
     const supabase = createClient()
     const { data = [] } = await supabase
       .from("parties")
       .select("id, name, type, created_at")
+      .eq("user_id", currentUser.id)
       .order("name", { ascending: true })
     return data
   })()

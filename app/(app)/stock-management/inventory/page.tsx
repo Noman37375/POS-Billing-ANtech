@@ -63,7 +63,7 @@ export default async function InventoryPage() {
                   const sellingPrice = Number((item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0)
                   const grossProfit = sellingPrice - costPrice
                   const grossProfitPercent = sellingPrice > 0 ? Math.round((grossProfit / sellingPrice) * 100) : 0
-                  const stockValue = stock * costPrice
+                  const stockValue = stock * sellingPrice
 
                   // Determine stock status
                   let stockStatus: { label: string; variant: "default" | "destructive" | "secondary" | "outline" } = {

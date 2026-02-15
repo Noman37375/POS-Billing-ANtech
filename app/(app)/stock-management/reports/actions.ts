@@ -8,7 +8,7 @@ export async function getStockLevels() {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("inventory_items")
-    .select("id, name, stock, cost_price, minimum_stock")
+    .select("id, name, stock, cost_price, selling_price, minimum_stock")
     .eq("user_id", currentUser.id)
     .order("stock", { ascending: true })
 
@@ -20,6 +20,7 @@ export async function getStockLevels() {
     const stock = Number(item.stock || 0)
     const minStock = item.minimum_stock !== null ? Number(item.minimum_stock) : null
     const costPrice = Number((item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0)
+    const sellingPrice = Number((item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0)
 
     // Determine stock status
     let stockStatus: "out_of_stock" | "low_stock" | "in_stock" = "in_stock"
@@ -36,7 +37,7 @@ export async function getStockLevels() {
       name: item.name,
       stock,
       unitPrice: costPrice,
-      value: stock * costPrice,
+      value: stock * sellingPrice,
       stockStatus,
       isLowStock: stockStatus === "low_stock",
       isOutOfStock: stockStatus === "out_of_stock",
@@ -99,7 +100,7 @@ export async function getInventoryValueAnalysis() {
   const supabase = createClient()
   const { data, error } = await supabase
     .from("inventory_items")
-    .select("stock, cost_price, category_id, minimum_stock")
+    .select("stock, cost_price, selling_price, category_id, minimum_stock")
     .eq("user_id", currentUser.id)
 
   if (error) {
@@ -131,8 +132,9 @@ export async function getInventoryValueAnalysis() {
   for (const item of items) {
     const stock = Number(item.stock || 0)
     const costPrice = Number((item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0)
+    const sellingPrice = Number((item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0)
     const minStock = item.minimum_stock !== null ? Number(item.minimum_stock) : null
-    const value = stock * costPrice
+    const value = stock * sellingPrice
     totalValue += value
 
     // Count out of stock items
