@@ -18,10 +18,18 @@ BEGIN
   END IF;
 END $$;
 
--- Backfill selling_price from unit_price (before rename)
-UPDATE inventory_items
-SET selling_price = unit_price
-WHERE selling_price = 0 AND unit_price IS NOT NULL;
+-- Backfill selling_price from unit_price (only if unit_price column still exists)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'inventory_items' AND column_name = 'unit_price'
+  ) THEN
+    UPDATE inventory_items
+    SET selling_price = unit_price
+    WHERE selling_price = 0 AND unit_price IS NOT NULL;
+  END IF;
+END $$;
 
 -- Rename unit_price to cost_price if cost_price doesn't exist yet
 DO $$
