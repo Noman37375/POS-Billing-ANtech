@@ -57,6 +57,33 @@ export function POSNewSaleForm({ parties, inventory, initialItemId }: POSNewSale
     }
   }, [initialItemId, inventory, router])
 
+  // Auto-print when sale is completed
+  useEffect(() => {
+    if (lastInvoiceId) {
+      const autoPrint = async () => {
+        setPrintPending(true)
+        try {
+          const format = await getUserPrintFormat()
+          if (format === "a4") {
+            const invoiceResult = await getInvoiceForPDF(lastInvoiceId)
+            if (invoiceResult.error || !invoiceResult.data) return
+            const { generateInvoicePDF } = await import("@/lib/pdf/generate-invoice-pdf")
+            await generateInvoicePDF({ ...invoiceResult.data, currency: undefined })
+          } else {
+            const invoiceResult = await getInvoiceForPrint(lastInvoiceId)
+            if (invoiceResult.error || !invoiceResult.data) return
+            const { printStandardInvoice } = await import("@/components/pos/print-standard-invoice")
+            await printStandardInvoice(invoiceResult.data)
+          }
+        } finally {
+          setPrintPending(false)
+        }
+      }
+      const timer = setTimeout(autoPrint, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [lastInvoiceId])
+
   const computed = useMemo(() => {
     const detailed = items.map((line) => {
       const inv = inventory.find((i) => i.id === line.itemId)

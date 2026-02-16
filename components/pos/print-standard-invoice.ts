@@ -46,11 +46,9 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     itemsHTML += `
       <div class="item-row">
         <div class="item-name">${escapeHtml(item.name)}</div>
-        <div class="item-numbers">
-          <span class="qty">${qty}</span>
-          <span class="price">${formatMoney(unitPrice)}</span>
-          <span class="total">${formatMoney(lineTotal)}</span>
-        </div>
+        <div class="qty">${qty}</div>
+        <div class="price">${formatMoney(unitPrice)}</div>
+        <div class="total">${formatMoney(lineTotal)}</div>
       </div>
     `
   }
@@ -143,77 +141,79 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
 
     .items-section {
       margin: 3mm 0;
-      border-top: 1px dashed #000;
-      border-bottom: 1px dashed #000;
-      padding: 2mm 0;
+      border: 1px solid #000;
     }
 
     .item-header {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr 40px 50px 50px;
+      gap: 0;
       font-weight: bold;
       font-size: 11px;
-      padding: 2mm 0;
+      padding: 2mm 3mm;
       border-bottom: 1px solid #000;
-      border-top: 1px solid #000;
-      margin-bottom: 3mm;
+      background: #fff;
     }
 
     .item-header-col1 {
-      flex: 1;
       text-align: left;
     }
 
     .item-header-col2 {
-      width: 10mm;
-      text-align: right;
+      text-align: center;
     }
 
     .item-header-col3 {
-      width: 12mm;
       text-align: right;
     }
 
     .item-header-col4 {
-      width: 12mm;
       text-align: right;
     }
 
     .item-row {
-      margin-bottom: 3mm;
+      display: grid;
+      grid-template-columns: 1fr 40px 50px 50px;
+      gap: 0;
+      border-bottom: 1px solid #ccc;
+      padding: 2mm 3mm;
       font-size: 10px;
+      align-items: start;
+    }
+
+    .item-row:last-child {
+      border-bottom: 1px solid #000;
     }
 
     .item-name {
       text-align: left;
       word-wrap: break-word;
       overflow-wrap: break-word;
-      margin-bottom: 1.5mm;
       font-size: 11px;
       font-weight: 500;
+      grid-column: 1;
     }
 
     .item-numbers {
-      display: flex;
-      justify-content: space-between;
+      display: contents;
+    }
+
+    .qty {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .price {
       text-align: right;
       font-size: 10px;
       font-weight: 500;
     }
 
-    .qty {
-      width: 10mm;
-      text-align: center;
-    }
-
-    .price {
-      width: 12mm;
-    }
-
     .total {
-      width: 12mm;
-      font-weight: bold;
       text-align: right;
+      font-size: 10px;
+      font-weight: bold;
     }
 
     .totals-section {
