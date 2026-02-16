@@ -275,16 +275,16 @@ export async function getPartyLedger(partyId: string) {
     payments?.forEach((pay) => {
       const relatedInvoice = invoices?.find((inv) => inv.id === pay.invoice_id)
       const isCancelled = relatedInvoice?.status === "Cancelled"
-      
+
       allTransactions.push({
         date: pay.created_at,
-        description: isCancelled 
-          ? `Payment (${pay.method}) - Invoice Cancelled` 
+        description: isCancelled
+          ? `Payment (${pay.method}) - Invoice Cancelled`
           : `Payment (${pay.method})`,
         debit: 0,
         credit: isCancelled ? 0 : Number(pay.amount || 0),
         type: "payment",
-        reference_id: pay.id,
+        reference_id: pay.invoice_id,
       })
     })
 
@@ -336,18 +336,19 @@ export async function getPartyLedger(partyId: string) {
     }> = []
 
     // Add purchase invoices (only non-cancelled ones count toward balance)
+    // For vendors (liability): Credit increases, Debit decreases
     purchases?.forEach((purch) => {
       if (purch.status !== "Cancelled") {
         allTransactions.push({
           date: purch.created_at,
           description: `Purchase #${purch.id.substring(0, 8).toUpperCase()}`,
-          debit: Number(purch.total || 0),
-          credit: 0,
+          debit: 0,
+          credit: Number(purch.total || 0),
           type: "purchase",
           reference_id: purch.id,
         })
       } else {
-        // Show cancelled purchases but with 0 debit
+        // Show cancelled purchases but with 0 debit/credit
         allTransactions.push({
           date: purch.created_at,
           description: `Purchase #${purch.id.substring(0, 8).toUpperCase()} (Cancelled)`,
@@ -360,19 +361,20 @@ export async function getPartyLedger(partyId: string) {
     })
 
     // Add purchase payments (only count payments for non-cancelled purchases)
+    // For vendors (liability): Debit decreases, Credit increases
     purchasePayments?.forEach((pay) => {
       const relatedPurchase = purchases?.find((purch) => purch.id === pay.purchase_invoice_id)
       const isCancelled = relatedPurchase?.status === "Cancelled"
-      
+
       allTransactions.push({
         date: pay.created_at,
-        description: isCancelled 
-          ? `Payment (${pay.method}) - Purchase Cancelled` 
+        description: isCancelled
+          ? `Payment (${pay.method}) - Purchase Cancelled`
           : `Payment (${pay.method})`,
-        debit: 0,
-        credit: isCancelled ? 0 : Number(pay.amount || 0),
+        debit: isCancelled ? 0 : Number(pay.amount || 0),
+        credit: 0,
         type: "payment",
-        reference_id: pay.id,
+        reference_id: pay.purchase_invoice_id,
       })
     })
 
@@ -380,9 +382,10 @@ export async function getPartyLedger(partyId: string) {
     allTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
     // Calculate running balance (positive = you owe vendor)
+    // For vendors (liability): Balance = Credit - Debit (proper accounting)
     let runningBalance = 0
     const ledgerRows = allTransactions.map((txn) => {
-      runningBalance += txn.debit - txn.credit
+      runningBalance += txn.credit - txn.debit
       return {
         ...txn,
         balance: runningBalance,

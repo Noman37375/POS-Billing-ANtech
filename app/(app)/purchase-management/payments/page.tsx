@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { requirePrivilege } from "@/lib/auth/privileges"
-import { getAllPurchasePayments, getPurchases, deletePurchasePayment } from "@/app/(app)/purchases/actions"
+import { getAllPurchasePayments, getPurchases, getPaidPurchases, deletePurchasePayment } from "@/app/(app)/purchases/actions"
 import { PurchasePaymentDialog } from "@/components/purchase-payment-dialog"
 import { CurrencyDisplay } from "@/components/currency-display"
 import { DeletePurchasePaymentButton } from "@/components/delete-purchase-payment-button"
@@ -11,7 +11,7 @@ import { DeletePurchasePaymentButton } from "@/components/delete-purchase-paymen
 export default async function VendorPaymentsPage() {
   await requirePrivilege("parties")
 
-  const [payments, purchases] = await Promise.all([
+  const [payments, purchases, paidPurchases] = await Promise.all([
     (async () => {
       if (!isSupabaseReady()) return []
       const result = await getAllPurchasePayments()
@@ -22,9 +22,15 @@ export default async function VendorPaymentsPage() {
       const result = await getPurchases()
       return result.data || []
     })(),
+    (async () => {
+      if (!isSupabaseReady()) return []
+      const result = await getPaidPurchases()
+      return result.data || []
+    })(),
   ])
 
   const totalPayments = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+  const totalPaid = paidPurchases.reduce((sum, p) => sum + Number(p.paid || 0), 0)
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -34,26 +40,124 @@ export default async function VendorPaymentsPage() {
           <p className="text-xs sm:text-sm text-muted-foreground">Manage payments for purchase invoices.</p>
         </div>
         <PurchasePaymentDialog
-          purchases={purchases.map((p) => ({
-            id: p.id,
-            purchaseNumber: p.purchaseNumber,
-            vendorName: p.vendorName,
-            total: Number(p.total || 0),
-            status: p.status || "Draft",
-          }))}
+          purchases={purchases.map((p) => {
+            // Calculate paid amount for this purchase
+            const purchasePayments = payments.filter(
+              (payment) => payment.purchaseInvoiceId === p.id
+            )
+            const paid = purchasePayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+            const balance = Number(p.total || 0) - paid
+
+            return {
+              id: p.id,
+              purchaseNumber: p.purchaseNumber,
+              vendorName: p.vendorName,
+              total: Number(p.total || 0),
+              status: p.status || "Draft",
+              paid,
+              balance,
+            }
+          })}
         />
       </div>
 
-      {/* Summary Card */}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Total Paid</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6">
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-600">
+              <CurrencyDisplay amount={totalPaid} />
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{paidPurchases.length} invoice(s) paid</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Total Payments</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6">
+            <div className="text-2xl sm:text-3xl font-bold">
+              <CurrencyDisplay amount={totalPayments} />
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{payments.length} payment(s) recorded</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Paid Purchases */}
       <Card>
         <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-base sm:text-lg">Total Payments</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Paid Purchases</CardTitle>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6">
-          <div className="text-2xl sm:text-3xl font-bold">
-            <CurrencyDisplay amount={totalPayments} />
+        <CardContent className="p-0 sm:p-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b">
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Purchase</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Vendor</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Total</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Paid</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Balance</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[15%]">Date</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[14%]">Status</th>
+                </tr>
+              </thead>
+              <tbody className="[&>tr:not(:last-child)]:border-b">
+                {paidPurchases.map((purchase) => (
+                  <tr key={purchase.id} className="hover:bg-muted/50">
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[15%]">
+                      <div className="flex flex-col min-w-0 overflow-hidden">
+                        <span className="truncate break-words">{purchase.purchaseNumber}</span>
+                        <span className="text-[10px] text-muted-foreground sm:hidden truncate">
+                          {purchase.vendorName}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[20%]">
+                      <span className="truncate block">{purchase.vendorName}</span>
+                    </td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[12%]">
+                      <span className="truncate block">
+                        <CurrencyDisplay amount={purchase.total} />
+                      </span>
+                    </td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-emerald-600 text-xs sm:text-sm w-[12%]">
+                      <span className="truncate block">
+                        <CurrencyDisplay amount={purchase.paid} />
+                      </span>
+                    </td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[12%]">
+                      <span className={`truncate block ${purchase.balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                        <CurrencyDisplay amount={purchase.balance} />
+                      </span>
+                    </td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[15%]">
+                      <span className="truncate block">
+                        {purchase.date ? new Date(purchase.date).toLocaleDateString() : "—"}
+                      </span>
+                    </td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[14%]">
+                      <Badge variant={purchase.balance === 0 ? "default" : "outline"} className="text-[10px] sm:text-xs whitespace-nowrap">
+                        {purchase.balance === 0 ? "Fully Paid" : "Partial"}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+                {(!paidPurchases || paidPurchases.length === 0) && (
+                  <tr>
+                    <td colSpan={7} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
+                      No paid purchases yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{payments.length} payment(s) recorded</p>
         </CardContent>
       </Card>
 

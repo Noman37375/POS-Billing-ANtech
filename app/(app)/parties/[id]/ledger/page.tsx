@@ -23,13 +23,49 @@ export default async function PartyLedgerPage({ params }: { params: Promise<{ id
 
   const currentBalance = ledgerRows.length > 0 ? ledgerRows[ledgerRows.length - 1].balance : 0
   const isVendor = party.type === "Vendor"
-  
+
   // Calculate summary stats
   const totalDebits = ledgerRows.reduce((sum, row) => sum + row.debit, 0)
   const totalCredits = ledgerRows.reduce((sum, row) => sum + row.credit, 0)
   const transactionCount = ledgerRows.length
   const invoiceCount = ledgerRows.filter((r) => r.type === "invoice" || r.type === "purchase").length
   const paymentCount = ledgerRows.filter((r) => r.type === "payment").length
+
+  // Group payments under their related invoices/purchases
+  type GroupedRow = {
+    type: "group" | "payment"
+    parentId?: string
+    row: (typeof ledgerRows)[0]
+    childPayments?: (typeof ledgerRows)[]
+  }
+
+  const groupedRows: GroupedRow[] = []
+  const paymentsByRef: Record<string, (typeof ledgerRows)[]> = {}
+
+  // First pass: collect all payments by their purchase/invoice reference
+  ledgerRows.forEach((row) => {
+    if (row.type === "payment") {
+      // Extract invoice/purchase ID from reference or description
+      const invoiceRef = row.reference_id?.replace("payment-", "") || row.reference_id || ""
+      if (!paymentsByRef[invoiceRef]) {
+        paymentsByRef[invoiceRef] = []
+      }
+      paymentsByRef[invoiceRef].push(row)
+    }
+  })
+
+  // Second pass: build grouped structure
+  ledgerRows.forEach((row) => {
+    if (row.type === "invoice" || row.type === "purchase") {
+      groupedRows.push({ type: "group", row, parentId: row.reference_id })
+      const childPayments = paymentsByRef[row.reference_id] || []
+      childPayments.forEach((payment) => {
+        groupedRows.push({ type: "payment", parentId: row.reference_id, row: payment })
+      })
+    } else if (row.type !== "payment") {
+      groupedRows.push({ type: "group", row })
+    }
+  })
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -154,58 +190,81 @@ export default async function PartyLedgerPage({ params }: { params: Promise<{ id
                 </tr>
               </thead>
               <tbody className="[&>tr:not(:last-child)]:border-b">
-                {ledgerRows.length === 0 ? (
+                {groupedRows.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
                       No transactions found.
                     </td>
                   </tr>
                 ) : (
-                  ledgerRows.map((row, index) => (
-                    <tr key={`${row.type}-${row.reference_id}-${index}`} className="hover:bg-muted/50">
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[20%]">
-                        <div className="flex flex-col">
-                          <span>{new Date(row.date).toLocaleDateString()}</span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(row.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[30%]">
-                        <div className="flex items-center gap-2">
-                          {row.type === "invoice" || row.type === "purchase" ? (
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <CreditCard className="w-4 h-4 text-muted-foreground" />
-                          )}
-                          <span>{row.description}</span>
-                        </div>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm w-[15%]">
-                        {row.debit > 0 ? <CurrencyDisplay amount={row.debit} /> : "—"}
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm w-[15%]">
-                        {row.credit > 0 ? <CurrencyDisplay amount={row.credit} /> : "—"}
-                      </td>
-                      <td
-                        className={`py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm font-medium w-[20%] ${
-                          isVendor
-                            ? row.balance > 0
-                              ? "text-red-600"
-                              : row.balance < 0
-                                ? "text-emerald-600"
-                                : "text-foreground"
-                            : row.balance > 0
-                              ? "text-amber-600"
-                              : row.balance < 0
-                                ? "text-red-600"
-                                : "text-foreground"
+                  groupedRows.map((item, index) => {
+                    const row = item.row
+                    const isPayment = item.type === "payment"
+                    return (
+                      <tr
+                        key={`${row.type}-${row.reference_id}-${index}`}
+                        className={`${
+                          isPayment ? "bg-muted/30" : "hover:bg-muted/50"
                         }`}
                       >
-                        <CurrencyDisplay amount={row.balance} />
-                      </td>
-                    </tr>
-                  ))
+                        <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[20%]">
+                          <div className="flex flex-col">
+                            <span>{new Date(row.date).toLocaleDateString()}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(row.date).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[30%]">
+                          <div className="flex items-center gap-2">
+                            {isPayment && (
+                              <div className="w-4 flex justify-center">
+                                <span className="text-muted-foreground">└</span>
+                              </div>
+                            )}
+                            {!isPayment &&
+                              (row.type === "invoice" || row.type === "purchase" ? (
+                                <FileText className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <CreditCard className="w-4 h-4 text-muted-foreground" />
+                              ))}
+                            {isPayment && (
+                              <CreditCard className="w-4 h-4 text-muted-foreground" />
+                            )}
+                            <span className={isPayment ? "text-muted-foreground" : ""}>
+                              {row.description}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm w-[15%]">
+                          {row.debit > 0 ? <CurrencyDisplay amount={row.debit} /> : "—"}
+                        </td>
+                        <td className="py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm w-[15%]">
+                          {row.credit > 0 ? <CurrencyDisplay amount={row.credit} /> : "—"}
+                        </td>
+                        <td
+                          className={`py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm font-medium w-[20%] ${
+                            isVendor
+                              ? row.balance > 0
+                                ? "text-red-600"
+                                : row.balance < 0
+                                  ? "text-emerald-600"
+                                  : "text-foreground"
+                              : row.balance > 0
+                                ? "text-amber-600"
+                                : row.balance < 0
+                                  ? "text-red-600"
+                                  : "text-foreground"
+                          }`}
+                        >
+                          <CurrencyDisplay amount={row.balance} />
+                        </td>
+                      </tr>
+                    )
+                  })
                 )}
               </tbody>
             </table>

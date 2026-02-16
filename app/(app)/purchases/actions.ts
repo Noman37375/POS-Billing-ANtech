@@ -721,3 +721,77 @@ export async function getAllPurchasePayments() {
 
   return { error: null, data: payments }
 }
+
+export async function getPaidPurchases() {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  // Get all purchases for current user
+  const { data: purchases, error: purchaseError } = await supabase
+    .from("purchase_invoices")
+    .select(
+      `
+      id,
+      total,
+      status,
+      created_at,
+      parties:party_id (
+        id,
+        name,
+        phone
+      )
+    `,
+    )
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false })
+
+  if (purchaseError) {
+    return { error: purchaseError.message, data: [] }
+  }
+
+  // Get all payments for these purchases
+  const purchaseIds = (purchases || []).map((p) => p.id).filter(Boolean)
+  let allPayments: any[] = []
+  if (purchaseIds.length > 0) {
+    const { data: paymentsData } = await supabase
+      .from("purchase_payments")
+      .select("purchase_invoice_id, amount, method, created_at")
+      .in("purchase_invoice_id", purchaseIds)
+      .eq("user_id", currentUser.id)
+    allPayments = paymentsData || []
+  }
+
+  // Calculate paid amount per purchase and filter paid ones
+  const paidPurchases = (purchases || [])
+    .map((purchase: any) => {
+      const partyData = purchase.parties
+        ? (Array.isArray(purchase.parties) ? purchase.parties[0] : purchase.parties)
+        : null
+
+      const purchasePayments = allPayments.filter((p) => p.purchase_invoice_id === purchase.id)
+      const totalPaid = purchasePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+      const totalAmount = Number(purchase.total || 0)
+      const balance = totalAmount - totalPaid
+
+      return {
+        id: purchase.id,
+        purchaseNumber: purchase.id.substring(0, 8).toUpperCase(),
+        vendorName: (partyData as { name?: string })?.name || "Unknown",
+        vendorPhone: (partyData as { phone?: string })?.phone || "",
+        total: totalAmount,
+        paid: totalPaid,
+        balance: balance,
+        status: purchase.status || "Draft",
+        date: purchase.created_at,
+        payments: purchasePayments.map((p) => ({
+          amount: Number(p.amount || 0),
+          method: p.method || "Cash",
+          date: p.created_at,
+        })),
+      }
+    })
+    .filter((p) => p.paid > 0) // Only show purchases with actual payment records
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  return { error: null, data: paidPurchases }
+}

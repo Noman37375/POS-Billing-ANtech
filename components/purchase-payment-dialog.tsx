@@ -25,6 +25,8 @@ interface PurchaseOption {
   vendorName: string
   total: number
   status: string
+  paid?: number
+  balance?: number
 }
 
 interface PurchasePaymentDialogProps {
@@ -43,9 +45,9 @@ export function PurchasePaymentDialog({ purchases, trigger }: PurchasePaymentDia
   const [loadingPayments, setLoadingPayments] = useState(false)
   const router = useRouter()
 
-  // Filter out Paid and Cancelled purchases - only show Draft and Pending
+  // Filter to show only unpaid purchases (Draft/Pending with outstanding balance)
   const availablePurchases = purchases.filter(
-    (p) => p.status === "Draft" || p.status === "Pending"
+    (p) => (p.status === "Draft" || p.status === "Pending") && (p.balance ?? p.total) > 0
   )
 
   const selectedPurchase = availablePurchases.find((p) => p.id === purchaseInvoiceId)
