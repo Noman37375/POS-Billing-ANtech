@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState, useTransition, useEffect } from "react"
+import { useMemo, useState, useTransition, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Loader2, Printer, ChevronDown } from "lucide-react"
+import { Plus, Trash2, Loader2, Printer, X } from "lucide-react"
 import { createPOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
 import { getInvoiceForPDF } from "@/app/(app)/invoices/actions"
 import { Button } from "@/components/ui/button"
@@ -10,8 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { toast } from "sonner"
 import { useCurrency } from "@/contexts/currency-context"
 import type { PaymentMethod } from "@/lib/types/pos"
@@ -34,10 +32,12 @@ export function POSNewSaleForm({ parties, inventory, initialItemId }: POSNewSale
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
   const [lastInvoiceId, setLastInvoiceId] = useState<string | null>(null)
-  const [customerOpen, setCustomerOpen] = useState(false)
-  const [itemOpen, setItemOpen] = useState(false)
+  const [showCustomerResults, setShowCustomerResults] = useState(false)
+  const [showItemResults, setShowItemResults] = useState(false)
   const [customerQuery, setCustomerQuery] = useState("")
   const [itemQuery, setItemQuery] = useState("")
+  const customerInputRef = useRef<HTMLInputElement>(null)
+  const itemInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const { formatCurrency } = useCurrency()
 
@@ -172,48 +172,58 @@ export function POSNewSaleForm({ parties, inventory, initialItemId }: POSNewSale
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Customer</Label>
-            <Popover open={customerOpen} onOpenChange={(open) => { setCustomerOpen(open); if (!open) setCustomerQuery("") }}>
-              <PopoverTrigger asChild>
-                <div className="relative flex">
-                  <Input
-                    placeholder="Type or select customer"
-                    value={customerOpen ? customerQuery : selectedPartyName || ""}
-                    onChange={(e) => {
-                      setCustomerQuery(e.target.value)
-                      setCustomerOpen(true)
-                      if (!e.target.value) setPartyId("")
-                    }}
-                    onFocus={() => setCustomerOpen(true)}
-                    className="pr-9"
-                  />
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+            <div className="relative">
+              <Input
+                ref={customerInputRef}
+                placeholder="Search customer..."
+                value={customerQuery || selectedPartyName || ""}
+                onChange={(e) => {
+                  setCustomerQuery(e.target.value)
+                  setShowCustomerResults(e.target.value.length > 0)
+                  if (!e.target.value) setPartyId("")
+                }}
+                onFocus={() => customerQuery && setShowCustomerResults(true)}
+              />
+              {partyId && (
+                <button
+                  onClick={() => {
+                    setPartyId("")
+                    setCustomerQuery("")
+                    setShowCustomerResults(false)
+                    customerInputRef.current?.focus()
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+
+              {showCustomerResults && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
+                  {parties
+                    .filter((p) => p.name.toLowerCase().includes(customerQuery.toLowerCase()))
+                    .length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">No customer found</div>
+                  ) : (
+                    parties
+                      .filter((p) => p.name.toLowerCase().includes(customerQuery.toLowerCase()))
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            setPartyId(p.id)
+                            setCustomerQuery("")
+                            setShowCustomerResults(false)
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-muted text-sm border-b last:border-b-0"
+                        >
+                          {p.name}
+                        </button>
+                      ))
+                  )}
                 </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                <Command>
-                  <CommandList className="max-h-[200px]">
-                    <CommandEmpty>No customer found.</CommandEmpty>
-                    <CommandGroup>
-                      {parties
-                        .filter((p) => !customerQuery || p.name.toLowerCase().includes(customerQuery.toLowerCase()))
-                        .map((p) => (
-                          <CommandItem
-                            key={p.id}
-                            value={p.name}
-                            onSelect={() => {
-                              setPartyId(p.id)
-                              setCustomerQuery("")
-                              setCustomerOpen(false)
-                            }}
-                          >
-                            {p.name}
-                          </CommandItem>
-                        ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Tax rate (%)</Label>
@@ -231,52 +241,53 @@ export function POSNewSaleForm({ parties, inventory, initialItemId }: POSNewSale
         <div className="space-y-2">
           <Label>Add item</Label>
           <div className="flex flex-wrap gap-2">
-            <Popover open={itemOpen} onOpenChange={(open) => { setItemOpen(open); if (!open) setItemQuery("") }}>
-              <PopoverTrigger asChild>
-                <div className="relative flex min-w-[180px]">
-                  <Input
-                    placeholder="Type or select item"
-                    value={itemOpen ? itemQuery : selectedItemName || ""}
-                    onChange={(e) => {
-                      setItemQuery(e.target.value)
-                      setItemOpen(true)
-                      if (!e.target.value) setSelectedItem("")
-                    }}
-                    onFocus={() => setItemOpen(true)}
-                    className="pr-9"
-                  />
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 opacity-50 pointer-events-none" />
+            <div className="relative flex-1 min-w-[180px]">
+              <Input
+                ref={itemInputRef}
+                placeholder="Search item..."
+                value={itemQuery || selectedItemName || ""}
+                onChange={(e) => {
+                  setItemQuery(e.target.value)
+                  setShowItemResults(e.target.value.length > 0)
+                  if (!e.target.value) setSelectedItem("")
+                }}
+                onFocus={() => itemQuery && setShowItemResults(true)}
+              />
+
+              {showItemResults && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
+                  {inventory
+                    .filter(
+                      (item) =>
+                        item.stock > 0 &&
+                        item.name.toLowerCase().includes(itemQuery.toLowerCase())
+                    )
+                    .length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">No item found</div>
+                  ) : (
+                    inventory
+                      .filter(
+                        (item) =>
+                          item.stock > 0 &&
+                          item.name.toLowerCase().includes(itemQuery.toLowerCase())
+                      )
+                      .map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setSelectedItem(item.id)
+                            setItemQuery("")
+                            setShowItemResults(false)
+                          }}
+                          className="w-full px-3 py-2 text-left hover:bg-muted text-sm border-b last:border-b-0"
+                        >
+                          {item.name} (Stock: {item.stock})
+                        </button>
+                      ))
+                  )}
                 </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                <Command>
-                  <CommandList className="max-h-[200px]">
-                    <CommandEmpty>No item found.</CommandEmpty>
-                    <CommandGroup>
-                      {inventory
-                        .filter(
-                          (item) =>
-                            item.stock > 0 &&
-                            (!itemQuery || item.name.toLowerCase().includes(itemQuery.toLowerCase()))
-                        )
-                        .map((item) => (
-                          <CommandItem
-                            key={item.id}
-                            value={item.name}
-                            onSelect={() => {
-                              setSelectedItem(item.id)
-                              setItemQuery("")
-                              setItemOpen(false)
-                            }}
-                          >
-                            {item.name} (Stock: {item.stock})
-                          </CommandItem>
-                        ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
             <Input
               type="number"
               min={1}

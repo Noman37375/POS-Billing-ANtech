@@ -152,10 +152,11 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       display: flex;
       justify-content: space-between;
       font-weight: bold;
-      font-size: 9px;
-      padding: 1mm 0;
+      font-size: 11px;
+      padding: 2mm 0;
       border-bottom: 1px solid #000;
-      margin-bottom: 2mm;
+      border-top: 1px solid #000;
+      margin-bottom: 3mm;
     }
 
     .item-header-col1 {
@@ -179,26 +180,30 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     }
 
     .item-row {
-      margin-bottom: 2mm;
-      font-size: 9px;
+      margin-bottom: 3mm;
+      font-size: 10px;
     }
 
     .item-name {
       text-align: left;
       word-wrap: break-word;
       overflow-wrap: break-word;
-      margin-bottom: 1mm;
-      font-size: 10px;
+      margin-bottom: 1.5mm;
+      font-size: 11px;
+      font-weight: 500;
     }
 
     .item-numbers {
       display: flex;
       justify-content: space-between;
       text-align: right;
+      font-size: 10px;
+      font-weight: 500;
     }
 
     .qty {
       width: 10mm;
+      text-align: center;
     }
 
     .price {
@@ -208,6 +213,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     .total {
       width: 12mm;
       font-weight: bold;
+      text-align: right;
     }
 
     .totals-section {
@@ -218,22 +224,24 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     .total-row {
       display: flex;
       justify-content: space-between;
-      margin: 2mm 0;
-      font-size: 10px;
+      margin: 2.5mm 0;
+      font-size: 11px;
+      font-weight: 500;
     }
 
     .subtotal {
       border-top: 1px solid #000;
-      padding-top: 2mm;
+      padding-top: 3mm;
     }
 
     .final-total {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: bold;
       border-top: 2px solid #000;
       border-bottom: 2px solid #000;
-      padding: 2mm 0;
-      margin: 2mm 0;
+      padding: 3mm 0;
+      margin: 3mm 0;
+      letter-spacing: 0.5px;
     }
 
     .payment-section {
