@@ -105,31 +105,19 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
     }
   }, [initialItemId, inventory, router, autoAdd, addItemById])
 
-  // Auto-print when sale is completed
+  // Handle F7 key to print invoice
   useEffect(() => {
-    if (lastInvoiceId) {
-      const autoPrint = async () => {
-        setPrintPending(true)
-        try {
-          const format = await getUserPrintFormat()
-          if (format === "a4") {
-            const invoiceResult = await getInvoiceForPDF(lastInvoiceId)
-            if (invoiceResult.error || !invoiceResult.data) return
-            const { generateInvoicePDF } = await import("@/lib/pdf/generate-invoice-pdf")
-            await generateInvoicePDF({ ...invoiceResult.data, currency: undefined })
-          } else {
-            const invoiceResult = await getInvoiceForPrint(lastInvoiceId)
-            if (invoiceResult.error || !invoiceResult.data) return
-            const { printStandardInvoice } = await import("@/components/pos/print-standard-invoice")
-            await printStandardInvoice(invoiceResult.data)
-          }
-        } finally {
-          setPrintPending(false)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F7") {
+        e.preventDefault()
+        if (lastInvoiceId) {
+          handlePrint()
         }
       }
-      const timer = setTimeout(autoPrint, 300)
-      return () => clearTimeout(timer)
     }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [lastInvoiceId])
 
   const computed = useMemo(() => {
@@ -527,7 +515,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
 
         {lastInvoiceId && (
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-            <span className="text-sm">Sale completed. Invoice: {lastInvoiceId.substring(0, 8).toUpperCase()}</span>
+            <span className="text-sm">Sale completed. Invoice: {lastInvoiceId.substring(0, 8).toUpperCase()} • Press <kbd className="px-2 py-1 bg-background border rounded text-xs font-semibold">F7</kbd> to print</span>
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={printPending}>
               {printPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
