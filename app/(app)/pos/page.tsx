@@ -6,10 +6,11 @@ import { POSNewSaleForm } from "@/components/pos-new-sale-form"
 export default async function POSNewSalePage({
   searchParams,
 }: {
-  searchParams: Promise<{ itemId?: string }>
+  searchParams: Promise<{ itemId?: string; autoAdd?: string }>
 }) {
   const params = await searchParams
   const initialItemId = params?.itemId ?? null
+  const autoAdd = params?.autoAdd === "true"
 
   if (!isSupabaseReady()) {
     return (
@@ -22,6 +23,7 @@ export default async function POSNewSalePage({
           unitPrice: (i as { selling_price?: number }).selling_price ?? i.unit_price ?? 0,
         }))}
         initialItemId={initialItemId}
+        autoAdd={autoAdd}
       />
     )
   }
@@ -49,6 +51,7 @@ export default async function POSNewSalePage({
         parties={(parties || []).map((p) => ({ id: (p as { id: string }).id, name: (p as { name?: string }).name || "" }))}
         inventory={normalizedInventory}
         initialItemId={initialItemId}
+        autoAdd={autoAdd}
       />
     </div>
   )

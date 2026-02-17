@@ -28,7 +28,7 @@ export function BarcodeScanToPOS() {
           e.preventDefault()
           lookupItemByBarcode(barcode).then((result) => {
             if (!result.error && result.item) {
-              router.push(`/pos?itemId=${encodeURIComponent(result.item.id)}`)
+              router.push(`/pos?itemId=${encodeURIComponent(result.item.id)}&autoAdd=true`)
             }
           })
         }

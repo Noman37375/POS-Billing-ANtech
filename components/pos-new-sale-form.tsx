@@ -20,9 +20,10 @@ interface POSNewSaleFormProps {
   parties: PartyOption[]
   inventory: InventoryOption[]
   initialItemId?: string | null
+  autoAdd?: boolean
 }
 
-export function POSNewSaleForm({ parties, inventory, initialItemId }: POSNewSaleFormProps) {
+export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: POSNewSaleFormProps) {
   const [partyId, setPartyId] = useState("")
   const [items, setItems] = useState<Array<{ itemId: string; quantity: number }>>([])
   const [taxRate, setTaxRate] = useState(18)
@@ -52,10 +53,29 @@ export function POSNewSaleForm({ parties, inventory, initialItemId }: POSNewSale
   // Apply initial item from barcode redirect and clear URL param
   useEffect(() => {
     if (initialItemId && inventory.some((i) => i.id === initialItemId)) {
-      setSelectedItem(initialItemId)
+      if (autoAdd) {
+        // Auto-add the item with quantity 1
+        const inv = inventory.find((i) => i.id === initialItemId)
+        if (inv && inv.stock > 0) {
+          setItems((prev) => {
+            const existingIdx = prev.findIndex((i) => i.itemId === initialItemId)
+            if (existingIdx >= 0) {
+              return prev.map((item, i) =>
+                i === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
+              )
+            } else {
+              return [...prev, { itemId: initialItemId, quantity: 1 }]
+            }
+          })
+          toast.success(`Added 1x ${inv.name}`)
+        }
+      } else {
+        // Just select the item, don't add it
+        setSelectedItem(initialItemId)
+      }
       router.replace("/pos", { scroll: false })
     }
-  }, [initialItemId, inventory, router])
+  }, [initialItemId, inventory, router, autoAdd])
 
   // Auto-print when sale is completed
   useEffect(() => {
