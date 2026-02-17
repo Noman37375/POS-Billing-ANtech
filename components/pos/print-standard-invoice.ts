@@ -94,7 +94,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       padding: 0;
       color: #000;
       background: #fff;
-      font-weight: 600;
+      font-weight: 800;
     }
 
     .receipt {
@@ -110,8 +110,8 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     }
 
     .store-name {
-      font-weight: bold;
-      font-size: 12px;
+      font-weight: 900;
+      font-size: 13px;
       margin-bottom: 1.5mm;
     }
 
@@ -119,7 +119,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       font-size: 9px;
       line-height: 1.2;
       margin-bottom: 1.5mm;
-      font-weight: 600;
+      font-weight: 800;
     }
 
     .invoice-info {
@@ -128,7 +128,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       border-bottom: 1px dashed #000;
       padding: 2mm;
       text-align: left;
-      font-weight: 600;
+      font-weight: 800;
     }
 
     .info-row {
@@ -152,7 +152,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       display: grid;
       grid-template-columns: 1fr 35px 40px 40px;
       gap: 0;
-      font-weight: bold;
+      font-weight: 900;
       font-size: 11px;
       padding: 1.5mm 2mm;
       border-bottom: 1px solid #000;
@@ -182,7 +182,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       border-bottom: 1px solid #ccc;
       padding: 1.5mm 2mm;
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 800;
       align-items: start;
     }
 
@@ -195,7 +195,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       word-wrap: break-word;
       overflow-wrap: break-word;
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 800;
       grid-column: 1;
     }
 
@@ -206,19 +206,19 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     .qty {
       text-align: center;
       font-size: 10px;
-      font-weight: 500;
+      font-weight: 800;
     }
 
     .price {
       text-align: right;
       font-size: 10px;
-      font-weight: 500;
+      font-weight: 800;
     }
 
     .total {
       text-align: right;
       font-size: 10px;
-      font-weight: bold;
+      font-weight: 900;
     }
 
     .totals-section {
@@ -233,7 +233,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       margin-left: 2mm;
       margin-right: 2mm;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 900;
     }
 
     .subtotal {
@@ -242,8 +242,8 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     }
 
     .final-total {
-      font-size: 13px;
-      font-weight: bold;
+      font-size: 14px;
+      font-weight: 900;
       border-top: 2px solid #000;
       border-bottom: 2px solid #000;
       padding: 3mm 0;
@@ -256,7 +256,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       padding: 2mm;
       font-size: 10px;
       border-bottom: 1px dashed #000;
-      font-weight: 600;
+      font-weight: 800;
     }
 
     .footer {
@@ -264,11 +264,11 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       margin: 2mm 0;
       font-size: 10px;
       padding-bottom: 2mm;
-      font-weight: 600;
+      font-weight: 800;
     }
 
     .thank-you {
-      font-weight: bold;
+      font-weight: 900;
       margin: 1.5mm 0;
     }
 
