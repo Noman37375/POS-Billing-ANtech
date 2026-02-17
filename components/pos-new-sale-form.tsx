@@ -25,8 +25,8 @@ interface POSNewSaleFormProps {
 
 export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: POSNewSaleFormProps) {
   const [partyId, setPartyId] = useState("")
-  const [items, setItems] = useState<Array<{ itemId: string; quantity: number }>>([])
-  const [taxRate, setTaxRate] = useState(18)
+  const [items, setItems] = useState<Array<{ itemId: string; quantity: number; unitPrice: number }>>([])
+  const [taxRate, setTaxRate] = useState(0)
   const [selectedItem, setSelectedItem] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash")
@@ -71,7 +71,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
             i === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
           )
         }
-        return [...prev, { itemId, quantity: 1 }]
+        return [...prev, { itemId, quantity: 1, unitPrice: inv.unitPrice }]
       })
       toast.success(`Added 1x ${inv.name}`)
     },
@@ -137,12 +137,12 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
       return {
         ...line,
         name: inv?.name ?? "",
-        unitPrice: inv?.unitPrice ?? 0,
-        amount: (inv?.unitPrice ?? 0) * line.quantity,
+        stock: inv?.stock ?? 0,
+        amount: line.unitPrice * line.quantity,
       }
     })
     const subtotal = detailed.reduce((sum, line) => sum + line.amount, 0)
-    const tax = subtotal * (taxRate / 100)
+    const tax = taxRate > 0 ? subtotal * (taxRate / 100) : 0
     const total = subtotal + tax
     return { detailed, subtotal, tax, total }
   }, [inventory, items, taxRate])
@@ -165,11 +165,31 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
         prev.map((item, i) => (i === existingIdx ? { ...item, quantity: newQty } : item)),
       )
     } else {
-      setItems((prev) => [...prev, { itemId: selectedItem, quantity }])
+      setItems((prev) => [...prev, { itemId: selectedItem, quantity, unitPrice: inv.unitPrice }])
     }
     setSelectedItem("")
     setQuantity(1)
     toast.success("Item added")
+  }
+
+  const updateLineQuantity = (index: number, newQty: number) => {
+    const line = items[index]
+    const inv = inventory.find((i) => i.id === line.itemId)
+    if (newQty < 1) return
+    if (inv && newQty > inv.stock) {
+      toast.error(`Insufficient stock. Available: ${inv.stock}`)
+      return
+    }
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, quantity: newQty } : item))
+    )
+  }
+
+  const updateLinePrice = (index: number, newPrice: number) => {
+    if (newPrice < 0) return
+    setItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, unitPrice: newPrice } : item))
+    )
   }
 
   const removeLine = (index: number) => {
@@ -383,8 +403,8 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
               <thead>
                 <tr className="bg-muted border-b">
                   <th className="px-4 py-2 text-left">Item</th>
-                  <th className="px-4 py-2 text-left">Qty</th>
-                  <th className="px-4 py-2 text-left">Selling Price</th>
+                  <th className="px-4 py-2 text-left w-24">Qty</th>
+                  <th className="px-4 py-2 text-left w-32">Selling Price</th>
                   <th className="px-4 py-2 text-left">Amount</th>
                   <th className="px-4 py-2 w-10" />
                 </tr>
@@ -393,8 +413,26 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
                 {computed.detailed.map((line, idx) => (
                   <tr key={`${line.itemId}-${idx}`} className="border-b">
                     <td className="px-4 py-2">{line.name}</td>
-                    <td className="px-4 py-2">{line.quantity}</td>
-                    <td className="px-4 py-2">{formatCurrency(line.unitPrice)}</td>
+                    <td className="px-2 py-1">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={line.stock}
+                        value={line.quantity}
+                        onChange={(e) => updateLineQuantity(idx, Math.max(1, Number(e.target.value) || 1))}
+                        className="w-20 h-8 text-sm"
+                      />
+                    </td>
+                    <td className="px-2 py-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={line.unitPrice}
+                        onChange={(e) => updateLinePrice(idx, Number(e.target.value) || 0)}
+                        className="w-28 h-8 text-sm"
+                      />
+                    </td>
                     <td className="px-4 py-2 font-medium">{formatCurrency(line.amount)}</td>
                     <td className="px-4 py-2">
                       <Button variant="ghost" size="icon" onClick={() => removeLine(idx)}>
