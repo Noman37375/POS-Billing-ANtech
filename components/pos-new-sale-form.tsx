@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition, useEffect, useRef } from "react"
+import { useMemo, useState, useTransition, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2, Loader2, Printer, X } from "lucide-react"
 import { createPOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
@@ -50,37 +50,59 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
       })()
     : ""
 
-  // Track if we've already processed the initial item to avoid double processing in StrictMode
-  const processedRef = useRef(false)
-
-  // Apply initial item from barcode redirect and clear URL param
-  useEffect(() => {
-    if (initialItemId && inventory.some((i) => i.id === initialItemId) && !processedRef.current) {
-      processedRef.current = true
-
-      if (autoAdd) {
-        // Auto-add the item with quantity 1
-        const inv = inventory.find((i) => i.id === initialItemId)
-        if (inv && inv.stock > 0) {
-          setItems((prev) => {
-            const existingIdx = prev.findIndex((i) => i.itemId === initialItemId)
-            if (existingIdx >= 0) {
-              return prev.map((item, i) =>
-                i === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
-              )
-            } else {
-              return [...prev, { itemId: initialItemId, quantity: 1 }]
-            }
-          })
-          toast.success(`Added 1x ${inv.name}`)
+  // Helper to add an item by ID with quantity 1 (used by both barcode flows)
+  const addItemById = useCallback(
+    (itemId: string) => {
+      const inv = inventory.find((i) => i.id === itemId)
+      if (!inv) return
+      if (inv.stock <= 0) {
+        toast.error(`${inv.name} is out of stock`)
+        return
+      }
+      setItems((prev) => {
+        const existingIdx = prev.findIndex((i) => i.itemId === itemId)
+        const currentQty = existingIdx >= 0 ? prev[existingIdx].quantity : 0
+        if (currentQty + 1 > inv.stock) {
+          toast.error(`Insufficient stock for ${inv.name}. Available: ${inv.stock}`)
+          return prev
         }
+        if (existingIdx >= 0) {
+          return prev.map((item, i) =>
+            i === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
+          )
+        }
+        return [...prev, { itemId, quantity: 1 }]
+      })
+      toast.success(`Added 1x ${inv.name}`)
+    },
+    [inventory]
+  )
+
+  // Listen for barcode scans from the global BarcodeScanToPOS component (same-page event)
+  useEffect(() => {
+    const handleBarcodeScan = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.itemId) {
+        addItemById(detail.itemId)
+      }
+    }
+    window.addEventListener("pos-barcode-scan", handleBarcodeScan)
+    return () => window.removeEventListener("pos-barcode-scan", handleBarcodeScan)
+  }, [addItemById])
+
+  // Handle item from URL params (cross-page redirect from barcode scan on non-POS pages)
+  const processedInitialRef = useRef(false)
+  useEffect(() => {
+    if (initialItemId && inventory.some((i) => i.id === initialItemId) && !processedInitialRef.current) {
+      processedInitialRef.current = true
+      if (autoAdd) {
+        addItemById(initialItemId)
       } else {
-        // Just select the item, don't add it
         setSelectedItem(initialItemId)
       }
       router.replace("/pos", { scroll: false })
     }
-  }, [initialItemId, inventory, router, autoAdd])
+  }, [initialItemId, inventory, router, autoAdd, addItemById])
 
   // Auto-print when sale is completed
   useEffect(() => {
