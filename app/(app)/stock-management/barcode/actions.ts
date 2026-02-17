@@ -55,28 +55,56 @@ export async function bulkGenerateBarcodes(itemIds: string[]) {
 export async function lookupItemByBarcode(barcode: string) {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
-  const { data, error } = await supabase
+
+  // 1. Try exact match first
+  const { data } = await supabase
     .from("inventory_items")
     .select("id, name, stock, cost_price, selling_price, barcode")
     .eq("barcode", barcode)
     .eq("user_id", currentUser.id)
     .single()
 
-  if (error || !data) {
+  // 2. If not found, try partial match — many barcode scanners strip the EAN check digit
+  //    (e.g. scanner sends 12 digits "026229574702" but DB has 13-digit "0262295747022")
+  //    Try: DB barcode starts with scanned barcode (scanner stripped check digit)
+  let matched = data
+  if (!matched) {
+    const { data: startsWith } = await supabase
+      .from("inventory_items")
+      .select("id, name, stock, cost_price, selling_price, barcode")
+      .eq("user_id", currentUser.id)
+      .like("barcode", `${barcode}%`)
+      .limit(1)
+      .single()
+    matched = startsWith
+  }
+
+  // 3. Also try: scanned barcode has extra check digit that DB doesn't store
+  if (!matched && barcode.length > 1) {
+    const { data: withoutCheck } = await supabase
+      .from("inventory_items")
+      .select("id, name, stock, cost_price, selling_price, barcode")
+      .eq("barcode", barcode.slice(0, -1))
+      .eq("user_id", currentUser.id)
+      .single()
+    matched = withoutCheck
+  }
+
+  if (!matched) {
     return { error: "Item not found", item: null }
   }
 
-  const row = data as { selling_price?: number; cost_price?: number; unit_price?: number }
+  const row = matched as { selling_price?: number; cost_price?: number; unit_price?: number }
   const sellingPrice = Number(row.selling_price ?? row.unit_price ?? 0)
 
   return {
     error: null,
     item: {
-      id: data.id,
-      name: data.name,
-      stock: Number(data.stock || 0),
+      id: matched.id,
+      name: matched.name,
+      stock: Number(matched.stock || 0),
       unitPrice: sellingPrice,
-      barcode: data.barcode,
+      barcode: matched.barcode,
     },
   }
 }
