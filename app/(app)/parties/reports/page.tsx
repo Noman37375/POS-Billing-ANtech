@@ -10,6 +10,7 @@ import { mockParties } from "@/lib/supabase/mock"
 import { Button } from "@/components/ui/button"
 import { FileText, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { ExportButtons } from "@/components/export-buttons"
 
 export default async function PartyReportsPage() {
   await requirePrivilege("parties")
@@ -93,8 +94,24 @@ export default async function PartyReportsPage() {
 
       {/* Parties Table */}
       <Card>
-        <CardHeader className="p-4 sm:p-6">
+        <CardHeader className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="text-base sm:text-lg">All Parties</CardTitle>
+          <ExportButtons
+            data={parties.map((party) => ({
+              name: party.name,
+              type: party.type,
+              balance: balances[party.id] || 0,
+              status: balances[party.id] === 0 ? "Settled" : party.type === "Customer" ? (balances[party.id] > 0 ? "Receivable" : "Overpaid") : (balances[party.id] > 0 ? "Payable" : "Overpaid"),
+            }))}
+            columns={[
+              { key: "name", header: "Name" },
+              { key: "type", header: "Type" },
+              { key: "balance", header: "Balance" },
+              { key: "status", header: "Status" },
+            ]}
+            filename={`party-balances-${new Date().toISOString().split("T")[0]}`}
+            title="Party Balance Report"
+          />
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">

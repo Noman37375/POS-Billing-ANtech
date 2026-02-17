@@ -14,7 +14,9 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     return { error: "Customer and at least one line item are required", data: null }
   }
 
-  if (!payload.payments?.length || payload.payments.every((p) => p.amount <= 0)) {
+  const isDraft = payload.status === "Draft" || !payload.payments?.length || payload.payments.every((p) => p.amount <= 0)
+
+  if (!isDraft && (!payload.payments?.length || payload.payments.every((p) => p.amount <= 0))) {
     return { error: "At least one payment is required", data: null }
   }
 
@@ -48,13 +50,16 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
   const subtotal = payload.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const tax = subtotal * (taxRate / 100)
   const total = subtotal + tax
-  const paymentTotal = payload.payments.reduce((sum, p) => sum + p.amount, 0)
+  const paymentTotal = isDraft ? 0 : (payload.payments ?? []).reduce((sum, p) => sum + p.amount, 0)
 
-  if (paymentTotal < total) {
-    return { error: "Payment total is less than invoice total", data: null }
+  let status: string
+  if (isDraft) {
+    status = "Draft"
+  } else if (paymentTotal >= total) {
+    status = "Paid"
+  } else {
+    status = "Pending"
   }
-
-  const status = paymentTotal >= total ? "Paid" : "Pending"
 
   const { data: invoice, error: invoiceError } = await supabase
     .from("sales_invoices")
@@ -88,20 +93,22 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     return { error: lineError.message, data: null }
   }
 
-  const paymentRows = payload.payments
-    .filter((p) => p.amount > 0)
-    .map((p) => ({
-      invoice_id: invoice.id,
-      amount: p.amount,
-      method: p.method,
-      reference: p.reference ?? null,
-      user_id: currentUser.id,
-    }))
+  if (!isDraft && payload.payments?.length) {
+    const paymentRows = payload.payments
+      .filter((p) => p.amount > 0)
+      .map((p) => ({
+        invoice_id: invoice.id,
+        amount: p.amount,
+        method: p.method,
+        reference: p.reference ?? null,
+        user_id: currentUser.id,
+      }))
 
-  if (paymentRows.length > 0) {
-    const { error: payError } = await supabase.from("payments").insert(paymentRows)
-    if (payError) {
-      return { error: payError.message, data: null }
+    if (paymentRows.length > 0) {
+      const { error: payError } = await supabase.from("payments").insert(paymentRows)
+      if (payError) {
+        return { error: payError.message, data: null }
+      }
     }
   }
 
@@ -130,6 +137,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
 
   revalidatePath("/pos")
   revalidatePath("/pos/sales")
+  revalidatePath("/pos/payments")
   revalidatePath("/invoices")
   revalidatePath("/dashboard")
   return { error: null, data: { invoiceId: invoice.id } }
@@ -211,8 +219,8 @@ export async function getUserPrintFormat(): Promise<PrintFormat> {
     .single()
 
   const value = (data as { value?: string } | null)?.value
-  if (value === "standard" || value === "a4") {
-    return value
+  if (value === "pos_thermal" || value === "pos_ncr" || value === "a4") {
+    return value as PrintFormat
   }
   return "a4"
 }
@@ -483,4 +491,361 @@ export async function setStoreSettings(settings: StoreSettings) {
   revalidatePath("/pos")
   revalidatePath("/pos/settings")
   return { error: null }
+}
+
+// ─── Customer Payment Actions ───────────────────────────────────────────────
+
+export async function createCustomerPayment(payload: {
+  invoiceId: string
+  amount: number
+  method: string
+  reference?: string
+}) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!payload.invoiceId || !payload.amount || payload.amount <= 0) {
+    return { error: "Invoice ID and valid amount are required" }
+  }
+
+  // Verify sales invoice belongs to user
+  const { data: invoice } = await supabase
+    .from("sales_invoices")
+    .select("id, total, status")
+    .eq("id", payload.invoiceId)
+    .eq("user_id", currentUser.id)
+    .single()
+
+  if (!invoice) {
+    return { error: "Sales invoice not found" }
+  }
+
+  const { error: insertError } = await supabase.from("payments").insert({
+    invoice_id: payload.invoiceId,
+    amount: payload.amount,
+    method: payload.method,
+    reference: payload.reference || null,
+    user_id: currentUser.id,
+  })
+
+  if (insertError) {
+    return { error: insertError.message }
+  }
+
+  // Auto-update invoice status based on total paid
+  const { data: allPayments } = await supabase
+    .from("payments")
+    .select("amount")
+    .eq("invoice_id", payload.invoiceId)
+    .eq("user_id", currentUser.id)
+
+  const totalPaid = (allPayments || []).reduce((sum, p) => sum + Number(p.amount || 0), 0)
+  const invoiceTotal = Number(invoice.total || 0)
+  const newStatus = totalPaid >= invoiceTotal ? "Paid" : "Pending"
+
+  await supabase
+    .from("sales_invoices")
+    .update({ status: newStatus })
+    .eq("id", payload.invoiceId)
+    .eq("user_id", currentUser.id)
+
+  revalidatePath("/pos")
+  revalidatePath("/pos/sales")
+  revalidatePath("/pos/payments")
+  revalidatePath("/parties")
+  revalidatePath("/invoices")
+  return { error: null }
+}
+
+export async function getCustomerPayments(invoiceId: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  // Verify sales invoice belongs to user
+  const { data: invoice } = await supabase
+    .from("sales_invoices")
+    .select("id")
+    .eq("id", invoiceId)
+    .eq("user_id", currentUser.id)
+    .single()
+
+  if (!invoice) {
+    return { error: "Sales invoice not found", data: [] }
+  }
+
+  const { data, error: fetchError } = await supabase
+    .from("payments")
+    .select("id, amount, method, reference, created_at")
+    .eq("invoice_id", invoiceId)
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: true })
+
+  if (fetchError) {
+    return { error: fetchError.message, data: [] }
+  }
+
+  return { error: null, data: data || [] }
+}
+
+export async function deleteCustomerPayment(paymentId: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!paymentId) {
+    return { error: "Payment ID is required" }
+  }
+
+  // Get payment to find invoice_id before deleting
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("id, invoice_id")
+    .eq("id", paymentId)
+    .eq("user_id", currentUser.id)
+    .single()
+
+  if (!payment) {
+    return { error: "Payment not found" }
+  }
+
+  const invoiceId = payment.invoice_id
+
+  const { error: deleteError } = await supabase
+    .from("payments")
+    .delete()
+    .eq("id", paymentId)
+    .eq("user_id", currentUser.id)
+
+  if (deleteError) {
+    return { error: deleteError.message }
+  }
+
+  // Auto-update invoice status based on remaining payments
+  const { data: inv } = await supabase
+    .from("sales_invoices")
+    .select("id, total")
+    .eq("id", invoiceId)
+    .eq("user_id", currentUser.id)
+    .single()
+
+  if (inv) {
+    const { data: remaining } = await supabase
+      .from("payments")
+      .select("amount")
+      .eq("invoice_id", invoiceId)
+      .eq("user_id", currentUser.id)
+
+    const totalPaid = (remaining || []).reduce((sum, p) => sum + Number(p.amount || 0), 0)
+    const invoiceTotal = Number(inv.total || 0)
+    let newStatus: string
+    if (totalPaid <= 0) {
+      newStatus = "Draft"
+    } else if (totalPaid >= invoiceTotal) {
+      newStatus = "Paid"
+    } else {
+      newStatus = "Pending"
+    }
+
+    await supabase
+      .from("sales_invoices")
+      .update({ status: newStatus })
+      .eq("id", invoiceId)
+      .eq("user_id", currentUser.id)
+  }
+
+  revalidatePath("/pos")
+  revalidatePath("/pos/sales")
+  revalidatePath("/pos/payments")
+  revalidatePath("/parties")
+  revalidatePath("/invoices")
+  return { error: null }
+}
+
+export async function getAllCustomerPayments() {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  const { data, error: fetchError } = await supabase
+    .from("payments")
+    .select(
+      `
+      id,
+      amount,
+      method,
+      reference,
+      created_at,
+      sales_invoices:invoice_id (
+        id,
+        total,
+        status,
+        source,
+        parties:party_id (
+          id,
+          name
+        )
+      )
+    `,
+    )
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false })
+
+  if (fetchError) {
+    return { error: fetchError.message, data: [] }
+  }
+
+  const payments = (data || [])
+    .map((payment: any) => {
+      const inv = payment.sales_invoices
+        ? (Array.isArray(payment.sales_invoices) ? payment.sales_invoices[0] : payment.sales_invoices)
+        : null
+      const partyData = inv?.parties
+        ? (Array.isArray(inv.parties) ? inv.parties[0] : inv.parties)
+        : null
+
+      return {
+        id: payment.id,
+        amount: payment.amount || 0,
+        method: payment.method || "Cash",
+        reference: payment.reference || null,
+        createdAt: payment.created_at,
+        invoiceId: inv?.id || "",
+        invoiceNumber: inv?.id ? inv.id.substring(0, 8).toUpperCase() : "N/A",
+        customerName: (partyData as { name?: string })?.name || "Unknown",
+        invoiceTotal: inv?.total || 0,
+        invoiceStatus: inv?.status || "Draft",
+        source: inv?.source || "manual",
+      }
+    })
+    .filter((p) => p.source === "pos")
+
+  return { error: null, data: payments }
+}
+
+export async function getPaidSales() {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  const { data: sales, error: salesError } = await supabase
+    .from("sales_invoices")
+    .select(
+      `
+      id,
+      total,
+      status,
+      source,
+      created_at,
+      parties:party_id (
+        id,
+        name,
+        phone
+      )
+    `,
+    )
+    .eq("user_id", currentUser.id)
+    .eq("source", "pos")
+    .order("created_at", { ascending: false })
+
+  if (salesError) {
+    return { error: salesError.message, data: [] }
+  }
+
+  const saleIds = (sales || []).map((s) => s.id).filter(Boolean)
+  let allPayments: any[] = []
+  if (saleIds.length > 0) {
+    const { data: paymentsData } = await supabase
+      .from("payments")
+      .select("invoice_id, amount, method, created_at")
+      .in("invoice_id", saleIds)
+      .eq("user_id", currentUser.id)
+    allPayments = paymentsData || []
+  }
+
+  const paidSales = (sales || [])
+    .map((sale: any) => {
+      const partyData = sale.parties
+        ? (Array.isArray(sale.parties) ? sale.parties[0] : sale.parties)
+        : null
+
+      const salePayments = allPayments.filter((p) => p.invoice_id === sale.id)
+      const totalPaid = salePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+      const totalAmount = Number(sale.total || 0)
+      const balance = totalAmount - totalPaid
+
+      return {
+        id: sale.id,
+        invoiceNumber: sale.id.substring(0, 8).toUpperCase(),
+        customerName: (partyData as { name?: string })?.name || "Unknown",
+        total: totalAmount,
+        paid: totalPaid,
+        balance,
+        status: sale.status || "Draft",
+        date: sale.created_at,
+      }
+    })
+    .filter((s) => s.paid > 0)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  return { error: null, data: paidSales }
+}
+
+export async function getUnpaidPOSSales() {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  const { data: sales, error: salesError } = await supabase
+    .from("sales_invoices")
+    .select(
+      `
+      id,
+      total,
+      status,
+      source,
+      created_at,
+      parties:party_id (
+        id,
+        name
+      )
+    `,
+    )
+    .eq("user_id", currentUser.id)
+    .eq("source", "pos")
+    .in("status", ["Draft", "Pending"])
+    .order("created_at", { ascending: false })
+
+  if (salesError) {
+    return { error: salesError.message, data: [] }
+  }
+
+  const saleIds = (sales || []).map((s) => s.id).filter(Boolean)
+  let allPayments: any[] = []
+  if (saleIds.length > 0) {
+    const { data: paymentsData } = await supabase
+      .from("payments")
+      .select("invoice_id, amount")
+      .in("invoice_id", saleIds)
+      .eq("user_id", currentUser.id)
+    allPayments = paymentsData || []
+  }
+
+  const unpaidSales = (sales || []).map((sale: any) => {
+    const partyData = sale.parties
+      ? (Array.isArray(sale.parties) ? sale.parties[0] : sale.parties)
+      : null
+
+    const salePayments = allPayments.filter((p) => p.invoice_id === sale.id)
+    const totalPaid = salePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+    const totalAmount = Number(sale.total || 0)
+    const balance = totalAmount - totalPaid
+
+    return {
+      id: sale.id,
+      invoiceNumber: sale.id.substring(0, 8).toUpperCase(),
+      customerName: (partyData as { name?: string })?.name || "Unknown",
+      total: totalAmount,
+      status: sale.status || "Draft",
+      paid: totalPaid,
+      balance,
+    }
+  })
+
+  return { error: null, data: unpaidSales }
 }

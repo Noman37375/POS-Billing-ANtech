@@ -5,6 +5,7 @@ import { getStockLevels, getStockMovements, getInventoryValueAnalysis } from "./
 import { CurrencyDisplay } from "@/components/currency-display"
 import { AlertCircle, TrendingUp, Package, ArrowDown, ArrowUp, XCircle } from "lucide-react"
 import { InventoryReportClient } from "@/components/inventory-report-client"
+import { ExportButtons } from "@/components/export-buttons"
 
 export default async function InventoryReportsPage() {
   // Check if user has inventory_report privilege
@@ -92,8 +93,26 @@ export default async function InventoryReportsPage() {
 
       {/* Stock Levels */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle>Stock Levels</CardTitle>
+          <ExportButtons
+            data={stockLevels.map((item) => ({
+              item: item.name,
+              stock: item.stock,
+              costPrice: item.unitPrice,
+              value: item.value,
+              status: item.isOutOfStock ? "Out of Stock" : item.isLowStock ? "Low Stock" : "In Stock",
+            }))}
+            columns={[
+              { key: "item", header: "Item" },
+              { key: "stock", header: "Stock" },
+              { key: "costPrice", header: "Cost Price" },
+              { key: "value", header: "Value" },
+              { key: "status", header: "Status" },
+            ]}
+            filename={`stock-levels-${new Date().toISOString().split("T")[0]}`}
+            title="Stock Levels"
+          />
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

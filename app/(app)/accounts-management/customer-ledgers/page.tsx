@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { ExportButtons } from "@/components/export-buttons"
 
 export default async function CustomerLedgersPage() {
   await requirePrivilege("accounts")
@@ -55,8 +56,22 @@ export default async function CustomerLedgersPage() {
 
       {/* Customer Ledgers Table */}
       <Card>
-        <CardHeader className="p-4 sm:p-6">
+        <CardHeader className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="text-base sm:text-lg">Customer List</CardTitle>
+          <ExportButtons
+            data={customerLedgers.map((customer) => ({
+              name: customer.name,
+              phone: customer.phone || "",
+              balance: customer.balance,
+            }))}
+            columns={[
+              { key: "name", header: "Customer Name" },
+              { key: "phone", header: "Phone" },
+              { key: "balance", header: "Balance" },
+            ]}
+            filename={`customer-ledgers-${new Date().toISOString().split("T")[0]}`}
+            title="Customer Ledgers"
+          />
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">

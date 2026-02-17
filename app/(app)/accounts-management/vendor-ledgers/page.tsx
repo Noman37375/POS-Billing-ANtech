@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { ExportButtons } from "@/components/export-buttons"
 
 export default async function VendorLedgersPage() {
   await requirePrivilege("accounts")
@@ -55,8 +56,22 @@ export default async function VendorLedgersPage() {
 
       {/* Vendor Ledgers Table */}
       <Card>
-        <CardHeader className="p-4 sm:p-6">
+        <CardHeader className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="text-base sm:text-lg">Vendor List</CardTitle>
+          <ExportButtons
+            data={vendorLedgers.map((vendor) => ({
+              name: vendor.name,
+              phone: vendor.phone || "",
+              balance: vendor.balance,
+            }))}
+            columns={[
+              { key: "name", header: "Vendor Name" },
+              { key: "phone", header: "Phone" },
+              { key: "balance", header: "Balance" },
+            ]}
+            filename={`vendor-ledgers-${new Date().toISOString().split("T")[0]}`}
+            title="Vendor Ledgers"
+          />
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Loader2, Printer, X } from "lucide-react"
+import { Plus, Trash2, Loader2, Printer, X, FileText } from "lucide-react"
 import { createPOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
 import { getInvoiceForPDF } from "@/app/(app)/invoices/actions"
 import { Button } from "@/components/ui/button"
@@ -29,6 +29,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
   const [taxRate, setTaxRate] = useState(0)
   const [selectedItem, setSelectedItem] = useState("")
   const [quantity, setQuantity] = useState(1)
+  const [saleMode, setSaleMode] = useState<"sale" | "draft">("sale")
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash")
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
@@ -202,6 +203,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
       return
     }
     startTransition(async () => {
+      const isDraft = saleMode === "draft"
       const result = await createPOSSale({
         partyId,
         items: computed.detailed.map((line) => ({
@@ -210,16 +212,24 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
           unitPrice: line.unitPrice,
         })),
         taxRate,
-        payments: [{ amount: computed.total, method: paymentMethod }],
+        ...(isDraft
+          ? { status: "Draft" as const }
+          : { payments: [{ amount: computed.total, method: paymentMethod }] }),
       })
       if (result.error) {
         toast.error(result.error)
         return
       }
-      toast.success("Sale completed")
-      setLastInvoiceId(result.data?.invoiceId ?? null)
-      setItems([])
-      setPartyId("")
+      if (isDraft) {
+        toast.success("Draft saved")
+        setItems([])
+        setPartyId("")
+      } else {
+        toast.success("Sale completed")
+        setLastInvoiceId(result.data?.invoiceId ?? null)
+        setItems([])
+        setPartyId("")
+      }
     })
   }
 
@@ -464,28 +474,48 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <Label className="text-sm">Payment</Label>
-                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                <Label className="text-sm">Mode</Label>
+                <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "draft")}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Card">Card</SelectItem>
-                    <SelectItem value="Mixed">Mixed</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="sale">Sale</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {saleMode === "sale" && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Payment</Label>
+                  <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Card">Card</SelectItem>
+                      <SelectItem value="Mixed">Mixed</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button
                 onClick={handleCompleteSale}
                 disabled={pending || !partyId}
                 className="w-full sm:w-auto"
+                variant={saleMode === "draft" ? "outline" : "default"}
               >
                 {pending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Completing...
+                    {saleMode === "draft" ? "Saving..." : "Completing..."}
+                  </>
+                ) : saleMode === "draft" ? (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Save Draft
                   </>
                 ) : (
                   "Complete Sale"

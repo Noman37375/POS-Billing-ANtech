@@ -92,7 +92,9 @@ export function POSSalesList({ sales }: POSSalesListProps) {
                       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                         sale.status === "Paid"
                           ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                          : sale.status === "Draft"
+                            ? "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                            : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
                       }`}
                     >
                       {sale.status}
@@ -138,14 +140,14 @@ export function POSSalesList({ sales }: POSSalesListProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Reprint"
-                        disabled={printPendingId !== null}
+                        title={sale.status === "Draft" ? "Cannot print draft invoices" : "Reprint"}
+                        disabled={printPendingId !== null || sale.status === "Draft"}
                         onClick={() => handleReprint(sale.id)}
                       >
                         {printPendingId === sale.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Printer className="w-4 h-4" />
+                          <Printer className={`w-4 h-4 ${sale.status === "Draft" ? "opacity-40" : ""}`} />
                         )}
                       </Button>
                     </div>

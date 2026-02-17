@@ -9,6 +9,7 @@ import { CurrencyDisplay } from "@/components/currency-display"
 import { requirePrivilege } from "@/lib/auth/privileges"
 import { getPurchases } from "@/app/(app)/purchases/actions"
 import { DeletePurchaseButton } from "@/components/delete-purchase-button"
+import { PurchaseDownloadButton } from "@/components/purchase-download-button"
 
 export default async function PurchasesListPage() {
   await requirePrivilege("parties")
@@ -94,6 +95,7 @@ export default async function PurchasesListPage() {
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 w-[10%]">
                       <div className="flex items-center gap-1 sm:gap-2">
+                        <PurchaseDownloadButton purchaseId={purchase.id} status={purchase.status} />
                         <Link href={`/purchase-management/edit/${purchase.id}`}>
                           <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
                             <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />

@@ -4,6 +4,7 @@ import { requirePrivilege } from "@/lib/auth/privileges"
 import { getPurchaseSummary, getPurchaseTrends, getTopVendors, getPurchasePaymentSummary } from "./actions"
 import { CurrencyDisplay } from "@/components/currency-display"
 import { TrendingUp, ShoppingBag, DollarSign, FileText, AlertCircle } from "lucide-react"
+import { ExportButtons } from "@/components/export-buttons"
 
 export default async function PurchaseReportsPage() {
   await requirePrivilege("parties")
@@ -174,8 +175,28 @@ export default async function PurchaseReportsPage() {
 
       {/* Purchase vs Payment Summary */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle>Purchase Payment Summary</CardTitle>
+          <ExportButtons
+            data={(paymentSummary.data || []).map((item) => ({
+              purchase: item.purchaseNumber,
+              vendor: item.vendorName,
+              total: item.totalAmount,
+              paid: item.paidAmount,
+              outstanding: item.outstanding,
+              status: item.status,
+            }))}
+            columns={[
+              { key: "purchase", header: "Purchase" },
+              { key: "vendor", header: "Vendor" },
+              { key: "total", header: "Total" },
+              { key: "paid", header: "Paid" },
+              { key: "outstanding", header: "Outstanding" },
+              { key: "status", header: "Status" },
+            ]}
+            filename={`purchase-payment-summary-${new Date().toISOString().split("T")[0]}`}
+            title="Purchase Payment Summary"
+          />
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

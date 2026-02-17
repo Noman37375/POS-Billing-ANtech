@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, FileText, CreditCard } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { ExportButtons } from "@/components/export-buttons"
 
 export default async function PartyLedgerPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePrivilege("parties")
@@ -174,8 +175,26 @@ export default async function PartyLedgerPage({ params }: { params: Promise<{ id
 
       {/* Ledger Table */}
       <Card>
-        <CardHeader className="p-4 sm:p-6">
+        <CardHeader className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <CardTitle className="text-base sm:text-lg">Transaction History</CardTitle>
+          <ExportButtons
+            data={ledgerRows.map((row) => ({
+              date: new Date(row.date).toLocaleDateString(),
+              description: row.description,
+              debit: row.debit > 0 ? row.debit : "",
+              credit: row.credit > 0 ? row.credit : "",
+              balance: row.balance,
+            }))}
+            columns={[
+              { key: "date", header: "Date" },
+              { key: "description", header: "Description" },
+              { key: "debit", header: "Debit" },
+              { key: "credit", header: "Credit" },
+              { key: "balance", header: "Balance" },
+            ]}
+            filename={`${party.name}-ledger-${new Date().toISOString().split("T")[0]}`}
+            title={`${party.name} - Transaction History`}
+          />
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">

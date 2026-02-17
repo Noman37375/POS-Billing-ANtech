@@ -78,5 +78,6 @@ export interface CreatePOSSaleInput {
   partyId: string
   items: POSSaleItemInput[]
   taxRate?: number
-  payments: POSPaymentInput[]
+  payments?: POSPaymentInput[]
+  status?: "Draft" | "Paid" | "Pending"
 }

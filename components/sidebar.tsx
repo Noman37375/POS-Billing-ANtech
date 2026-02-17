@@ -116,6 +116,7 @@ export function Sidebar({ user }: SidebarProps) {
         children: [
           { href: "/pos", label: "New Sale", icon: ShoppingCart, privilege: "pos" as ModulePrivilege },
           { href: "/pos/sales", label: "Sales", icon: Receipt, privilege: "pos" as ModulePrivilege },
+          { href: "/pos/payments", label: "Customer Payments", icon: CreditCard, privilege: "pos" as ModulePrivilege },
           { href: "/pos/settings", label: "Settings", icon: Settings, privilege: "pos" as ModulePrivilege },
         ],
       },
@@ -222,7 +223,7 @@ export function Sidebar({ user }: SidebarProps) {
     // This prevents parent from being highlighted when on /pos/sales or /pos/settings
     if (href === "/pos") {
       // If on a child route, don't highlight parent
-      if (pathname.startsWith("/pos/sales") || pathname.startsWith("/pos/settings")) {
+      if (pathname.startsWith("/pos/sales") || pathname.startsWith("/pos/payments") || pathname.startsWith("/pos/settings")) {
         return false
       }
       return pathname.startsWith("/pos")
@@ -244,9 +245,9 @@ export function Sidebar({ user }: SidebarProps) {
       </button>
 
       <aside
-        className={`w-72 bg-sidebar border-r border-sidebar-border transition-all duration-300 shadow-[0_12px_50px_rgba(0,0,0,0.2)] overflow-y-auto ${
+        className={`w-72 bg-sidebar border-r border-sidebar-border transition-all duration-300 shadow-[0_12px_50px_rgba(0,0,0,0.2)] overflow-y-auto custom-scrollbar ${
           open ? "translate-x-0" : "-translate-x-full"
-        } fixed h-screen z-30 lg:translate-x-0 lg:static lg:h-screen lg:z-auto lg:flex-shrink-0`}
+        } fixed top-0 left-0 h-screen z-30 lg:translate-x-0 lg:z-20`}
       >
         <div className="h-20 flex items-center gap-3 px-6 border-b border-sidebar-border text-sidebar-foreground/90 bg-gradient-to-r from-sidebar via-sidebar/90 to-sidebar/80">
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm bg-white">

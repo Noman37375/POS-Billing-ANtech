@@ -1,64 +1,54 @@
-import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { requirePrivilege } from "@/lib/auth/privileges"
-import { getAllPurchasePayments, getPurchases, getPaidPurchases, deletePurchasePayment } from "@/app/(app)/purchases/actions"
-import { PurchasePaymentDialog } from "@/components/purchase-payment-dialog"
+import { getAllCustomerPayments, getUnpaidPOSSales, getPaidSales } from "@/app/(app)/pos/actions"
+import { CustomerPaymentDialog } from "@/components/customer-payment-dialog"
 import { CurrencyDisplay } from "@/components/currency-display"
-import { DeletePurchasePaymentButton } from "@/components/delete-purchase-payment-button"
+import { DeleteCustomerPaymentButton } from "@/components/delete-customer-payment-button"
 import { ExportButtons } from "@/components/export-buttons"
 
-export default async function VendorPaymentsPage() {
-  await requirePrivilege("parties")
+export default async function CustomerPaymentsPage() {
+  await requirePrivilege("pos")
 
-  const [payments, purchases, paidPurchases] = await Promise.all([
+  const [payments, unpaidSales, paidSales] = await Promise.all([
     (async () => {
       if (!isSupabaseReady()) return []
-      const result = await getAllPurchasePayments()
+      const result = await getAllCustomerPayments()
       return result.data || []
     })(),
     (async () => {
       if (!isSupabaseReady()) return []
-      const result = await getPurchases()
+      const result = await getUnpaidPOSSales()
       return result.data || []
     })(),
     (async () => {
       if (!isSupabaseReady()) return []
-      const result = await getPaidPurchases()
+      const result = await getPaidSales()
       return result.data || []
     })(),
   ])
 
   const totalPayments = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-  const totalPaid = paidPurchases.reduce((sum, p) => sum + Number(p.paid || 0), 0)
+  const totalReceived = paidSales.reduce((sum, s) => sum + Number(s.paid || 0), 0)
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Vendor Payments</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Manage payments for purchase invoices.</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Customer Payments</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Manage payments for POS sales invoices.</p>
         </div>
-        <PurchasePaymentDialog
-          purchases={purchases.map((p) => {
-            // Calculate paid amount for this purchase
-            const purchasePayments = payments.filter(
-              (payment) => payment.purchaseInvoiceId === p.id
-            )
-            const paid = purchasePayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
-            const balance = Number(p.total || 0) - paid
-
-            return {
-              id: p.id,
-              purchaseNumber: p.purchaseNumber,
-              vendorName: p.vendorName,
-              total: Number(p.total || 0),
-              status: p.status || "Draft",
-              paid,
-              balance,
-            }
-          })}
+        <CustomerPaymentDialog
+          sales={unpaidSales.map((s) => ({
+            id: s.id,
+            invoiceNumber: s.invoiceNumber,
+            customerName: s.customerName,
+            total: Number(s.total || 0),
+            status: s.status || "Draft",
+            paid: s.paid,
+            balance: s.balance,
+          }))}
         />
       </div>
 
@@ -66,13 +56,13 @@ export default async function VendorPaymentsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-base sm:text-lg">Total Paid</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Total Received</CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             <div className="text-2xl sm:text-3xl font-bold text-emerald-600">
-              <CurrencyDisplay amount={totalPaid} />
+              <CurrencyDisplay amount={totalReceived} />
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{paidPurchases.length} invoice(s) paid</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{paidSales.length} invoice(s) with payments</p>
           </CardContent>
         </Card>
 
@@ -89,18 +79,18 @@ export default async function VendorPaymentsPage() {
         </Card>
       </div>
 
-      {/* Paid Purchases */}
+      {/* Paid Sales */}
       <Card>
         <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-base sm:text-lg">Paid Purchases</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Paid Sales</CardTitle>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Purchase</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Vendor</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Invoice</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Customer</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Total</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Paid</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Balance</th>
@@ -109,50 +99,50 @@ export default async function VendorPaymentsPage() {
                 </tr>
               </thead>
               <tbody className="[&>tr:not(:last-child)]:border-b">
-                {paidPurchases.map((purchase) => (
-                  <tr key={purchase.id} className="hover:bg-muted/50">
+                {paidSales.map((sale) => (
+                  <tr key={sale.id} className="hover:bg-muted/50">
                     <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[15%]">
                       <div className="flex flex-col min-w-0 overflow-hidden">
-                        <span className="truncate break-words">{purchase.purchaseNumber}</span>
+                        <span className="truncate break-words">{sale.invoiceNumber}</span>
                         <span className="text-[10px] text-muted-foreground sm:hidden truncate">
-                          {purchase.vendorName}
+                          {sale.customerName}
                         </span>
                       </div>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[20%]">
-                      <span className="truncate block">{purchase.vendorName}</span>
+                      <span className="truncate block">{sale.customerName}</span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[12%]">
                       <span className="truncate block">
-                        <CurrencyDisplay amount={purchase.total} />
+                        <CurrencyDisplay amount={sale.total} />
                       </span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-emerald-600 text-xs sm:text-sm w-[12%]">
                       <span className="truncate block">
-                        <CurrencyDisplay amount={purchase.paid} />
+                        <CurrencyDisplay amount={sale.paid} />
                       </span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[12%]">
-                      <span className={`truncate block ${purchase.balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                        <CurrencyDisplay amount={purchase.balance} />
+                      <span className={`truncate block ${sale.balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                        <CurrencyDisplay amount={sale.balance} />
                       </span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[15%]">
                       <span className="truncate block">
-                        {purchase.date ? new Date(purchase.date).toLocaleDateString() : "—"}
+                        {sale.date ? new Date(sale.date).toLocaleDateString() : "\u2014"}
                       </span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[14%]">
-                      <Badge variant={purchase.balance === 0 ? "default" : "outline"} className="text-[10px] sm:text-xs whitespace-nowrap">
-                        {purchase.balance === 0 ? "Fully Paid" : "Partial"}
+                      <Badge variant={sale.balance === 0 ? "default" : "outline"} className="text-[10px] sm:text-xs whitespace-nowrap">
+                        {sale.balance === 0 ? "Fully Paid" : "Partial"}
                       </Badge>
                     </td>
                   </tr>
                 ))}
-                {(!paidPurchases || paidPurchases.length === 0) && (
+                {(!paidSales || paidSales.length === 0) && (
                   <tr>
                     <td colSpan={7} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
-                      No paid purchases yet.
+                      No paid sales yet.
                     </td>
                   </tr>
                 )}
@@ -168,21 +158,21 @@ export default async function VendorPaymentsPage() {
           <CardTitle className="text-base sm:text-lg">Payment History</CardTitle>
           <ExportButtons
             data={payments.map((payment) => ({
-              purchase: payment.purchaseNumber,
-              vendor: payment.vendorName,
+              invoice: payment.invoiceNumber,
+              customer: payment.customerName,
               amount: payment.amount,
               method: payment.method,
               date: new Date(payment.createdAt).toLocaleDateString(),
             }))}
             columns={[
-              { key: "purchase", header: "Purchase" },
-              { key: "vendor", header: "Vendor" },
+              { key: "invoice", header: "Invoice" },
+              { key: "customer", header: "Customer" },
               { key: "amount", header: "Amount" },
               { key: "method", header: "Method" },
               { key: "date", header: "Date" },
             ]}
-            filename={`vendor-payments-${new Date().toISOString().split("T")[0]}`}
-            title="Vendor Payments"
+            filename={`customer-payments-${new Date().toISOString().split("T")[0]}`}
+            title="Customer Payments"
           />
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
@@ -190,8 +180,8 @@ export default async function VendorPaymentsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Purchase</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Vendor</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Invoice</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Customer</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Amount</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[15%]">Method</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[15%]">Date</th>
@@ -203,9 +193,9 @@ export default async function VendorPaymentsPage() {
                   <tr key={payment.id} className="hover:bg-muted/50">
                     <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[15%]">
                       <div className="flex flex-col min-w-0 overflow-hidden">
-                        <span className="truncate break-words">{payment.purchaseNumber}</span>
+                        <span className="truncate break-words">{payment.invoiceNumber}</span>
                         <span className="text-[10px] text-muted-foreground sm:hidden truncate">
-                          {payment.vendorName}
+                          {payment.customerName}
                         </span>
                         <span className="text-[10px] text-muted-foreground sm:hidden truncate">
                           {payment.method}
@@ -213,7 +203,7 @@ export default async function VendorPaymentsPage() {
                       </div>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[20%]">
-                      <span className="truncate block">{payment.vendorName}</span>
+                      <span className="truncate block">{payment.customerName}</span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm w-[15%]">
                       <span className="truncate block">
@@ -227,11 +217,11 @@ export default async function VendorPaymentsPage() {
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[15%]">
                       <span className="truncate block">
-                        {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : "—"}
+                        {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : "\u2014"}
                       </span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 w-[10%]">
-                      <DeletePurchasePaymentButton paymentId={payment.id} />
+                      <DeleteCustomerPaymentButton paymentId={payment.id} />
                     </td>
                   </tr>
                 ))}
