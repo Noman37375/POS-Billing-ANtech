@@ -1,21 +1,29 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { lookupItemByBarcode } from "@/app/(app)/stock-management/barcode/actions"
 
 /**
  * Listens for barcode scanner input when focus is not in an input/textarea.
  * On scan (rapid keypress + Enter), looks up item by barcode and redirects to New Sale with item selected.
+ * Disabled on stock-management/barcode page to allow manual barcode input.
  */
 export function BarcodeScanToPOS() {
   const router = useRouter()
+  const pathname = usePathname()
   const bufferRef = useRef("")
   const lastKeyTimeRef = useRef(0)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Disable barcode scanner on stock management barcode page
+  const isBarcodePage = pathname?.includes("/stock-management/barcode")
+
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Skip if on stock management barcode page
+      if (isBarcodePage) return
+
       const target = e.target as HTMLElement
       const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable
       if (isInput) return
@@ -52,7 +60,7 @@ export function BarcodeScanToPOS() {
       window.removeEventListener("keydown", handleKeyPress)
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [router])
+  }, [router, isBarcodePage])
 
   return null
 }

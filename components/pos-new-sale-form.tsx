@@ -50,9 +50,14 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
       })()
     : ""
 
+  // Track if we've already processed the initial item to avoid double processing in StrictMode
+  const processedRef = useRef(false)
+
   // Apply initial item from barcode redirect and clear URL param
   useEffect(() => {
-    if (initialItemId && inventory.some((i) => i.id === initialItemId)) {
+    if (initialItemId && inventory.some((i) => i.id === initialItemId) && !processedRef.current) {
+      processedRef.current = true
+
       if (autoAdd) {
         // Auto-add the item with quantity 1
         const inv = inventory.find((i) => i.id === initialItemId)
