@@ -94,11 +94,12 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       padding: 0;
       color: #000;
       background: #fff;
+      font-weight: 600;
     }
 
     .receipt {
       width: 80mm;
-      padding: 3mm;
+      padding: 2mm;
       text-align: center;
     }
 
@@ -111,27 +112,29 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     .store-name {
       font-weight: bold;
       font-size: 12px;
-      margin-bottom: 2mm;
+      margin-bottom: 1.5mm;
     }
 
     .store-details {
       font-size: 9px;
       line-height: 1.2;
-      margin-bottom: 2mm;
+      margin-bottom: 1.5mm;
+      font-weight: 600;
     }
 
     .invoice-info {
       font-size: 10px;
-      margin-bottom: 3mm;
+      margin-bottom: 2mm;
       border-bottom: 1px dashed #000;
-      padding-bottom: 3mm;
+      padding: 2mm;
       text-align: left;
+      font-weight: 600;
     }
 
     .info-row {
       display: flex;
       justify-content: space-between;
-      margin: 1.5mm 0;
+      margin: 1mm 0;
       font-size: 10px;
     }
 
@@ -140,17 +143,18 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     }
 
     .items-section {
-      margin: 3mm 0;
+      margin: 2mm 0;
       border: 1px solid #000;
+      padding: 0;
     }
 
     .item-header {
       display: grid;
-      grid-template-columns: 1fr 40px 50px 50px;
+      grid-template-columns: 1fr 35px 40px 40px;
       gap: 0;
       font-weight: bold;
       font-size: 11px;
-      padding: 2mm 3mm;
+      padding: 1.5mm 2mm;
       border-bottom: 1px solid #000;
       background: #fff;
     }
@@ -173,11 +177,12 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
 
     .item-row {
       display: grid;
-      grid-template-columns: 1fr 40px 50px 50px;
+      grid-template-columns: 1fr 35px 40px 40px;
       gap: 0;
       border-bottom: 1px solid #ccc;
-      padding: 2mm 3mm;
+      padding: 1.5mm 2mm;
       font-size: 10px;
+      font-weight: 600;
       align-items: start;
     }
 
@@ -217,16 +222,18 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     }
 
     .totals-section {
-      margin: 3mm 0;
-      padding: 2mm 0;
+      margin: 2mm 0;
+      padding: 1.5mm 0;
     }
 
     .total-row {
       display: flex;
       justify-content: space-between;
-      margin: 2.5mm 0;
+      margin: 2mm 0;
+      margin-left: 2mm;
+      margin-right: 2mm;
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 700;
     }
 
     .subtotal {
@@ -246,21 +253,23 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
 
     .payment-section {
       margin: 2mm 0;
-      padding: 2mm 0;
+      padding: 2mm;
       font-size: 10px;
       border-bottom: 1px dashed #000;
+      font-weight: 600;
     }
 
     .footer {
       text-align: center;
-      margin: 3mm 0;
+      margin: 2mm 0;
       font-size: 10px;
-      padding-bottom: 3mm;
+      padding-bottom: 2mm;
+      font-weight: 600;
     }
 
     .thank-you {
       font-weight: bold;
-      margin: 2mm 0;
+      margin: 1.5mm 0;
     }
 
     .copy-mark {
