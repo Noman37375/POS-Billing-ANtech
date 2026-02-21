@@ -1,429 +1,256 @@
 import type { InvoiceForPrint } from "@/lib/types/pos"
 
-const CURRENCY = "PKR"
-
-function formatMoney(amount: number) {
-  return `${CURRENCY} ${amount.toLocaleString("en-PK", { minimumFractionDigits: 2 })}`
+function esc(s: string): string {
+  const div = typeof document !== "undefined" ? document.createElement("div") : null
+  if (!div) return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  div.textContent = s
+  return div.innerHTML
 }
 
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString("en-PK", { day: "2-digit", month: "2-digit", year: "numeric" })
+function fmtNum(n: number): string {
+  return n.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 
-function formatTime(dateStr: string) {
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: true })
+function fmtDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  const dd = String(d.getDate()).padStart(2, "0")
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const yyyy = d.getFullYear()
+  return `${dd}/${mm}/${yyyy}`
+}
+
+function fmtTime(dateStr: string): string {
+  const d = new Date(dateStr)
+  let h = d.getHours()
+  const min = String(d.getMinutes()).padStart(2, "0")
+  const ampm = h >= 12 ? "pm" : "am"
+  h = h % 12 || 12
+  return `${h}:${min} ${ampm}`
+}
+
+function fmtTimeFull(dateStr: string): string {
+  const d = new Date(dateStr)
+  let h = d.getHours()
+  const min = String(d.getMinutes()).padStart(2, "0")
+  const sec = String(d.getSeconds()).padStart(2, "0")
+  const ampm = h >= 12 ? "PM" : "AM"
+  h = h % 12 || 12
+  return `${String(h).padStart(2, "0")}:${min}:${sec}${ampm}`
+}
+
+function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant Copy"): string {
+  const storeName  = data.store?.name    || ""
+  const storeAddr  = data.store?.address || ""
+  const storePhone = data.store?.phone   || ""
+  const cashier    = data.cashier        || ""
+  const invNo      = data.invoiceNumber  || data.id.substring(0, 8).toUpperCase()
+  const dateStr    = data.date ? fmtDate(data.date) : ""
+  const timeStr    = data.date ? fmtTime(data.date) : ""
+  const printDate  = data.date ? fmtDate(data.date) : ""
+  const printTime  = data.date ? fmtTimeFull(data.date) : ""
+
+  const cashPaid   = data.payments && data.payments.length > 0
+    ? data.payments.reduce((s, p) => s + Number(p.amount || 0), 0)
+    : data.total
+  const payMethod  = data.payments && data.payments.length > 0
+    ? [...new Set(data.payments.map((p) => p.method))].join(" / ")
+    : "Cash"
+
+  const itemCount  = data.items.length
+  const totalQty   = data.items.reduce((s, i) => s + i.quantity, 0)
+
+  // Build item rows — no alternating background, tight padding like real thermal paper
+  let itemRows = ""
+  data.items.forEach((item, idx) => {
+    itemRows += `
+      <tr style="border-bottom:0.5px solid #e0e0e0;">
+        <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;color:#000;">${idx + 1}</td>
+        <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;color:#000;word-break:break-word;">${esc(item.name)}</td>
+        <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;color:#000;">${item.quantity}</td>
+        <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;color:#000;">${fmtNum(item.unitPrice)}</td>
+        <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;font-weight:700;color:#000;">${fmtNum(item.lineTotal)}</td>
+      </tr>`
+  })
+
+  return `
+  <div class="receipt">
+
+    <!-- COPY LABEL -->
+    <div style="text-align:center;font-size:7.5px;border:1px solid #000;padding:1px 5px;margin-bottom:1.5mm;display:inline-block;float:right;color:#000;font-weight:700;letter-spacing:0.5px;">
+      ${copyLabel}
+    </div>
+    <div style="clear:both;"></div>
+
+    <!-- STORE NAME -->
+    <div style="text-align:center;font-size:15px;font-weight:900;letter-spacing:0.3px;margin-bottom:0.8mm;color:#000;">
+      ${esc(storeName)}
+    </div>
+
+    <!-- STORE ADDRESS & PHONE -->
+    ${storeAddr ? `<div style="text-align:center;font-size:8px;line-height:1.4;margin-bottom:0.4mm;color:#000;">Address: ${esc(storeAddr)}</div>` : ""}
+    ${storePhone ? `<div style="text-align:center;font-size:8px;margin-bottom:1mm;color:#000;">Contact Number : ${esc(storePhone)}</div>` : ""}
+
+    <!-- SALES RECEIPT BAR -->
+    <div style="background:#000;color:#fff;text-align:center;font-weight:700;font-size:9.5px;padding:2px 0;margin:1.5mm 0;">
+      Sales Receipt
+    </div>
+
+    <!-- BILL INFO -->
+    <table style="width:100%;font-size:8px;margin-bottom:0.8mm;color:#000;" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:0.3mm 0;color:#000;">Bill No: <strong style="color:#000;">${esc(invNo)}</strong></td>
+        <td style="padding:0.3mm 0;text-align:right;color:#000;">${cashier ? `User: <strong style="color:#000;">${esc(cashier)}</strong>` : ""}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:0.3mm 0;color:#000;">Date &amp; Time: ${esc(dateStr)} - ${esc(timeStr)}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:0.3mm 0;color:#000;">Customer Contact #: ${data.party?.phone ? esc(data.party.phone) : ""}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:0.3mm 0;color:#000;">Customer Name: ${data.party?.name ? esc(data.party.name) : ""}</td>
+      </tr>
+    </table>
+
+    <!-- ITEMS TABLE -->
+    <table style="width:100%;border-collapse:collapse;font-size:8px;color:#000;table-layout:fixed;" cellpadding="0" cellspacing="0">
+      <colgroup>
+        <col style="width:6%">
+        <col style="width:38%">
+        <col style="width:12%">
+        <col style="width:20%">
+        <col style="width:24%">
+      </colgroup>
+      <thead>
+        <tr style="border-top:1.5px solid #000;border-bottom:1.5px solid #000;">
+          <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;color:#000;">Sr</th>
+          <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;color:#000;">Description</th>
+          <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;color:#000;">Qty</th>
+          <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;color:#000;">Rate</th>
+          <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;color:#000;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemRows}
+      </tbody>
+    </table>
+
+    <!-- SUMMARY ROW -->
+    <div style="border-top:1.5px solid #000;border-bottom:1px dashed #000;font-size:8px;padding:1mm 0.5mm;margin-top:0;color:#000;">
+      No. Of Item(s) ${itemCount} &nbsp;&nbsp; Total Qty: ${totalQty}
+    </div>
+
+    <!-- TOTALS (right-aligned) -->
+    <table style="width:100%;font-size:9px;margin-top:1mm;color:#000;" cellpadding="0" cellspacing="0">
+      ${data.tax > 0 ? `
+      <tr>
+        <td></td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;color:#000;">Subtotal:</td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;min-width:18mm;color:#000;">${fmtNum(data.subtotal)}</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;color:#000;">Tax:</td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;color:#000;">${fmtNum(data.tax)}</td>
+      </tr>` : ""}
+      <tr>
+        <td></td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Net Amount:</td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(data.total)}</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${esc(payMethod)} Paid:</td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(cashPaid)}</td>
+      </tr>
+    </table>
+
+    <!-- DASHED SEPARATOR -->
+    <div style="border-top:1px dashed #000;margin:1.5mm 0;"></div>
+
+    <!-- TERMS -->
+    <div style="font-size:7.5px;line-height:1.4;color:#000;">
+      <div style="color:#000;">1- Only Products can be exchanged within 7 days of sales.</div>
+      <div style="color:#000;">2- Check your Product Before Leave Counter.</div>
+      <div style="color:#000;">3- Damage Product no Exchange Or Return.</div>
+      <div style="margin-top:0.8mm;font-weight:700;color:#000;">*Note: No Exchange No Return Without Sale Receipt</div>
+    </div>
+
+    <!-- BARCODE AREA -->
+    <div style="text-align:center;margin:2mm 0 1mm;">
+      <div style="font-family:'Libre Barcode 128 Text',monospace;font-size:36px;line-height:1;letter-spacing:0;color:#000;">
+        ${esc(invNo)}
+      </div>
+      <div style="font-size:7.5px;margin-top:0.5mm;color:#000;">* ${esc(invNo)} *</div>
+    </div>
+
+    <!-- PRINT DATE / TIME -->
+    <div style="display:flex;justify-content:space-between;font-size:7.5px;border-top:1px dashed #999;padding-top:1mm;color:#000;">
+      <span style="color:#000;">Print Date: ${esc(printDate)}</span>
+      <span style="color:#000;">Print Time: ${esc(printTime)}</span>
+    </div>
+
+  </div>`
 }
 
 /**
- * Generate POS Carbon Copy (NCR) Invoice
- * Proper format for thermal printers and carbon copy machines
- * Width: 3-4 inches (80-100mm) - standard POS machine size
+ * NCR Carbon Copy — prints ORIGINAL + DUPLICATE (2 copies, one per page)
  */
 export async function printStandardInvoice(data: InvoiceForPrint) {
-  const dateStr = data.date ? formatDate(data.date) : ""
-  const timeStr = data.date ? formatTime(data.date) : ""
-  const invoiceNumber = data.invoiceNumber || data.id.substring(0, 8).toUpperCase()
-
-  // Store info with fallbacks
-  const storeName = data.store?.name || "STORE"
-  const storeAddress = data.store?.address || ""
-  const storePhone = data.store?.phone || ""
-  const cashier = data.cashier || "—"
-
-  // Payment method(s)
-  const paymentMethods = data.payments && data.payments.length > 0
-    ? [...new Set(data.payments.map((p) => p.method))].join(", ")
-    : "—"
-
-  // Build items rows
-  let itemsHTML = ""
-  for (const item of data.items) {
-    const qty = item.quantity || 0
-    const unitPrice = item.unitPrice || 0
-    const lineTotal = item.lineTotal || 0
-    itemsHTML += `
-      <div class="item-row">
-        <div class="item-name">${escapeHtml(item.name)}</div>
-        <div class="qty">${qty}</div>
-        <div class="price">${formatMoney(unitPrice)}</div>
-        <div class="total">${formatMoney(lineTotal)}</div>
-      </div>
-    `
-  }
-
-  const html = `
-<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Invoice ${escapeHtml(invoiceNumber)}</title>
+  <title>Receipt ${esc(data.invoiceNumber || data.id.substring(0, 8).toUpperCase())}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128+Text&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     @page {
-      size: 80mm auto;
+      size: 72mm auto;
       margin: 0;
       padding: 0;
     }
-
     @media print {
       body {
-        width: 80mm;
+        width: 72mm;
         margin: 0;
         padding: 0;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-      .page-break {
-        page-break-after: always;
-      }
+      .page-break { page-break-after: always; }
     }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; color: #000; }
+    a, a:visited, a:hover { color: #000 !important; text-decoration: none; }
     body {
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      line-height: 1.3;
-      width: 80mm;
-      margin: 0 auto;
-      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8.5px;
       color: #000;
       background: #fff;
-      font-weight: 800;
+      width: 72mm;
+      margin: 0 auto;
     }
-
     .receipt {
-      width: 80mm;
-      padding: 2mm;
-      text-align: center;
+      width: 72mm;
+      padding: 2mm 2mm 2mm 2mm;
     }
-
-    .header {
-      border-bottom: 1px dashed #000;
-      padding-bottom: 3mm;
-      margin-bottom: 3mm;
-    }
-
-    .store-name {
-      font-weight: 900;
-      font-size: 13px;
-      margin-bottom: 1.5mm;
-    }
-
-    .store-details {
-      font-size: 9px;
-      line-height: 1.2;
-      margin-bottom: 1.5mm;
-      font-weight: 800;
-    }
-
-    .invoice-info {
-      font-size: 10px;
-      margin-bottom: 2mm;
-      border-bottom: 1px dashed #000;
-      padding: 2mm;
-      text-align: left;
-      font-weight: 800;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 1mm 0;
-      font-size: 10px;
-    }
-
-    .label {
-      font-weight: bold;
-    }
-
-    .items-section {
-      margin: 2mm 0;
-      border: 1px solid #000;
-      padding: 0;
-    }
-
-    .item-header {
-      display: grid;
-      grid-template-columns: 1fr 35px 40px 40px;
-      gap: 0;
-      font-weight: 900;
-      font-size: 11px;
-      padding: 1.5mm 2mm;
-      border-bottom: 1px solid #000;
-      background: #fff;
-    }
-
-    .item-header-col1 {
-      text-align: left;
-    }
-
-    .item-header-col2 {
-      text-align: center;
-    }
-
-    .item-header-col3 {
-      text-align: right;
-    }
-
-    .item-header-col4 {
-      text-align: right;
-    }
-
-    .item-row {
-      display: grid;
-      grid-template-columns: 1fr 35px 40px 40px;
-      gap: 0;
-      border-bottom: 1px solid #ccc;
-      padding: 1.5mm 2mm;
-      font-size: 10px;
-      font-weight: 800;
-      align-items: start;
-    }
-
-    .item-row:last-child {
-      border-bottom: 1px solid #000;
-    }
-
-    .item-name {
-      text-align: left;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      font-size: 11px;
-      font-weight: 800;
-      grid-column: 1;
-    }
-
-    .item-numbers {
-      display: contents;
-    }
-
-    .qty {
-      text-align: center;
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-    .price {
-      text-align: right;
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-    .total {
-      text-align: right;
-      font-size: 10px;
-      font-weight: 900;
-    }
-
-    .totals-section {
-      margin: 2mm 0;
-      padding: 1.5mm 0;
-    }
-
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 2mm 0;
-      margin-left: 2mm;
-      margin-right: 2mm;
-      font-size: 11px;
-      font-weight: 900;
-    }
-
-    .subtotal {
-      border-top: 1px solid #000;
-      padding-top: 3mm;
-    }
-
-    .final-total {
-      font-size: 14px;
-      font-weight: 900;
-      border-top: 2px solid #000;
-      border-bottom: 2px solid #000;
-      padding: 3mm 0;
-      margin: 3mm 0;
-      letter-spacing: 0.5px;
-    }
-
-    .payment-section {
-      margin: 2mm 0;
-      padding: 2mm;
-      font-size: 10px;
-      border-bottom: 1px dashed #000;
-      font-weight: 800;
-    }
-
-    .footer {
-      text-align: center;
-      margin: 2mm 0;
-      font-size: 10px;
-      padding-bottom: 2mm;
-      font-weight: 800;
-    }
-
-    .thank-you {
-      font-weight: 900;
-      margin: 1.5mm 0;
-    }
-
-    .copy-mark {
-      font-size: 9px;
-      color: #666;
-      margin-top: 5mm;
-      padding-top: 3mm;
-      border-top: 1px dashed #999;
-      text-align: center;
+    .page-break {
+      page-break-after: always;
+      height: 0;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <!-- MERCHANT COPY -->
-  <div class="receipt">
-    <div class="header">
-      <div class="store-name">${escapeHtml(storeName)}</div>
-      <div class="store-details">
-        ${storeAddress ? escapeHtml(storeAddress) + '<br>' : ''}
-        ${storePhone ? escapeHtml(storePhone) : ''}
-      </div>
-    </div>
-
-    <div class="invoice-info">
-      <div class="info-row">
-        <span class="label">INV #:</span>
-        <span>${escapeHtml(invoiceNumber)}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">DATE:</span>
-        <span>${escapeHtml(dateStr)}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">TIME:</span>
-        <span>${escapeHtml(timeStr)}</span>
-      </div>
-      ${data.party?.name ? `<div class="info-row">
-        <span class="label">CUSTOMER:</span>
-        <span>${escapeHtml(data.party.name)}</span>
-      </div>` : ''}
-      <div class="info-row">
-        <span class="label">CASHIER:</span>
-        <span>${escapeHtml(cashier)}</span>
-      </div>
-    </div>
-
-    <div class="items-section">
-      <div class="item-header">
-        <div class="item-header-col1">ITEM</div>
-        <div class="item-header-col2">QTY</div>
-        <div class="item-header-col3">PRICE</div>
-        <div class="item-header-col4">TOTAL</div>
-      </div>
-      ${itemsHTML}
-    </div>
-
-    <div class="totals-section">
-      <div class="total-row subtotal">
-        <span class="label">SUBTOTAL:</span>
-        <span>${formatMoney(data.subtotal)}</span>
-      </div>
-      ${data.tax > 0 ? `<div class="total-row">
-        <span class="label">TAX:</span>
-        <span>${formatMoney(data.tax)}</span>
-      </div>` : ''}
-      <div class="total-row final-total">
-        <span>TOTAL</span>
-        <span>${formatMoney(data.total)}</span>
-      </div>
-    </div>
-
-    <div class="payment-section">
-      <div class="label">Payment: ${escapeHtml(paymentMethods)}</div>
-    </div>
-
-    <div class="footer">
-      <div class="thank-you">THANK YOU!</div>
-      <div>*** MERCHANT COPY ***</div>
-    </div>
-  </div>
-
-  <!-- PAGE BREAK FOR CUSTOMER COPY -->
+  ${buildCopy(data, "Customer Copy")}
   <div class="page-break"></div>
-
-  <!-- CUSTOMER COPY -->
-  <div class="receipt">
-    <div class="header">
-      <div class="store-name">${escapeHtml(storeName)}</div>
-      <div class="store-details">
-        ${storeAddress ? escapeHtml(storeAddress) + '<br>' : ''}
-        ${storePhone ? escapeHtml(storePhone) : ''}
-      </div>
-    </div>
-
-    <div class="invoice-info">
-      <div class="info-row">
-        <span class="label">INV #:</span>
-        <span>${escapeHtml(invoiceNumber)}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">DATE:</span>
-        <span>${escapeHtml(dateStr)}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">TIME:</span>
-        <span>${escapeHtml(timeStr)}</span>
-      </div>
-      ${data.party?.name ? `<div class="info-row">
-        <span class="label">CUSTOMER:</span>
-        <span>${escapeHtml(data.party.name)}</span>
-      </div>` : ''}
-    </div>
-
-    <div class="items-section">
-      <div class="item-header">
-        <div class="item-header-col1">ITEM</div>
-        <div class="item-header-col2">QTY</div>
-        <div class="item-header-col3">PRICE</div>
-        <div class="item-header-col4">TOTAL</div>
-      </div>
-      ${itemsHTML}
-    </div>
-
-    <div class="totals-section">
-      <div class="total-row subtotal">
-        <span class="label">SUBTOTAL:</span>
-        <span>${formatMoney(data.subtotal)}</span>
-      </div>
-      ${data.tax > 0 ? `<div class="total-row">
-        <span class="label">TAX:</span>
-        <span>${formatMoney(data.tax)}</span>
-      </div>` : ''}
-      <div class="total-row final-total">
-        <span>TOTAL</span>
-        <span>${formatMoney(data.total)}</span>
-      </div>
-    </div>
-
-    <div class="payment-section">
-      <div class="label">Payment: ${escapeHtml(paymentMethods)}</div>
-    </div>
-
-    <div class="footer">
-      <div class="thank-you">THANK YOU!</div>
-      <div>*** CUSTOMER COPY ***</div>
-      <div style="font-size: 8px; margin-top: 2mm;">Please retain for your records</div>
-    </div>
-  </div>
+  ${buildCopy(data, "Merchant Copy")}
 </body>
 </html>`
 
   const win = window.open("", "_blank")
   if (!win) {
-    console.error("Popup blocked - please allow popups to print")
+    console.error("Popup blocked — please allow popups to print")
     return
   }
   win.document.write(html)
@@ -432,12 +259,5 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
   setTimeout(() => {
     win.print()
     win.close()
-  }, 250)
-}
-
-function escapeHtml(s: string) {
-  const div = typeof document !== "undefined" ? document.createElement("div") : null
-  if (!div) return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-  div.textContent = s
-  return div.innerHTML
+  }, 600)
 }

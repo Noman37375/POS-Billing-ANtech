@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 const initialState = { error: "" }
 
@@ -23,9 +24,8 @@ export default function AddPartyForm() {
   )
 
   useEffect(() => {
-    // Only redirect if pending changed from true to false (form submission completed)
-    // and there's no error
     if (prevPendingRef.current && !pending && !state.error) {
+      toast.success("Party created successfully!")
       router.push("/parties")
     }
     prevPendingRef.current = pending
@@ -40,6 +40,10 @@ export default function AddPartyForm() {
       <div className="space-y-2">
         <Label htmlFor="phone">Phone</Label>
         <Input id="phone" name="phone" placeholder="9876543210" required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="address">Address</Label>
+        <Input id="address" name="address" placeholder="123 Main Street, City" />
       </div>
       <div className="space-y-2">
         <Label htmlFor="type">Type</Label>

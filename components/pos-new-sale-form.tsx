@@ -4,7 +4,6 @@ import { useMemo, useState, useTransition, useEffect, useRef, useCallback } from
 import { useRouter } from "next/navigation"
 import { Plus, Trash2, Loader2, Printer, X, FileText } from "lucide-react"
 import { createPOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
-import { getInvoiceForPDF } from "@/app/(app)/invoices/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner"
 import { useCurrency } from "@/contexts/currency-context"
 import type { PaymentMethod } from "@/lib/types/pos"
-type PartyOption = { id: string; name: string }
+type PartyOption = { id: string; name: string; address?: string | null }
 type InventoryOption = { id: string; name: string; stock: number; unitPrice: number }
 
 interface POSNewSaleFormProps {
@@ -226,27 +225,19 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
     setPrintPending(true)
     try {
       const format = await getUserPrintFormat()
+      const invoiceResult = await getInvoiceForPrint(lastInvoiceId)
+      if (invoiceResult.error || !invoiceResult.data) {
+        toast.error(invoiceResult.error ?? "Failed to load invoice")
+        return
+      }
       if (format === "a4") {
-        // A4 format: use existing getInvoiceForPDF (returns InvoicePDFData)
-        const invoiceResult = await getInvoiceForPDF(lastInvoiceId)
-        if (invoiceResult.error || !invoiceResult.data) {
-          toast.error(invoiceResult.error ?? "Failed to load invoice")
-          return
-        }
-        const { generateInvoicePDF } = await import("@/lib/pdf/generate-invoice-pdf")
-        await generateInvoicePDF({ ...invoiceResult.data, currency: undefined })
-        toast.success("PDF downloaded")
+        const { printA4Invoice } = await import("@/components/pos/print-a4-invoice")
+        await printA4Invoice(invoiceResult.data)
       } else {
-        // Standard format: use getInvoiceForPrint (returns InvoiceForPrint with store, cashier, payments)
-        const invoiceResult = await getInvoiceForPrint(lastInvoiceId)
-        if (invoiceResult.error || !invoiceResult.data) {
-          toast.error(invoiceResult.error ?? "Failed to load invoice")
-          return
-        }
         const { printStandardInvoice } = await import("@/components/pos/print-standard-invoice")
         await printStandardInvoice(invoiceResult.data)
-        toast.success("Open print dialog to print standard invoice")
       }
+      toast.success("Print dialog opened")
     } catch (e) {
       console.error(e)
       toast.error("Print failed")
@@ -276,6 +267,11 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
                 }}
                 onFocus={() => customerQuery && setShowCustomerResults(true)}
               />
+              {partyId && parties.find((p) => p.id === partyId)?.address && (
+                <p className="mt-1 text-xs text-muted-foreground truncate">
+                  📍 {parties.find((p) => p.id === partyId)?.address}
+                </p>
+              )}
               {partyId && (
                 <button
                   onClick={() => {

@@ -17,6 +17,7 @@ interface Party {
   id: string
   name: string
   phone: string
+  address?: string | null
   type: string
   created_at?: string
 }
@@ -110,11 +111,12 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted-foreground border-b">
-                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[25%]">Name</th>
-                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[20%]">Phone</th>
-                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Type</th>
-                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[20%]">Balance</th>
-                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[20%]">Actions</th>
+                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[20%]">Name</th>
+                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[15%]">Phone</th>
+                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden md:table-cell w-[20%]">Address</th>
+                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Type</th>
+                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[18%]">Balance</th>
+                <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[15%]">Actions</th>
               </tr>
             </thead>
             <tbody className="[&>tr:not(:last-child)]:border-b">
@@ -123,16 +125,24 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
                 const isCustomer = party.type === "Customer"
                 return (
                   <tr key={party.id} className="hover:bg-muted/50">
-                    <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[25%]">
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[20%]">
                       <div className="flex flex-col min-w-0 overflow-hidden">
                         <span className="truncate break-words">{party.name}</span>
                         <span className="text-[10px] text-muted-foreground sm:hidden truncate break-all">
                           {party.phone}
                         </span>
+                        {party.address && (
+                          <span className="text-[10px] text-muted-foreground md:hidden truncate">
+                            {party.address}
+                          </span>
+                        )}
                       </div>
                     </td>
-                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[20%]">
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden sm:table-cell w-[15%]">
                       <span className="truncate block break-all">{party.phone}</span>
+                    </td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-muted-foreground text-xs sm:text-sm hidden md:table-cell w-[20%]">
+                      <span className="truncate block">{party.address || "—"}</span>
                     </td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 w-[15%]">
                       <Badge
@@ -190,7 +200,7 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
               })}
               {filteredParties.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
+                  <td colSpan={6} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
                     {searchQuery || typeFilter !== "all"
                       ? "No parties found matching your filters."
                       : "No parties found. Add your first customer or vendor."}

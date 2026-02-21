@@ -71,15 +71,13 @@ export function POSSettingsForm({ defaultFormat, defaultStoreSettings }: POSSett
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pos_thermal">POS Thermal Printer (80mm)</SelectItem>
-                <SelectItem value="pos_ncr">POS NCR Carbon Copy</SelectItem>
+                <SelectItem value="pos_ncr">NCR Carbon Copy (80mm)</SelectItem>
                 <SelectItem value="a4">A4 (Full Page)</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              <strong>POS Thermal (80mm):</strong> For thermal printers (compact receipt format)<br/>
-              <strong>POS NCR:</strong> For carbon copy invoice machine (standard format)<br/>
-              <strong>A4:</strong> Full-size document format for detailed invoices
+              <strong>NCR Carbon Copy:</strong> 80mm receipt — prints 2 copies (Original + Duplicate)<br/>
+              <strong>A4:</strong> Full-size A4 document — opens browser print dialog
             </p>
           </div>
         </div>

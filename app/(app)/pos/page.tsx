@@ -32,7 +32,7 @@ export default async function POSNewSalePage({
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
   const [{ data: parties = [] }, { data: inventory = [] }] = await Promise.all([
-    supabase.from("parties").select("id, name").eq("type", "Customer").eq("user_id", currentUser.id).order("name"),
+    supabase.from("parties").select("id, name, address").eq("type", "Customer").eq("user_id", currentUser.id).order("name"),
     supabase.from("inventory_items").select("id, name, stock, selling_price").eq("user_id", currentUser.id).order("name"),
   ])
 
@@ -48,7 +48,7 @@ export default async function POSNewSalePage({
       <h1 className="text-xl sm:text-2xl font-semibold text-foreground">New Sale</h1>
       <p className="text-xs sm:text-sm text-muted-foreground">Add items, select customer, and complete payment.</p>
       <POSNewSaleForm
-        parties={(parties || []).map((p) => ({ id: (p as { id: string }).id, name: (p as { name?: string }).name || "" }))}
+        parties={(parties || []).map((p) => ({ id: (p as { id: string }).id, name: (p as { name?: string }).name || "", address: (p as { address?: string | null }).address ?? null }))}
         inventory={normalizedInventory}
         initialItemId={initialItemId}
         autoAdd={autoAdd}

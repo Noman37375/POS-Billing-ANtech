@@ -27,7 +27,7 @@ export default async function PartiesPage({
     const supabase = createClient()
     const { data = [] } = await supabase
       .from("parties")
-      .select("id, name, phone, type, created_at")
+      .select("id, name, phone, address, type, created_at")
       .eq("user_id", currentUser.id)
       .order("created_at", { ascending: false })
     return data

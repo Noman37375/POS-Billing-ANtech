@@ -203,7 +203,7 @@ export async function getPOSSales(dateFrom?: string, dateTo?: string) {
   }) as Sale[]
 }
 
-export type PrintFormat = "pos_thermal" | "pos_ncr" | "a4"
+export type PrintFormat = "pos_ncr" | "a4"
 
 const PRINT_FORMAT_KEY = "pos_default_print_format"
 
@@ -219,10 +219,11 @@ export async function getUserPrintFormat(): Promise<PrintFormat> {
     .single()
 
   const value = (data as { value?: string } | null)?.value
-  if (value === "pos_thermal" || value === "pos_ncr" || value === "a4") {
+  if (value === "pos_ncr" || value === "a4") {
     return value as PrintFormat
   }
-  return "a4"
+  // pos_thermal (old) maps to pos_ncr
+  return "pos_ncr"
 }
 
 export async function setUserPrintFormat(format: PrintFormat) {

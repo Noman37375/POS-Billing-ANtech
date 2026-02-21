@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
 
 const initialState = { error: "" }
 
@@ -16,6 +17,7 @@ interface Party {
   name: string
   phone: string
   type: string
+  address?: string | null
 }
 
 interface PartyDialogProps {
@@ -37,7 +39,10 @@ export default function PartyDialog({ party, trigger }: PartyDialogProps) {
 
   useEffect(() => {
     if (!state.error && !pending) {
-      setOpen(false)
+      if (open) {
+        toast.success(isEdit ? "Party updated successfully!" : "Party created successfully!")
+        setOpen(false)
+      }
     }
   }, [pending, state.error])
 
@@ -64,6 +69,10 @@ export default function PartyDialog({ party, trigger }: PartyDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
             <Input id="phone" name="phone" placeholder="9876543210" defaultValue={party?.phone || ""} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Input id="address" name="address" placeholder="123 Main Street, City" defaultValue={party?.address || ""} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="type">Type</Label>

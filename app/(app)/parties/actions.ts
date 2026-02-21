@@ -12,6 +12,7 @@ export async function createParty(formData: FormData) {
     name: String(formData.get("name") || "").trim(),
     phone: String(formData.get("phone") || "").trim(),
     type: String(formData.get("type") || "Customer"),
+    address: String(formData.get("address") || "").trim() || null,
     user_id: currentUser.id,
   }
 
@@ -38,6 +39,7 @@ export async function updateParty(formData: FormData) {
     name: String(formData.get("name") || "").trim(),
     phone: String(formData.get("phone") || "").trim(),
     type: String(formData.get("type") || "Customer"),
+    address: String(formData.get("address") || "").trim() || null,
   }
 
   if (!id || !payload.name || !payload.phone) {
