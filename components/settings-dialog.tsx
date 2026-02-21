@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Settings, Receipt, DollarSign, Bell, Download, Upload } from "lucide-react"
+import { Settings, Receipt, Bell, Download, Upload, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -18,12 +18,10 @@ import { useTheme } from "next-themes"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
-import { useCurrency } from "@/contexts/currency-context"
 
 export function SettingsDialog() {
   const [open, setOpen] = useState(false)
   const { theme, setTheme } = useTheme()
-  const { currency, setCurrency } = useCurrency()
   const [defaultTaxRate, setDefaultTaxRate] = useState(18)
   const [notifications, setNotifications] = useState(true)
 
@@ -77,33 +75,18 @@ export function SettingsDialog() {
               <Receipt className="w-4 h-4 text-muted-foreground" />
               <h3 className="font-semibold text-foreground">Invoice Settings</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="defaultTaxRate">Default Tax Rate (%)</Label>
-                <Input
-                  id="defaultTaxRate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={defaultTaxRate}
-                  onChange={(e) => setDefaultTaxRate(Number(e.target.value) || 0)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="currency">Currency</Label>
-                <Select value={currency} onValueChange={(value) => setCurrency(value as "PKR" | "USD" | "EUR" | "GBP")}>
-                  <SelectTrigger id="currency">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PKR">PKR - Pakistani Rupee</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="defaultTaxRate">Default Tax Rate (%)</Label>
+              <Input
+                id="defaultTaxRate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={defaultTaxRate}
+                onChange={(e) => setDefaultTaxRate(Number(e.target.value) || 0)}
+                className="max-w-xs"
+              />
             </div>
           </div>
 
@@ -152,7 +135,7 @@ export function SettingsDialog() {
           {/* Data Management */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <Database className="w-4 h-4 text-muted-foreground" />
               <h3 className="font-semibold text-foreground">Data Management</h3>
             </div>
             <div className="grid grid-cols-2 gap-4">

@@ -37,8 +37,15 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
   const [showItemResults, setShowItemResults] = useState(false)
   const [customerQuery, setCustomerQuery] = useState("")
   const [itemQuery, setItemQuery] = useState("")
+  const [customerHighlightIndex, setCustomerHighlightIndex] = useState(0)
+  const [itemHighlightIndex, setItemHighlightIndex] = useState(0)
   const customerInputRef = useRef<HTMLInputElement>(null)
   const itemInputRef = useRef<HTMLInputElement>(null)
+  const taxRateInputRef = useRef<HTMLInputElement>(null)
+  const quantityInputRef = useRef<HTMLInputElement>(null)
+  const addButtonRef = useRef<HTMLButtonElement>(null)
+  const customerDropdownRef = useRef<HTMLDivElement>(null)
+  const itemDropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { formatCurrency } = useCurrency()
 
@@ -49,6 +56,93 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
         return inv ? `${inv.name} (Stock: ${inv.stock})` : ""
       })()
     : ""
+
+  const filteredCustomers = useMemo(
+    () => parties.filter((p) => p.name.toLowerCase().includes(customerQuery.toLowerCase())),
+    [parties, customerQuery]
+  )
+
+  const filteredItems = useMemo(
+    () =>
+      inventory.filter(
+        (item) => item.stock > 0 && item.name.toLowerCase().includes(itemQuery.toLowerCase())
+      ),
+    [inventory, itemQuery]
+  )
+
+  useEffect(() => {
+    setCustomerHighlightIndex(0)
+  }, [customerQuery])
+
+  useEffect(() => {
+    setItemHighlightIndex(0)
+  }, [itemQuery])
+
+  useEffect(() => {
+    if (customerDropdownRef.current && showCustomerResults) {
+      const highlightedEl = customerDropdownRef.current.children[customerHighlightIndex] as HTMLElement
+      if (highlightedEl) {
+        highlightedEl.scrollIntoView({ block: "nearest" })
+      }
+    }
+  }, [customerHighlightIndex, showCustomerResults])
+
+  useEffect(() => {
+    if (itemDropdownRef.current && showItemResults) {
+      const highlightedEl = itemDropdownRef.current.children[itemHighlightIndex] as HTMLElement
+      if (highlightedEl) {
+        highlightedEl.scrollIntoView({ block: "nearest" })
+      }
+    }
+  }, [itemHighlightIndex, showItemResults])
+
+  const handleCustomerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showCustomerResults) return
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setCustomerHighlightIndex((prev) =>
+        prev < filteredCustomers.length - 1 ? prev + 1 : prev
+      )
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setCustomerHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0))
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      if (filteredCustomers.length > 0 && filteredCustomers[customerHighlightIndex]) {
+        const selected = filteredCustomers[customerHighlightIndex]
+        setPartyId(selected.id)
+        setCustomerQuery("")
+        setShowCustomerResults(false)
+      }
+    } else if (e.key === "Escape") {
+      setShowCustomerResults(false)
+    }
+  }
+
+  const handleItemKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showItemResults) return
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setItemHighlightIndex((prev) =>
+        prev < filteredItems.length - 1 ? prev + 1 : prev
+      )
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setItemHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0))
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      if (filteredItems.length > 0 && filteredItems[itemHighlightIndex]) {
+        const selected = filteredItems[itemHighlightIndex]
+        setSelectedItem(selected.id)
+        setItemQuery("")
+        setShowItemResults(false)
+      }
+    } else if (e.key === "Escape") {
+      setShowItemResults(false)
+    }
+  }
 
   // Helper to add an item by ID with quantity 1 (used by both barcode flows)
   const addItemById = useCallback(
@@ -104,13 +198,54 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
     }
   }, [initialItemId, inventory, router, autoAdd, addItemById])
 
-  // Handle F7 key to print invoice
+  // Handle F7 key to print invoice, F3 to focus item field, Shift+Arrows for navigation
   useEffect(() => {
+    const inputRefs: React.RefObject<HTMLInputElement | HTMLButtonElement | null>[] = [
+      customerInputRef,
+      taxRateInputRef,
+      itemInputRef,
+      quantityInputRef,
+      addButtonRef,
+    ]
+
     const handleKeyDown = (e: KeyboardEvent) => {
+      // F7 - Print invoice
       if (e.key === "F7") {
         e.preventDefault()
         if (lastInvoiceId) {
           handlePrint()
+        }
+        return
+      }
+
+      // F3 - Focus on item search field
+      if (e.key === "F3") {
+        e.preventDefault()
+        itemInputRef.current?.focus()
+        itemInputRef.current?.select()
+        return
+      }
+
+      // Shift + Arrow keys - Navigate between input fields
+      if (e.shiftKey && (e.key === "ArrowRight" || e.key === "ArrowLeft" || e.key === "ArrowDown" || e.key === "ArrowUp")) {
+        const activeElement = document.activeElement
+        const currentIndex = inputRefs.findIndex((ref) => ref.current === activeElement)
+
+        if (currentIndex !== -1) {
+          e.preventDefault()
+          let nextIndex: number
+
+          if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+            nextIndex = (currentIndex + 1) % inputRefs.length
+          } else {
+            nextIndex = (currentIndex - 1 + inputRefs.length) % inputRefs.length
+          }
+
+          const nextRef = inputRefs[nextIndex]
+          nextRef.current?.focus()
+          if (nextRef.current && 'select' in nextRef.current) {
+            (nextRef.current as HTMLInputElement).select()
+          }
         }
       }
     }
@@ -252,7 +387,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
         <CardTitle className="text-base sm:text-lg">Point of Sale</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 p-4 sm:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Customer</Label>
             <div className="relative">
@@ -266,12 +401,8 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
                   if (!e.target.value) setPartyId("")
                 }}
                 onFocus={() => customerQuery && setShowCustomerResults(true)}
+                onKeyDown={handleCustomerKeyDown}
               />
-              {partyId && parties.find((p) => p.id === partyId)?.address && (
-                <p className="mt-1 text-xs text-muted-foreground truncate">
-                  📍 {parties.find((p) => p.id === partyId)?.address}
-                </p>
-              )}
               {partyId && (
                 <button
                   onClick={() => {
@@ -287,35 +418,48 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
               )}
 
               {showCustomerResults && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                  {parties
-                    .filter((p) => p.name.toLowerCase().includes(customerQuery.toLowerCase()))
-                    .length === 0 ? (
+                <div
+                  ref={customerDropdownRef}
+                  className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto"
+                >
+                  {filteredCustomers.length === 0 ? (
                     <div className="p-2 text-sm text-muted-foreground">No customer found</div>
                   ) : (
-                    parties
-                      .filter((p) => p.name.toLowerCase().includes(customerQuery.toLowerCase()))
-                      .map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => {
-                            setPartyId(p.id)
-                            setCustomerQuery("")
-                            setShowCustomerResults(false)
-                          }}
-                          className="w-full px-3 py-2 text-left hover:bg-muted text-sm border-b last:border-b-0"
-                        >
-                          {p.name}
-                        </button>
-                      ))
+                    filteredCustomers.map((p, index) => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          setPartyId(p.id)
+                          setCustomerQuery("")
+                          setShowCustomerResults(false)
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm border-b last:border-b-0 ${
+                          index === customerHighlightIndex
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-muted"
+                        }`}
+                      >
+                        {p.name}
+                      </button>
+                    ))
                   )}
                 </div>
               )}
             </div>
           </div>
           <div className="space-y-2">
+            <Label>Address</Label>
+            <Input
+              placeholder="Customer address..."
+              value={partyId ? parties.find((p) => p.id === partyId)?.address || "" : ""}
+              readOnly
+              className="bg-muted/50"
+            />
+          </div>
+          <div className="space-y-2">
             <Label>Tax rate (%)</Label>
             <Input
+              ref={taxRateInputRef}
               type="number"
               min={0}
               max={100}
@@ -340,43 +484,40 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
                   if (!e.target.value) setSelectedItem("")
                 }}
                 onFocus={() => itemQuery && setShowItemResults(true)}
+                onKeyDown={handleItemKeyDown}
               />
 
               {showItemResults && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto">
-                  {inventory
-                    .filter(
-                      (item) =>
-                        item.stock > 0 &&
-                        item.name.toLowerCase().includes(itemQuery.toLowerCase())
-                    )
-                    .length === 0 ? (
+                <div
+                  ref={itemDropdownRef}
+                  className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto"
+                >
+                  {filteredItems.length === 0 ? (
                     <div className="p-2 text-sm text-muted-foreground">No item found</div>
                   ) : (
-                    inventory
-                      .filter(
-                        (item) =>
-                          item.stock > 0 &&
-                          item.name.toLowerCase().includes(itemQuery.toLowerCase())
-                      )
-                      .map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setSelectedItem(item.id)
-                            setItemQuery("")
-                            setShowItemResults(false)
-                          }}
-                          className="w-full px-3 py-2 text-left hover:bg-muted text-sm border-b last:border-b-0"
-                        >
-                          {item.name} (Stock: {item.stock})
-                        </button>
-                      ))
+                    filteredItems.map((item, index) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedItem(item.id)
+                          setItemQuery("")
+                          setShowItemResults(false)
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm border-b last:border-b-0 ${
+                          index === itemHighlightIndex
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-muted"
+                        }`}
+                      >
+                        {item.name} (Stock: {item.stock})
+                      </button>
+                    ))
                   )}
                 </div>
               )}
             </div>
             <Input
+              ref={quantityInputRef}
               type="number"
               min={1}
               max={selectedItem ? inventory.find((i) => i.id === selectedItem)?.stock ?? 0 : undefined}
@@ -384,7 +525,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
               onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
               className="w-24"
             />
-            <Button type="button" onClick={addLine} disabled={!selectedItem}>
+            <Button ref={addButtonRef} type="button" onClick={addLine} disabled={!selectedItem}>
               <Plus className="w-4 h-4 mr-2" />
               Add
             </Button>

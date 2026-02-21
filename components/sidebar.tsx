@@ -3,10 +3,11 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo, useState, useEffect } from "react"
-import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet } from "lucide-react"
+import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard } from "lucide-react"
 import Image from "next/image"
 import { PosUser, ModulePrivilege } from "@/lib/types/user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { ShortcutsDialog } from "@/components/shortcuts-dialog"
 
 interface SidebarProps {
   user: PosUser
@@ -258,7 +259,7 @@ export function Sidebar({ user }: SidebarProps) {
             <p className="text-[11px] text-sidebar-foreground/70">Invoice & Billing</p>
           </div>
         </div>
-        <nav className="pt-5 px-3 space-y-2">
+        <nav className="pt-5 px-3 space-y-2 pb-4">
           {navItems.map((item) => {
             const { href, label, icon: Icon, children } = item
             const active = isActive(href)
@@ -360,6 +361,11 @@ export function Sidebar({ user }: SidebarProps) {
               </Link>
             )
           })}
+
+          {/* Keyboard Shortcuts */}
+          <div className="pt-4 mt-4 border-t border-sidebar-border">
+            <ShortcutsDialog />
+          </div>
         </nav>
       </aside>
 
