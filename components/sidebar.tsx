@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo, useState, useEffect } from "react"
-import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard } from "lucide-react"
+import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp } from "lucide-react"
 import Image from "next/image"
 import { PosUser, ModulePrivilege } from "@/lib/types/user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -119,6 +119,7 @@ export function Sidebar({ user }: SidebarProps) {
           { href: "/pos/sales", label: "Sales", icon: Receipt, privilege: "pos" as ModulePrivilege },
           { href: "/pos/payments", label: "Customer Payments", icon: CreditCard, privilege: "pos" as ModulePrivilege },
           { href: "/pos/settings", label: "Settings", icon: Settings, privilege: "pos" as ModulePrivilege },
+          { href: "/pos/reports", label: "Gross Profit", icon: TrendingUp, privilege: "pos" as ModulePrivilege },
         ],
       },
       {
@@ -224,7 +225,7 @@ export function Sidebar({ user }: SidebarProps) {
     // This prevents parent from being highlighted when on /pos/sales or /pos/settings
     if (href === "/pos") {
       // If on a child route, don't highlight parent
-      if (pathname.startsWith("/pos/sales") || pathname.startsWith("/pos/payments") || pathname.startsWith("/pos/settings")) {
+      if (pathname.startsWith("/pos/sales") || pathname.startsWith("/pos/payments") || pathname.startsWith("/pos/settings") || pathname.startsWith("/pos/reports")) {
         return false
       }
       return pathname.startsWith("/pos")

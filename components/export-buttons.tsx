@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import { FileDown, FileSpreadsheet, Loader2 } from "lucide-react"
+import { FileSpreadsheet, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
@@ -15,84 +14,130 @@ interface ExportButtonsProps {
   columns: ExportColumn[]
   filename: string
   title?: string
+  /** Store name for print header (e.g. "Sadaf Store Gross Profit Report") */
+  printStoreName?: string
+  /** Report parameters text for print (e.g. "From Date: ... To Date: ...") */
+  printReportParams?: string
+  /** User name for print footer */
+  printUserName?: string
+  /** Location for report params (e.g. "Sadaf Store") */
+  printLocation?: string
 }
 
-export function ExportButtons({ data, columns, filename, title }: ExportButtonsProps) {
-  const [pdfLoading, setPdfLoading] = useState(false)
+function escapeHtml(s: string): string {
+  const div = document.createElement("div")
+  div.textContent = s
+  return div.innerHTML
+}
 
-  const handleExportPDF = async () => {
-    setPdfLoading(true)
+function formatCell(val: unknown): string {
+  if (val === null || val === undefined) return "—"
+  if (typeof val === "number") {
+    return val.toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+  return String(val)
+}
+
+export function ExportButtons({
+  data,
+  columns,
+  filename,
+  title,
+  printStoreName,
+  printReportParams,
+  printUserName = "ADMIN",
+  printLocation,
+}: ExportButtonsProps) {
+  const handlePrint = () => {
     try {
-      const jsPDF = (await import("jspdf")).default
-      const autoTable = (await import("jspdf-autotable")).default
+      const reportTitle = title || "Report"
+      const fullTitle = printStoreName ? `${printStoreName} ${reportTitle}` : reportTitle
+      const paramsText =
+        printReportParams ||
+        `From Date: ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" })} AND To Date: ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" })} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${printLocation || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`
 
-      const doc = new jsPDF()
-      const pageWidth = doc.internal.pageSize.getWidth()
-      const margin = 20
-      let yPos = margin
+      const headerRow = columns.map((col) => `<th style="border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:11px;background:#f5f5f5;">${escapeHtml(col.header)}</th>`).join("")
+      const bodyRows = data
+        .map(
+          (row) =>
+            `<tr>${columns
+              .map((col) => {
+                const val = row[col.key]
+                const text = formatCell(val)
+                const isNum = typeof val === "number"
+                return `<td style="border:1px solid #ddd;padding:5px 8px;font-size:10px;${isNum ? "text-align:right;" : ""}">${escapeHtml(text)}</td>`
+              })
+              .join("")}</tr>`
+        )
+        .join("")
 
-      // Title
-      if (title) {
-        doc.setFontSize(18)
-        doc.setTextColor(59, 130, 246)
-        doc.setFont("helvetica", "bold")
-        doc.text(title, pageWidth / 2, yPos + 10, { align: "center" })
-        yPos += 25
+      const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(fullTitle)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #000; margin: 16px; }
+    .report-title { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 12px; }
+    .report-params { font-size: 10px; color: #333; margin-bottom: 14px; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    .footer { margin-top: 20px; font-size: 10px; color: #555; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .footer-left { }
+    .footer-center { text-align: center; }
+    .footer-right { text-align: right; }
+    @media print { body { margin: 12px; } }
+  </style>
+</head>
+<body>
+  <div class="report-title">${escapeHtml(fullTitle)}</div>
+  <div class="report-params"><strong>Report Parameters</strong><br>${escapeHtml(paramsText)}</div>
+  <table>
+    <thead><tr>${headerRow}</tr></thead>
+    <tbody>${bodyRows}</tbody>
+  </table>
+  <div class="footer">
+    <span class="footer-left">User Name: ${escapeHtml(printUserName)}</span>
+    <span class="footer-center">${new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}<br>Design By: GENTEC www.nentersoft.com | (92) 300 213 88 68</span>
+    <span class="footer-right">Page 1</span>
+  </div>
+</body>
+</html>`
+
+      // Use a hidden iframe for printing to avoid popup blockers
+      const iframe = document.createElement("iframe")
+      iframe.style.position = "fixed"
+      iframe.style.right = "0"
+      iframe.style.bottom = "0"
+      iframe.style.width = "0"
+      iframe.style.height = "0"
+      iframe.style.border = "0"
+      document.body.appendChild(iframe)
+
+      const frameDoc = iframe.contentWindow?.document
+      if (!frameDoc) {
+        document.body.removeChild(iframe)
+        toast.error("Failed to open print view")
+        return
       }
 
-      // Date
-      doc.setFontSize(9)
-      doc.setFont("helvetica", "normal")
-      doc.setTextColor(100, 100, 100)
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, margin, yPos)
-      yPos += 10
+      frameDoc.open()
+      frameDoc.write(printContent)
+      frameDoc.close()
 
-      // Table
-      const tableData = data.map((row) =>
-        columns.map((col) => {
-          const val = row[col.key]
-          if (val === null || val === undefined) return "—"
-          if (typeof val === "number") {
-            return val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          }
-          return String(val)
-        })
-      )
+      iframe.onload = () => {
+        iframe.contentWindow?.focus()
+        iframe.contentWindow?.print()
+        // Clean up iframe after a small delay
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+        }, 1000)
+      }
 
-      autoTable(doc, {
-        startY: yPos,
-        head: [columns.map((col) => col.header)],
-        body: tableData,
-        theme: "striped",
-        headStyles: {
-          fillColor: [59, 130, 246],
-          textColor: 255,
-          fontStyle: "bold",
-          fontSize: 9,
-          cellPadding: 4,
-        },
-        bodyStyles: {
-          fontSize: 8,
-          cellPadding: 4,
-          textColor: [40, 40, 40],
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252],
-        },
-        margin: { left: margin, right: margin },
-        styles: {
-          lineColor: [200, 200, 200],
-          lineWidth: 0.5,
-        },
-      })
-
-      doc.save(`${filename}.pdf`)
-      toast.success("PDF exported successfully")
+      toast.success("Print dialog opened")
     } catch (error) {
-      toast.error("Failed to export PDF")
+      toast.error("Failed to print")
       console.error(error)
-    } finally {
-      setPdfLoading(false)
     }
   }
 
@@ -133,9 +178,9 @@ export function ExportButtons({ data, columns, filename, title }: ExportButtonsP
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={pdfLoading} className="gap-1.5 text-xs">
-        {pdfLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-        PDF
+      <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 text-xs">
+        <Printer className="w-3.5 h-3.5" />
+        Print
       </Button>
       <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 text-xs">
         <FileSpreadsheet className="w-3.5 h-3.5" />

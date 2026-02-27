@@ -29,138 +29,158 @@ export default async function AccountsOverviewPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div>
+      <div className="space-y-1">
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Accounts Overview</h1>
-        <p className="text-xs sm:text-sm text-muted-foreground">Summary dashboard for accounts and finance.</p>
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          High-level summary of receivables, payables, sales and cash movement.
+        </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Receivables</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-amber-600" />
-              <p className="text-2xl sm:text-3xl font-semibold text-amber-600">
-                <CurrencyDisplay amount={overview.totalReceivables} />
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Amount customers owe</p>
-          </CardContent>
-        </Card>
+      {/* Balance Position */}
+      <div className="space-y-2">
+        <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Balance Position
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Receivables</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-amber-600" />
+                <p className="text-2xl sm:text-3xl font-semibold text-amber-600">
+                  <CurrencyDisplay amount={overview.totalReceivables} />
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Amount customers owe</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Payables</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-red-600" />
-              <p className="text-2xl sm:text-3xl font-semibold text-red-600">
-                <CurrencyDisplay amount={overview.totalPayables} />
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Amount owed to vendors</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Payables</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-red-600" />
+                <p className="text-2xl sm:text-3xl font-semibold text-red-600">
+                  <CurrencyDisplay amount={overview.totalPayables} />
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Amount owed to vendors</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Net Position</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-blue-600" />
-              <p
-                className={`text-2xl sm:text-3xl font-semibold ${
-                  overview.totalReceivables - overview.totalPayables >= 0 ? "text-emerald-600" : "text-red-600"
-                }`}
-              >
-                <CurrencyDisplay amount={overview.totalReceivables - overview.totalPayables} />
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Receivables - Payables</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Net Position</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-blue-600" />
+                <p
+                  className={`text-2xl sm:text-3xl font-semibold ${
+                    overview.totalReceivables - overview.totalPayables >= 0 ? "text-emerald-600" : "text-red-600"
+                  }`}
+                >
+                  <CurrencyDisplay amount={overview.totalReceivables - overview.totalPayables} />
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Receivables - Payables</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-blue-600" />
-              <p className="text-2xl font-semibold text-foreground">
-                <CurrencyDisplay amount={overview.totalSales} />
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">All sales invoices</p>
-          </CardContent>
-        </Card>
+      {/* Sales, Purchases & Payments */}
+      <div className="space-y-2">
+        <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Sales, Purchases & Payments
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-blue-600" />
+                <p className="text-2xl font-semibold text-foreground">
+                  <CurrencyDisplay amount={overview.totalSales} />
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">All sales invoices</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Purchases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-purple-600" />
-              <p className="text-2xl font-semibold text-foreground">
-                <CurrencyDisplay amount={overview.totalPurchases} />
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">All purchase invoices</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Purchases</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-purple-600" />
+                <p className="text-2xl font-semibold text-foreground">
+                  <CurrencyDisplay amount={overview.totalPurchases} />
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">All purchase invoices</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Payments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-green-600" />
-              <p className="text-2xl font-semibold text-foreground">
-                <CurrencyDisplay amount={overview.totalCustomerPayments + overview.totalVendorPayments} />
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Payments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-green-600" />
+                <p className="text-2xl font-semibold text-foreground">
+                  <CurrencyDisplay amount={overview.totalCustomerPayments + overview.totalVendorPayments} />
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Customer: <CurrencyDisplay amount={overview.totalCustomerPayments} /> | Vendor:{" "}
+                <CurrencyDisplay amount={overview.totalVendorPayments} />
               </p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Customer: <CurrencyDisplay amount={overview.totalCustomerPayments} /> | Vendor:{" "}
-              <CurrencyDisplay amount={overview.totalVendorPayments} />
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Party Counts */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Customers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-600" />
-              <p className="text-2xl font-semibold text-foreground">{overview.customerCount}</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Total customers</p>
-          </CardContent>
-        </Card>
+      <div className="space-y-2">
+        <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Party Counts
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Customers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                <p className="text-2xl font-semibold text-foreground">{overview.customerCount}</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Total customers</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Vendors</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-purple-600" />
-              <p className="text-2xl font-semibold text-foreground">{overview.vendorCount}</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Total vendors</p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Vendors</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-purple-600" />
+                <p className="text-2xl font-semibold text-foreground">{overview.vendorCount}</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Total vendors</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { FileText, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { ExportButtons } from "@/components/export-buttons"
+import { getStoreSettings } from "@/app/(app)/pos/actions"
 
 export default async function PartyReportsPage() {
   await requirePrivilege("parties")
@@ -28,6 +29,8 @@ export default async function PartyReportsPage() {
   })()
 
   const balances = await getPartyBalances()
+  const storeSettings = await getStoreSettings()
+  const storeName = storeSettings?.name || "Store"
 
   // Calculate totals
   const customers = parties.filter((p) => p.type === "Customer")
@@ -111,6 +114,12 @@ export default async function PartyReportsPage() {
             ]}
             filename={`party-balances-${new Date().toISOString().split("T")[0]}`}
             title="Party Balance Report"
+            printStoreName={storeName}
+            printReportParams={`From Date: ALL AND To Date: ALL AND Vendor: ALL AND Location: ${
+              storeName || "ALL"
+            } AND Brand: ALL AND Department: ALL AND Order By: Name AND Type: Ascending AND All Record(s): Yes AND Party`}
+            printLocation={storeName}
+            printUserName={currentUser.name || currentUser.email || "ADMIN"}
           />
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
