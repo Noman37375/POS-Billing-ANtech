@@ -206,13 +206,12 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
   <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128+Text&display=swap" rel="stylesheet">
   <style>
     @page {
-      size: 72mm auto;
-      margin: 0;
-      padding: 0;
+      size: auto;
+      margin: 2mm;
     }
     @media print {
       body {
-        width: 72mm;
+        width: 100%;
         margin: 0;
         padding: 0;
         -webkit-print-color-adjust: exact;
@@ -227,12 +226,12 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
       font-size: 8.5px;
       color: #000;
       background: #fff;
-      width: 72mm;
-      margin: 0 auto;
+      width: 100%;
+      margin: 0;
     }
     .receipt {
-      width: 72mm;
-      padding: 2mm 2mm 2mm 2mm;
+      width: 100%;
+      padding: 1mm 1mm 2mm 1mm;
     }
     .page-break {
       page-break-after: always;
