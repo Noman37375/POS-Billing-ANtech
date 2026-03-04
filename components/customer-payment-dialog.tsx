@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
-import { Plus } from "lucide-react"
+import { useState, useTransition, useEffect, useRef, useMemo } from "react"
+import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -43,6 +43,11 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
   const [pending, startTransition] = useTransition()
   const [existingPayments, setExistingPayments] = useState<Array<{ amount: number }>>([])
   const [loadingPayments, setLoadingPayments] = useState(false)
+  const [invoiceQuery, setInvoiceQuery] = useState("")
+  const [showInvoiceResults, setShowInvoiceResults] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState(0)
+  const invoiceInputRef = useRef<HTMLInputElement>(null)
+  const invoiceDropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   // Filter to show only unpaid sales (Draft/Pending with outstanding balance)
@@ -51,6 +56,47 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
   )
 
   const selectedSale = availableSales.find((s) => s.id === invoiceId)
+  const selectedLabel = selectedSale
+    ? `${selectedSale.invoiceNumber} - ${selectedSale.customerName} (${selectedSale.status})`
+    : ""
+
+  const filteredSales = useMemo(() => {
+    const q = invoiceQuery.trim().toLowerCase()
+    if (!q) return availableSales
+    return availableSales.filter(
+      (s) =>
+        s.invoiceNumber.toLowerCase().includes(q) ||
+        s.customerName.toLowerCase().includes(q) ||
+        s.status.toLowerCase().includes(q)
+    )
+  }, [availableSales, invoiceQuery])
+
+  const handleInvoiceKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showInvoiceResults) return
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setHighlightIndex((prev) => Math.min(prev + 1, filteredSales.length - 1))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setHighlightIndex((prev) => Math.max(prev - 1, 0))
+    } else if (e.key === "Enter") {
+      e.preventDefault()
+      if (filteredSales[highlightIndex]) {
+        setInvoiceId(filteredSales[highlightIndex].id)
+        setInvoiceQuery("")
+        setShowInvoiceResults(false)
+      }
+    } else if (e.key === "Escape") {
+      setShowInvoiceResults(false)
+    }
+  }
+
+  useEffect(() => {
+    if (invoiceDropdownRef.current && showInvoiceResults) {
+      const el = invoiceDropdownRef.current.children[highlightIndex] as HTMLElement
+      el?.scrollIntoView({ block: "nearest" })
+    }
+  }, [highlightIndex, showInvoiceResults])
 
   // Fetch existing payments when sale is selected
   useEffect(() => {
@@ -104,6 +150,7 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
         toast.success("Payment added successfully")
         setOpen(false)
         setInvoiceId("")
+        setInvoiceQuery("")
         setAmount("")
         setMethod("Cash")
         setReference("")
@@ -114,7 +161,7 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setInvoiceId(""); setInvoiceQuery(""); setShowInvoiceResults(false) } }}>
       <DialogTrigger asChild>
         {trigger || (
           <Button>
@@ -131,24 +178,72 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="sale">Sales Invoice</Label>
-            <Select value={invoiceId} onValueChange={setInvoiceId}>
-              <SelectTrigger id="sale">
-                <SelectValue placeholder="Select sales invoice" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableSales.length === 0 ? (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    No unpaid sales available
-                  </div>
-                ) : (
-                  availableSales.map((sale) => (
-                    <SelectItem key={sale.id} value={sale.id}>
-                      {sale.invoiceNumber} - {sale.customerName} ({sale.status})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <Input
+                ref={invoiceInputRef}
+                id="sale"
+                placeholder="Search by invoice # or customer..."
+                value={invoiceQuery || selectedLabel}
+                onChange={(e) => {
+                  setInvoiceQuery(e.target.value)
+                  setHighlightIndex(0)
+                  setShowInvoiceResults(e.target.value.length > 0)
+                  if (!e.target.value) setInvoiceId("")
+                }}
+                onFocus={() => {
+                  if (!invoiceId) setShowInvoiceResults(true)
+                }}
+                onKeyDown={handleInvoiceKeyDown}
+                autoComplete="off"
+              />
+              {invoiceId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvoiceId("")
+                    setInvoiceQuery("")
+                    setShowInvoiceResults(false)
+                    invoiceInputRef.current?.focus()
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              )}
+              {showInvoiceResults && (
+                <div
+                  ref={invoiceDropdownRef}
+                  className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto"
+                >
+                  {filteredSales.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">No invoice found</div>
+                  ) : (
+                    filteredSales.map((sale, index) => (
+                      <button
+                        key={sale.id}
+                        type="button"
+                        onClick={() => {
+                          setInvoiceId(sale.id)
+                          setInvoiceQuery("")
+                          setShowInvoiceResults(false)
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm border-b last:border-b-0 ${
+                          index === highlightIndex
+                            ? "bg-primary/10 text-primary"
+                            : "hover:bg-muted"
+                        }`}
+                      >
+                        <span className="font-mono font-semibold">{sale.invoiceNumber}</span>
+                        {" — "}{sale.customerName}
+                        <span className={`ml-1 text-xs ${sale.status === "Draft" ? "text-gray-500" : "text-amber-600"}`}>
+                          ({sale.status})
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
             {selectedSale && (
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">
