@@ -163,14 +163,14 @@ export function POSSalesList({ sales }: POSSalesListProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title={sale.status === "Draft" ? "Cannot print draft invoices" : "Reprint"}
-                        disabled={printPendingId !== null || sale.status === "Draft"}
+                        title="Reprint"
+                        disabled={printPendingId !== null}
                         onClick={() => handleReprint(sale.id)}
                       >
                         {printPendingId === sale.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Printer className={`w-4 h-4 ${sale.status === "Draft" ? "opacity-40" : ""}`} />
+                          <Printer className="w-4 h-4" />
                         )}
                       </Button>
                     </div>

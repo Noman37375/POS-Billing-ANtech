@@ -51,10 +51,13 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
 
   const cashPaid   = data.payments && data.payments.length > 0
     ? data.payments.reduce((s, p) => s + Number(p.amount || 0), 0)
-    : data.total
+    : data.status === "Pending" ? 0 : data.total
   const payMethod  = data.payments && data.payments.length > 0
     ? [...new Set(data.payments.map((p) => p.method))].join(" / ")
     : "Cash"
+  const remainingBalance = data.total - cashPaid
+  const isDraft   = data.status === "Draft"
+  const isPending = data.status === "Pending" && remainingBalance > 0
 
   const itemCount  = data.items.length
   const totalQty   = data.items.reduce((s, i) => s + i.quantity, 0)
@@ -92,7 +95,7 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
 
     <!-- SALES RECEIPT BAR -->
     <div style="background:#000;color:#fff;text-align:center;font-weight:700;font-size:9.5px;padding:2px 0;margin:1.5mm 0;">
-      Sales Receipt
+      ${isDraft ? "Pre-Paid Invoice" : "Sales Receipt"}
     </div>
 
     <!-- BILL INFO -->
@@ -163,6 +166,15 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
         <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${esc(payMethod)} Paid:</td>
         <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(cashPaid)}</td>
       </tr>
+      ${isPending ? `
+      <tr>
+        <td colspan="3"><div style="border-top:1px dashed #000;margin:1mm 0;"></div></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Remaining Balance:</td>
+        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(remainingBalance)}</td>
+      </tr>` : ""}
     </table>
 
     <!-- DASHED SEPARATOR -->
