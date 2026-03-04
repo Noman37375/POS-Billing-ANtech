@@ -33,6 +33,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
   const [lastInvoiceId, setLastInvoiceId] = useState<string | null>(null)
+  const [lastSaleMode, setLastSaleMode] = useState<"sale" | "draft">("sale")
   const [showCustomerResults, setShowCustomerResults] = useState(false)
   const [showItemResults, setShowItemResults] = useState(false)
   const [customerQuery, setCustomerQuery] = useState("")
@@ -344,10 +345,13 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
       }
       if (isDraft) {
         toast.success("Draft saved")
+        setLastSaleMode("draft")
+        setLastInvoiceId(result.data?.invoiceId ?? null)
         setItems([])
         setPartyId("")
       } else {
         toast.success("Sale completed")
+        setLastSaleMode("sale")
         setLastInvoiceId(result.data?.invoiceId ?? null)
         setItems([])
         setPartyId("")
@@ -652,7 +656,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
 
         {lastInvoiceId && (
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-            <span className="text-sm">Sale completed. Invoice: {lastInvoiceId.substring(0, 8).toUpperCase()} • Press <kbd className="px-2 py-1 bg-background border rounded text-xs font-semibold">F7</kbd> to print</span>
+            <span className="text-sm">{lastSaleMode === "draft" ? "Draft saved." : "Sale completed."} Invoice: {lastInvoiceId.substring(0, 8).toUpperCase()} • Press <kbd className="px-2 py-1 bg-background border rounded text-xs font-semibold">F7</kbd> to print</span>
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={printPending}>
               {printPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
