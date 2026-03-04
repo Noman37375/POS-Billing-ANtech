@@ -98,8 +98,7 @@ export function ExportButtons({
   </table>
   <div class="footer">
     <span class="footer-left">User Name: ${escapeHtml(printUserName)}</span>
-    <span class="footer-center">${new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}<br>Design By: GENTEC www.nentersoft.com | (92) 300 213 88 68</span>
-    <span class="footer-right">Page 1</span>
+AN-Tech Solutions    <span class="footer-right">Page 1</span>
   </div>
 </body>
 </html>`
