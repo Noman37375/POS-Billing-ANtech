@@ -51,7 +51,7 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
 
   const cashPaid   = data.payments && data.payments.length > 0
     ? data.payments.reduce((s, p) => s + Number(p.amount || 0), 0)
-    : data.status === "Pending" ? 0 : data.total
+    : (data.status === "Pending" || data.status === "Draft") ? 0 : data.total
   const payMethod  = data.payments && data.payments.length > 0
     ? [...new Set(data.payments.map((p) => p.method))].join(" / ")
     : "Cash"
