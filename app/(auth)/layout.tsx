@@ -1,55 +1,61 @@
 import type { ReactNode } from "react"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-import Image from "next/image"
+import { ReceiptText, ShieldCheck, Zap, BarChart3 } from "lucide-react"
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen grid md:grid-cols-2 bg-gradient-to-br from-background via-muted/40 to-background">
+    <div className="min-h-screen grid md:grid-cols-2">
       {/* Left Panel - Branding */}
-      <div className="hidden md:flex items-center justify-center bg-gradient-to-br from-primary via-primary/95 to-primary/90 text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0YzAtMS4xLS45LTItMi0ySDI2Yy0xLjEgMC0yIC45LTIgMnYyYzAgMS4xLjkgMiAyIDJoOGMxLjEgMCAyLS45IDItMnYtMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
-        <div className="max-w-md space-y-6 px-12 relative z-10">
+      <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-primary-foreground relative overflow-hidden px-12">
+        {/* Subtle dot pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }}
+        />
+
+        <div className="relative z-10 max-w-sm w-full space-y-10">
+          {/* Logo + Brand */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center overflow-hidden">
-              <Image src="/placeholder-logo.png" alt="Logo" width={48} height={48} className="object-contain p-1" />
+            <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center">
+              <ReceiptText className="w-6 h-6 text-white" />
             </div>
-            <div>
-              <p className="text-xs uppercase tracking-wider opacity-90 font-semibold">Invoice & Billing SaaS</p>
-            </div>
+            <span className="text-lg font-bold tracking-tight">AN-Tech POS</span>
           </div>
-          <h1 className="text-4xl font-bold leading-tight">Modern billing stack for your business</h1>
-          <p className="text-base opacity-95 leading-relaxed">
-            Secure, fast, and mobile-friendly invoicing with InvoSync, transactional mutations, and real-time UI
-            updates.
-          </p>
-          <div className="flex items-center gap-4 pt-4">
-            <div className="flex items-center gap-2 text-sm opacity-90">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span>Real-time sync</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm opacity-90">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span>Secure & Fast</span>
-            </div>
+
+          {/* Headline */}
+          <div className="space-y-3">
+            <h1 className="text-4xl font-extrabold leading-tight tracking-tight">
+              Smart Billing,<br />Simplified.
+            </h1>
+            <p className="text-sm opacity-75 leading-relaxed">
+              Manage sales, invoices &amp; payments — all in one place.
+            </p>
           </div>
+
+          {/* Feature list */}
+          <ul className="space-y-4">
+            {[
+              { icon: Zap,         text: "Fast POS checkout" },
+              { icon: ReceiptText, text: "Instant invoice printing" },
+              { icon: BarChart3,   text: "Sales & profit reports" },
+              { icon: ShieldCheck, text: "Secure & reliable" },
+            ].map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3 text-sm opacity-90">
+                <div className="w-7 h-7 bg-white/15 rounded-lg flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4" />
+                </div>
+                {text}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
       {/* Right Panel - Form */}
       <div className="flex items-center justify-center px-6 py-12 bg-background">
-        <div className="w-full max-w-md space-y-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to home
-          </Link>
+        <div className="w-full max-w-sm">
           {children}
         </div>
       </div>
     </div>
   )
 }
-
