@@ -1,61 +1,43 @@
 import type { ReactNode } from "react"
-import { ReceiptText, ShieldCheck, Zap, BarChart3 } from "lucide-react"
+import { ReceiptText } from "lucide-react"
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen grid md:grid-cols-2">
-      {/* Left Panel - Branding */}
-      <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-primary-foreground relative overflow-hidden px-12">
-        {/* Subtle dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }}
-        />
+    <div className="min-h-screen grid md:grid-cols-[1fr_1fr]">
 
-        <div className="relative z-10 max-w-sm w-full space-y-10">
-          {/* Logo + Brand */}
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center">
-              <ReceiptText className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">AN-Tech POS</span>
+      {/* Left Panel — Brand visual only, no text clutter */}
+      <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-primary via-primary to-primary/80 relative overflow-hidden">
+
+        {/* Decorative circles */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-white/5" />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] rounded-full border border-white/10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] rounded-full border border-white/10" />
+
+        {/* Center content */}
+        <div className="relative z-10 flex flex-col items-center text-center text-primary-foreground space-y-5">
+          <div className="w-20 h-20 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-xl">
+            <ReceiptText className="w-10 h-10 text-white" strokeWidth={1.5} />
           </div>
-
-          {/* Headline */}
-          <div className="space-y-3">
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight">
-              Smart Billing,<br />Simplified.
-            </h1>
-            <p className="text-sm opacity-75 leading-relaxed">
-              Manage sales, invoices &amp; payments — all in one place.
-            </p>
+          <div>
+            <p className="text-2xl font-bold tracking-tight">AN-Tech POS</p>
+            <p className="text-sm opacity-60 mt-1 font-medium tracking-widest uppercase">Billing System</p>
           </div>
-
-          {/* Feature list */}
-          <ul className="space-y-4">
-            {[
-              { icon: Zap,         text: "Fast POS checkout" },
-              { icon: ReceiptText, text: "Instant invoice printing" },
-              { icon: BarChart3,   text: "Sales & profit reports" },
-              { icon: ShieldCheck, text: "Secure & reliable" },
-            ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-sm opacity-90">
-                <div className="w-7 h-7 bg-white/15 rounded-lg flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                </div>
-                {text}
-              </li>
-            ))}
-          </ul>
         </div>
+
+        {/* Bottom tag */}
+        <p className="absolute bottom-8 text-xs text-white/30 tracking-wider">
+          AN-Tech Solutions
+        </p>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex items-center justify-center px-6 py-12 bg-background">
-        <div className="w-full max-w-sm">
+      {/* Right Panel — Pure form, nothing else */}
+      <div className="flex items-center justify-center bg-background px-8 py-12">
+        <div className="w-full max-w-[360px]">
           {children}
         </div>
       </div>
+
     </div>
   )
 }

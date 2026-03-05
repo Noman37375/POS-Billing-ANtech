@@ -14,22 +14,18 @@ export function AuthForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [state, formAction, pending] = useActionState(async (_prev, formData) => {
     const result = await signIn(formData)
-    if (result?.error) {
-      return { error: result.error }
-    }
+    if (result?.error) return { error: result.error }
     return initialState
   }, initialState)
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to continue</p>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Sign in</h1>
+        <p className="text-sm text-muted-foreground mt-1">Enter your credentials to continue</p>
       </div>
 
-      {/* Form */}
-      <form action={formAction} className="space-y-5">
+      <form action={formAction} className="space-y-4">
         {state.error && (
           <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -37,8 +33,8 @@ export function AuthForm() {
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="email" className="font-medium">Email</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Email</Label>
           <Input
             name="email"
             id="email"
@@ -49,8 +45,8 @@ export function AuthForm() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password" className="font-medium">Password</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="password">Password</Label>
           <div className="relative">
             <Input
               name="password"
@@ -61,20 +57,18 @@ export function AuthForm() {
               required
               className="h-11 pr-10"
             />
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-11 w-10 rounded-l-none text-muted-foreground hover:text-foreground"
-              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setShowPassword((p) => !p)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
+            </button>
           </div>
         </div>
 
-        <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={pending}>
+        <Button type="submit" className="w-full h-11 font-semibold mt-2" disabled={pending}>
           {pending ? "Signing in..." : "Sign in"}
         </Button>
       </form>
