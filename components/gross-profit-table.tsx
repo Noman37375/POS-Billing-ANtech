@@ -13,6 +13,8 @@ interface GrossProfitTableProps {
   data: GrossProfitRow[]
   dateFrom?: string
   dateTo?: string
+  timeFrom?: string
+  timeTo?: string
   storeName?: string
 }
 
@@ -24,17 +26,19 @@ function fmtPct(n: number) {
   return fmt(n) + "%"
 }
 
-function formatReportDateTime(d?: string, type: "from" | "to" = "from") {
+function formatReportDateTime(d?: string, t?: string, type: "from" | "to" = "from") {
   if (!d) return "ALL"
   const [datePart] = d.split("T")
   const [y, m, day] = datePart.split("-")
-  if (type === "from") {
-    return `${day}/${m}/${y} 08:00:00 AM`
-  }
-  return `${day}/${m}/${y} 07:59:59 AM`
+  const time = t || (type === "from" ? "09:00" : "23:59")
+  const [hStr, minStr] = time.split(":")
+  const hour = parseInt(hStr)
+  const ampm = hour >= 12 ? "PM" : "AM"
+  const h12 = String(hour % 12 || 12).padStart(2, "0")
+  return `${day}/${m}/${y} ${h12}:${minStr}:00 ${ampm}`
 }
 
-export function GrossProfitTable({ data, dateFrom, dateTo, storeName }: GrossProfitTableProps) {
+export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, storeName }: GrossProfitTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -44,11 +48,17 @@ export function GrossProfitTable({ data, dateFrom, dateTo, storeName }: GrossPro
       const form = e.currentTarget
       const from = (form.elements.namedItem("dateFrom") as HTMLInputElement)?.value
       const to = (form.elements.namedItem("dateTo") as HTMLInputElement)?.value
+      const tf = (form.elements.namedItem("timeFrom") as HTMLInputElement)?.value
+      const tt = (form.elements.namedItem("timeTo") as HTMLInputElement)?.value
       const params = new URLSearchParams(searchParams.toString())
       if (from) params.set("dateFrom", from)
       else params.delete("dateFrom")
       if (to) params.set("dateTo", to)
       else params.delete("dateTo")
+      if (tf) params.set("timeFrom", tf)
+      else params.delete("timeFrom")
+      if (tt) params.set("timeTo", tt)
+      else params.delete("timeTo")
       router.push(`/pos/reports?${params.toString()}`)
     },
     [router, searchParams],
@@ -103,16 +113,20 @@ export function GrossProfitTable({ data, dateFrom, dateTo, storeName }: GrossPro
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
           <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
             <div className="space-y-1">
-              <Label htmlFor="gp-dateFrom" className="text-xs">
-                From
-              </Label>
+              <Label htmlFor="gp-dateFrom" className="text-xs">From Date</Label>
               <Input id="gp-dateFrom" name="dateFrom" type="date" defaultValue={dateFrom} className="h-8 w-36" />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="gp-dateTo" className="text-xs">
-                To
-              </Label>
+              <Label htmlFor="gp-timeFrom" className="text-xs">Time</Label>
+              <Input id="gp-timeFrom" name="timeFrom" type="time" defaultValue={timeFrom ?? "09:00"} className="h-8 w-28" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="gp-dateTo" className="text-xs">To Date</Label>
               <Input id="gp-dateTo" name="dateTo" type="date" defaultValue={dateTo} className="h-8 w-36" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="gp-timeTo" className="text-xs">Time</Label>
+              <Input id="gp-timeTo" name="timeTo" type="time" defaultValue={timeTo ?? "23:59"} className="h-8 w-28" />
             </div>
             <Button type="submit" size="sm">
               Apply
@@ -124,7 +138,7 @@ export function GrossProfitTable({ data, dateFrom, dateTo, storeName }: GrossPro
             filename={`gross-profit-${new Date().toISOString().split("T")[0]}`}
             title="Gross Profit Report"
             printStoreName={storeName}
-            printReportParams={`From Date: ${formatReportDateTime(dateFrom, "from")} AND To Date: ${formatReportDateTime(dateTo, "to")} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${storeName || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`}
+            printReportParams={`From Date: ${formatReportDateTime(dateFrom, timeFrom, "from")} AND To Date: ${formatReportDateTime(dateTo, timeTo, "to")} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${storeName || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`}
             printLocation={storeName}
           />
         </div>

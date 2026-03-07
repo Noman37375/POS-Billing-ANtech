@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, DollarSign, ShoppingBag, BarChart3 } from "lucide-react"
 
 interface ReportsPageProps {
-  searchParams: Promise<{ dateFrom?: string; dateTo?: string }>
+  searchParams: Promise<{ dateFrom?: string; dateTo?: string; timeFrom?: string; timeTo?: string }>
 }
 
 function fmt(n: number) {
@@ -16,16 +16,27 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
   const params = await searchParams
   const dateFrom = params.dateFrom
   const dateTo = params.dateTo
+  const timeFrom = params.timeFrom
+  const timeTo = params.timeTo
 
   const [storeSettings, { rows, summary }] = await Promise.all([
     getStoreSettings(),
-    getGrossProfitReport(dateFrom, dateTo),
+    getGrossProfitReport(dateFrom, dateTo, timeFrom, timeTo),
   ])
   const storeName = storeSettings?.name || "Store"
 
+  const fmtTime = (t?: string) => {
+    if (!t) return ""
+    const [h, m] = t.split(":")
+    const hour = parseInt(h)
+    const ampm = hour >= 12 ? "PM" : "AM"
+    const h12 = hour % 12 || 12
+    return `${h12}:${m} ${ampm}`
+  }
+
   const subtitle =
     dateFrom || dateTo
-      ? `${dateFrom ?? "Start"} → ${dateTo ?? "Today"}`
+      ? `${dateFrom ?? "Start"} ${timeFrom ? fmtTime(timeFrom) : "09:00 AM"} → ${dateTo ?? "Today"} ${timeTo ? fmtTime(timeTo) : "11:59 PM"}`
       : "All time — item-wise profitability based on last cost rate"
 
   return (
@@ -90,7 +101,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
         </Card>
       </div>
 
-      <GrossProfitTable data={rows} dateFrom={dateFrom} dateTo={dateTo} storeName={storeName} />
+      <GrossProfitTable data={rows} dateFrom={dateFrom} dateTo={dateTo} timeFrom={timeFrom} timeTo={timeTo} storeName={storeName} />
     </div>
   )
 }

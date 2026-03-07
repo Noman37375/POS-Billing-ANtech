@@ -29,7 +29,12 @@ export interface GrossProfitResult {
   summary: GrossProfitSummary
 }
 
-export async function getGrossProfitReport(dateFrom?: string, dateTo?: string): Promise<GrossProfitResult> {
+export async function getGrossProfitReport(
+  dateFrom?: string,
+  dateTo?: string,
+  timeFrom?: string,
+  timeTo?: string,
+): Promise<GrossProfitResult> {
   const empty: GrossProfitResult = {
     rows: [],
     summary: { total_sale_amount: 0, total_purchase_amount: 0, total_gp_value: 0, overall_gp_pct: 0 },
@@ -38,7 +43,11 @@ export async function getGrossProfitReport(dateFrom?: string, dateTo?: string): 
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
 
-  // Step 1: Get POS invoice IDs matching the filter (non-Draft, within date range)
+  // Default time range: 09:00 → 23:59 (full business day from 9 AM)
+  const fromTime = timeFrom || "09:00"
+  const toTime = timeTo || "23:59"
+
+  // Step 1: Get POS invoice IDs matching the filter (non-Draft, within date+time range)
   let invoiceQuery = supabase
     .from("sales_invoices")
     .select("id")
@@ -47,11 +56,11 @@ export async function getGrossProfitReport(dateFrom?: string, dateTo?: string): 
     .neq("status", "Draft")
 
   if (dateFrom) {
-    const from = dateFrom.includes("T") ? dateFrom : `${dateFrom}T00:00:00.000Z`
+    const from = dateFrom.includes("T") ? dateFrom : `${dateFrom}T${fromTime}:00.000Z`
     invoiceQuery = invoiceQuery.gte("created_at", from)
   }
   if (dateTo) {
-    const to = dateTo.includes("T") ? dateTo : `${dateTo}T23:59:59.999Z`
+    const to = dateTo.includes("T") ? dateTo : `${dateTo}T${toTime}:59.999Z`
     invoiceQuery = invoiceQuery.lte("created_at", to)
   }
 
