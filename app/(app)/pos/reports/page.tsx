@@ -58,7 +58,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
           <CardContent>
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-blue-600 flex-shrink-0" />
-              <p className="text-xl font-semibold truncate">PKR {fmt(summary.total_sale_amount)}</p>
+              <p className="text-lg font-semibold leading-tight break-words">PKR {fmt(summary.total_sale_amount)}</p>
             </div>
           </CardContent>
         </Card>
@@ -70,7 +70,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
           <CardContent>
             <div className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-amber-600 flex-shrink-0" />
-              <p className="text-xl font-semibold truncate">PKR {fmt(summary.total_purchase_amount)}</p>
+              <p className="text-lg font-semibold leading-tight break-words">PKR {fmt(summary.total_purchase_amount)}</p>
             </div>
           </CardContent>
         </Card>
@@ -82,7 +82,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
           <CardContent>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-              <p className={`text-xl font-semibold truncate ${summary.total_gp_value >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+              <p className={`text-lg font-semibold leading-tight break-words ${summary.total_gp_value >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                 PKR {fmt(summary.total_gp_value)}
               </p>
             </div>

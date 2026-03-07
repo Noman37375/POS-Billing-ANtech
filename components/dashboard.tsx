@@ -72,7 +72,7 @@ export function Dashboard({ parties, inventory, invoices, grossProfit = 0, gross
               <div className="flex items-start justify-between gap-3 sm:gap-4">
                 <div className="space-y-1 sm:space-y-2 min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{kpi.title}</p>
-                  <p className="text-base sm:text-lg font-semibold text-foreground truncate">{kpi.value}</p>
+                  <p className="text-sm sm:text-base font-semibold text-foreground leading-tight break-words">{kpi.value}</p>
                 </div>
                 <div className={`${kpi.color} p-2 sm:p-3 rounded-lg sm:rounded-xl inline-flex flex-shrink-0`}>
                   <Icon className="w-5 h-5 sm:w-6 sm:h-6" />

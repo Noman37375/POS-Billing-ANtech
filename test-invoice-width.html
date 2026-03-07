@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Carbon Copy Invoice - Width Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+128+Text&display=swap" rel="stylesheet">
+  <style>
+    /* ── Screen preview styles ── */
+    body {
+      background: #e0e0e0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .preview-label {
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    .preview-row {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    .preview-box {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .w57  { width: 57mm; }
+    .w72  { width: 72mm; }
+    .w80  { width: 80mm; }
+    .btn-row {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #1d4ed8;
+      color: white;
+      border: none;
+      padding: 10px 28px;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 0 6px;
+    }
+    button:hover { background: #1e40af; }
+
+    /* ── Receipt styles (same as print-standard-invoice.ts) ── */
+    @page {
+      size: auto;
+      margin: 2mm;
+    }
+    @media print {
+      body {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      .preview-label, .preview-row, .btn-row, .info-bar { display: none !important; }
+      .print-area { display: block !important; }
+      .preview-box { box-shadow: none; width: 100% !important; }
+      .page-break { page-break-after: always; display: block; height: 0; }
+    }
+    .print-area { display: none; }
+    .receipt {
+      width: 100%;
+      padding: 1mm 1mm 2mm 1mm;
+      box-sizing: border-box;
+    }
+    * { box-sizing: border-box; }
+  </style>
+</head>
+<body>
+
+<div class="info-bar" style="background:#1d4ed8;color:white;padding:10px 20px;border-radius:8px;margin-bottom:16px;text-align:center;font-size:13px;">
+  ✅ Neeche teen sizes mein preview dekho (57mm / 72mm / 80mm) — sab mein Amount aur Net Amount visible hona chahiye. Phir "Print / PDF Test" button se actual print check karo.
+</div>
+
+<div class="btn-row">
+  <button onclick="window.print()">🖨️ Print / PDF Test (Actual)</button>
+</div>
+
+<div class="preview-row">
+  <div>
+    <div class="preview-label">57mm Paper</div>
+    <div class="preview-box w57">
+      <div class="receipt">
+        <!-- COPY LABEL -->
+        <div style="text-align:center;font-size:7.5px;border:1px solid #000;padding:1px 5px;margin-bottom:1.5mm;display:inline-block;float:right;color:#000;font-weight:700;letter-spacing:0.5px;">Customer Copy</div>
+        <div style="clear:both;"></div>
+        <!-- STORE NAME -->
+        <div style="text-align:center;font-size:15px;font-weight:900;letter-spacing:0.3px;margin-bottom:0.8mm;color:#000;">Fizzy Drinks</div>
+        <div style="text-align:center;font-size:8px;line-height:1.4;margin-bottom:0.4mm;color:#000;">Address: D-16, Block 12, Moor Garden Baropal, Federal B Ar, Gulberg Town, Karachi</div>
+        <div style="text-align:center;font-size:8px;margin-bottom:1mm;color:#000;">Contact Number : 03350202224</div>
+        <!-- SALES RECEIPT BAR -->
+        <div style="background:#000;color:#fff;text-align:center;font-weight:700;font-size:9.5px;padding:2px 0;margin:1.5mm 0;">Sales Receipt</div>
+        <!-- BILL INFO -->
+        <table style="width:100%;font-size:8px;margin-bottom:0.8mm;color:#000;" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:0.3mm 0;">Bill No: <strong>SDC77D83</strong></td>
+            <td style="padding:0.3mm 0;text-align:right;">User: <strong>Admin</strong></td>
+          </tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Date &amp; Time: 24/02/2026 - 12:17 am</td></tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Customer Contact #: 03349227954</td></tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Customer Name: Burran State</td></tr>
+        </table>
+        <!-- ITEMS TABLE -->
+        <table style="width:100%;border-collapse:collapse;font-size:8px;color:#000;table-layout:fixed;" cellpadding="0" cellspacing="0">
+          <colgroup>
+            <col style="width:6%">
+            <col style="width:38%">
+            <col style="width:12%">
+            <col style="width:20%">
+            <col style="width:24%">
+          </colgroup>
+          <thead>
+            <tr style="border-top:1.5px solid #000;border-bottom:1.5px solid #000;">
+              <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;">Sr</th>
+              <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;">Description</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Qty</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Rate</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:0.5px solid #e0e0e0;">
+              <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;">1</td>
+              <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;word-break:break-word;">Janora 200ml Tetra Pack</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;">2</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;">880</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;font-weight:700;">1,760</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- SUMMARY -->
+        <div style="border-top:1.5px solid #000;border-bottom:1px dashed #000;font-size:8px;padding:1mm 0.5mm;margin-top:0;">No. Of Item(s) 1 &nbsp;&nbsp; Total Qty: 2</div>
+        <!-- TOTALS -->
+        <table style="width:100%;font-size:9px;margin-top:1mm;" cellpadding="0" cellspacing="0">
+          <tr>
+            <td></td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">Net Amount:</td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;min-width:18mm;">1,760</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">Cash Paid:</td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">1,760</td>
+          </tr>
+        </table>
+        <div style="border-top:1px dashed #000;margin:1.5mm 0;"></div>
+        <div style="font-size:7.5px;line-height:1.4;">
+          <div>1- Only Products can be exchanged within 7 days of sales.</div>
+          <div>2- Check your Product Before Leave Counter.</div>
+          <div>3- Damage Product no Exchange Or Return.</div>
+          <div style="margin-top:0.8mm;font-weight:700;">*Note: No Exchange No Return Without Sale Receipt</div>
+        </div>
+        <div style="text-align:center;margin:2mm 0 1mm;">
+          <div style="font-family:'Libre Barcode 128 Text',monospace;font-size:36px;line-height:1;">SDC77D83</div>
+          <div style="font-size:7.5px;margin-top:0.5mm;">* SDC77D83 *</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:7.5px;border-top:1px dashed #999;padding-top:1mm;">
+          <span>Print Date: 24/02/2026</span>
+          <span>Print Time: 12:17:00AM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="preview-label">72mm Paper</div>
+    <div class="preview-box w72">
+      <div class="receipt">
+        <div style="text-align:center;font-size:7.5px;border:1px solid #000;padding:1px 5px;margin-bottom:1.5mm;display:inline-block;float:right;color:#000;font-weight:700;letter-spacing:0.5px;">Customer Copy</div>
+        <div style="clear:both;"></div>
+        <div style="text-align:center;font-size:15px;font-weight:900;letter-spacing:0.3px;margin-bottom:0.8mm;color:#000;">Fizzy Drinks</div>
+        <div style="text-align:center;font-size:8px;line-height:1.4;margin-bottom:0.4mm;color:#000;">Address: D-16, Block 12, Moor Garden Baropal, Federal B Ar, Gulberg Town, Karachi</div>
+        <div style="text-align:center;font-size:8px;margin-bottom:1mm;color:#000;">Contact Number : 03350202224</div>
+        <div style="background:#000;color:#fff;text-align:center;font-weight:700;font-size:9.5px;padding:2px 0;margin:1.5mm 0;">Sales Receipt</div>
+        <table style="width:100%;font-size:8px;margin-bottom:0.8mm;color:#000;" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:0.3mm 0;">Bill No: <strong>SDC77D83</strong></td>
+            <td style="padding:0.3mm 0;text-align:right;">User: <strong>Admin</strong></td>
+          </tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Date &amp; Time: 24/02/2026 - 12:17 am</td></tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Customer Contact #: 03349227954</td></tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Customer Name: Burran State</td></tr>
+        </table>
+        <table style="width:100%;border-collapse:collapse;font-size:8px;color:#000;table-layout:fixed;" cellpadding="0" cellspacing="0">
+          <colgroup>
+            <col style="width:6%"><col style="width:38%"><col style="width:12%"><col style="width:20%"><col style="width:24%">
+          </colgroup>
+          <thead>
+            <tr style="border-top:1.5px solid #000;border-bottom:1.5px solid #000;">
+              <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;">Sr</th>
+              <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;">Description</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Qty</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Rate</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:0.5px solid #e0e0e0;">
+              <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;">1</td>
+              <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;word-break:break-word;">Janora 200ml Tetra Pack</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;">2</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;">880</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;font-weight:700;">1,760</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="border-top:1.5px solid #000;border-bottom:1px dashed #000;font-size:8px;padding:1mm 0.5mm;">No. Of Item(s) 1 &nbsp;&nbsp; Total Qty: 2</div>
+        <table style="width:100%;font-size:9px;margin-top:1mm;" cellpadding="0" cellspacing="0">
+          <tr>
+            <td></td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">Net Amount:</td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;min-width:18mm;">1,760</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">Cash Paid:</td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">1,760</td>
+          </tr>
+        </table>
+        <div style="border-top:1px dashed #000;margin:1.5mm 0;"></div>
+        <div style="font-size:7.5px;line-height:1.4;">
+          <div>1- Only Products can be exchanged within 7 days of sales.</div>
+          <div>2- Check your Product Before Leave Counter.</div>
+          <div>3- Damage Product no Exchange Or Return.</div>
+          <div style="margin-top:0.8mm;font-weight:700;">*Note: No Exchange No Return Without Sale Receipt</div>
+        </div>
+        <div style="text-align:center;margin:2mm 0 1mm;">
+          <div style="font-family:'Libre Barcode 128 Text',monospace;font-size:36px;line-height:1;">SDC77D83</div>
+          <div style="font-size:7.5px;margin-top:0.5mm;">* SDC77D83 *</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:7.5px;border-top:1px dashed #999;padding-top:1mm;">
+          <span>Print Date: 24/02/2026</span>
+          <span>Print Time: 12:17:00AM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="preview-label">80mm Paper</div>
+    <div class="preview-box w80">
+      <div class="receipt">
+        <div style="text-align:center;font-size:7.5px;border:1px solid #000;padding:1px 5px;margin-bottom:1.5mm;display:inline-block;float:right;color:#000;font-weight:700;letter-spacing:0.5px;">Customer Copy</div>
+        <div style="clear:both;"></div>
+        <div style="text-align:center;font-size:15px;font-weight:900;letter-spacing:0.3px;margin-bottom:0.8mm;color:#000;">Fizzy Drinks</div>
+        <div style="text-align:center;font-size:8px;line-height:1.4;margin-bottom:0.4mm;color:#000;">Address: D-16, Block 12, Moor Garden Baropal, Federal B Ar, Gulberg Town, Karachi</div>
+        <div style="text-align:center;font-size:8px;margin-bottom:1mm;color:#000;">Contact Number : 03350202224</div>
+        <div style="background:#000;color:#fff;text-align:center;font-weight:700;font-size:9.5px;padding:2px 0;margin:1.5mm 0;">Sales Receipt</div>
+        <table style="width:100%;font-size:8px;margin-bottom:0.8mm;color:#000;" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:0.3mm 0;">Bill No: <strong>SDC77D83</strong></td>
+            <td style="padding:0.3mm 0;text-align:right;">User: <strong>Admin</strong></td>
+          </tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Date &amp; Time: 24/02/2026 - 12:17 am</td></tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Customer Contact #: 03349227954</td></tr>
+          <tr><td colspan="2" style="padding:0.3mm 0;">Customer Name: Burran State</td></tr>
+        </table>
+        <table style="width:100%;border-collapse:collapse;font-size:8px;color:#000;table-layout:fixed;" cellpadding="0" cellspacing="0">
+          <colgroup>
+            <col style="width:6%"><col style="width:38%"><col style="width:12%"><col style="width:20%"><col style="width:24%">
+          </colgroup>
+          <thead>
+            <tr style="border-top:1.5px solid #000;border-bottom:1.5px solid #000;">
+              <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;">Sr</th>
+              <th style="padding:1mm 0.5mm;text-align:left;font-weight:700;">Description</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Qty</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Rate</th>
+              <th style="padding:1mm 0.5mm;text-align:right;font-weight:700;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:0.5px solid #e0e0e0;">
+              <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;">1</td>
+              <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;word-break:break-word;">Janora 200ml Tetra Pack</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;">2</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;">880</td>
+              <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;font-weight:700;">1,760</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="border-top:1.5px solid #000;border-bottom:1px dashed #000;font-size:8px;padding:1mm 0.5mm;">No. Of Item(s) 1 &nbsp;&nbsp; Total Qty: 2</div>
+        <table style="width:100%;font-size:9px;margin-top:1mm;" cellpadding="0" cellspacing="0">
+          <tr>
+            <td></td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">Net Amount:</td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;min-width:18mm;">1,760</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">Cash Paid:</td>
+            <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;">1,760</td>
+          </tr>
+        </table>
+        <div style="border-top:1px dashed #000;margin:1.5mm 0;"></div>
+        <div style="font-size:7.5px;line-height:1.4;">
+          <div>1- Only Products can be exchanged within 7 days of sales.</div>
+          <div>2- Check your Product Before Leave Counter.</div>
+          <div>3- Damage Product no Exchange Or Return.</div>
+          <div style="margin-top:0.8mm;font-weight:700;">*Note: No Exchange No Return Without Sale Receipt</div>
+        </div>
+        <div style="text-align:center;margin:2mm 0 1mm;">
+          <div style="font-family:'Libre Barcode 128 Text',monospace;font-size:36px;line-height:1;">SDC77D83</div>
+          <div style="font-size:7.5px;margin-top:0.5mm;">* SDC77D83 *</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:7.5px;border-top:1px dashed #999;padding-top:1mm;">
+          <span>Print Date: 24/02/2026</span>
+          <span>Print Time: 12:17:00AM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
