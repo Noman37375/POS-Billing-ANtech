@@ -1,13 +1,16 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ExportButtons } from "@/components/export-buttons"
 import type { GrossProfitRow } from "@/app/(app)/pos/reports/actions"
+
+type PeriodType = "today" | "week" | "month" | "year" | "custom"
 
 interface GrossProfitTableProps {
   data: GrossProfitRow[]
@@ -15,6 +18,7 @@ interface GrossProfitTableProps {
   dateTo?: string
   timeFrom?: string
   timeTo?: string
+  period?: string
   storeName?: string
 }
 
@@ -38,10 +42,69 @@ function formatReportDateTime(d?: string, t?: string, type: "from" | "to" = "fro
   return `${day}/${m}/${y} ${h12}:${minStr}:00 ${ampm}`
 }
 
-export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, storeName }: GrossProfitTableProps) {
+function toDateStr(d: Date): string {
+  return d.toISOString().split("T")[0]
+}
+
+function getPresetDates(period: PeriodType): { dateFrom: string; dateTo: string } {
+  const today = new Date()
+  const todayStr = toDateStr(today)
+  switch (period) {
+    case "today":
+      return { dateFrom: todayStr, dateTo: todayStr }
+    case "week": {
+      const day = today.getDay() // 0=Sun
+      const diff = day === 0 ? -6 : 1 - day // Monday
+      const monday = new Date(today)
+      monday.setDate(today.getDate() + diff)
+      return { dateFrom: toDateStr(monday), dateTo: todayStr }
+    }
+    case "month": {
+      const first = new Date(today.getFullYear(), today.getMonth(), 1)
+      return { dateFrom: toDateStr(first), dateTo: todayStr }
+    }
+    case "year": {
+      const first = new Date(today.getFullYear(), 0, 1)
+      return { dateFrom: toDateStr(first), dateTo: todayStr }
+    }
+    default:
+      return { dateFrom: "", dateTo: "" }
+  }
+}
+
+export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, period, storeName }: GrossProfitTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const initialPeriod: PeriodType =
+    (period as PeriodType) || (dateFrom || dateTo ? "custom" : "today")
+  const [activePeriod, setActivePeriod] = useState<PeriodType>(initialPeriod)
+
+  // When a preset is chosen, calculate dates and navigate immediately
+  const handlePeriodChange = useCallback(
+    (value: string) => {
+      const p = value as PeriodType
+      setActivePeriod(p)
+      if (p === "custom") {
+        // Just update the period param and keep existing dates
+        const params = new URLSearchParams(searchParams.toString())
+        params.set("period", "custom")
+        router.push(`/pos/reports?${params.toString()}`)
+        return
+      }
+      const { dateFrom: df, dateTo: dt } = getPresetDates(p)
+      const params = new URLSearchParams()
+      params.set("period", p)
+      params.set("dateFrom", df)
+      params.set("dateTo", dt)
+      params.set("timeFrom", timeFrom || "09:00")
+      params.set("timeTo", timeTo || "23:59")
+      router.push(`/pos/reports?${params.toString()}`)
+    },
+    [router, searchParams, timeFrom, timeTo],
+  )
+
+  // Custom date form submit
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
@@ -50,18 +113,15 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, sto
       const to = (form.elements.namedItem("dateTo") as HTMLInputElement)?.value
       const tf = (form.elements.namedItem("timeFrom") as HTMLInputElement)?.value
       const tt = (form.elements.namedItem("timeTo") as HTMLInputElement)?.value
-      const params = new URLSearchParams(searchParams.toString())
+      const params = new URLSearchParams()
+      params.set("period", "custom")
       if (from) params.set("dateFrom", from)
-      else params.delete("dateFrom")
       if (to) params.set("dateTo", to)
-      else params.delete("dateTo")
       if (tf) params.set("timeFrom", tf)
-      else params.delete("timeFrom")
       if (tt) params.set("timeTo", tt)
-      else params.delete("timeTo")
       router.push(`/pos/reports?${params.toString()}`)
     },
-    [router, searchParams],
+    [router],
   )
 
   // Grand total row
@@ -106,41 +166,62 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, sto
 
   return (
     <Card>
-      <CardHeader className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="flex-1">
-          <CardTitle className="text-base sm:text-lg">Item-wise Gross Profit</CardTitle>
-        </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
-          <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
-            <div className="space-y-1">
-              <Label htmlFor="gp-dateFrom" className="text-xs">From Date</Label>
-              <Input id="gp-dateFrom" name="dateFrom" type="date" defaultValue={dateFrom} className="h-8 w-36" />
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <CardTitle className="text-base sm:text-lg shrink-0">Item-wise Gross Profit</CardTitle>
+
+          <div className="flex flex-col gap-2 items-start sm:items-end">
+            {/* Period selector + export buttons row */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={activePeriod} onValueChange={handlePeriodChange}>
+                <SelectTrigger className="h-8 w-36 text-xs">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="custom">Custom Date</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <ExportButtons
+                data={exportData}
+                columns={exportColumns}
+                filename={`gross-profit-${new Date().toISOString().split("T")[0]}`}
+                title="Gross Profit Report"
+                printStoreName={storeName}
+                printReportParams={`From Date: ${formatReportDateTime(dateFrom, timeFrom, "from")} AND To Date: ${formatReportDateTime(dateTo, timeTo, "to")} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${storeName || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`}
+                printLocation={storeName}
+              />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="gp-timeFrom" className="text-xs">Time</Label>
-              <Input id="gp-timeFrom" name="timeFrom" type="time" defaultValue={timeFrom ?? "09:00"} className="h-8 w-28" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="gp-dateTo" className="text-xs">To Date</Label>
-              <Input id="gp-dateTo" name="dateTo" type="date" defaultValue={dateTo} className="h-8 w-36" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="gp-timeTo" className="text-xs">Time</Label>
-              <Input id="gp-timeTo" name="timeTo" type="time" defaultValue={timeTo ?? "23:59"} className="h-8 w-28" />
-            </div>
-            <Button type="submit" size="sm">
-              Apply
-            </Button>
-          </form>
-          <ExportButtons
-            data={exportData}
-            columns={exportColumns}
-            filename={`gross-profit-${new Date().toISOString().split("T")[0]}`}
-            title="Gross Profit Report"
-            printStoreName={storeName}
-            printReportParams={`From Date: ${formatReportDateTime(dateFrom, timeFrom, "from")} AND To Date: ${formatReportDateTime(dateTo, timeTo, "to")} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${storeName || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`}
-            printLocation={storeName}
-          />
+
+            {/* Custom date/time inputs — only visible when "Custom Date" is selected */}
+            {activePeriod === "custom" && (
+              <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="gp-dateFrom" className="text-xs">From Date</Label>
+                  <Input id="gp-dateFrom" name="dateFrom" type="date" defaultValue={dateFrom} className="h-8 w-36" />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="gp-timeFrom" className="text-xs">Time</Label>
+                  <Input id="gp-timeFrom" name="timeFrom" type="time" defaultValue={timeFrom ?? "09:00"} className="h-8 w-28" />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="gp-dateTo" className="text-xs">To Date</Label>
+                  <Input id="gp-dateTo" name="dateTo" type="date" defaultValue={dateTo} className="h-8 w-36" />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="gp-timeTo" className="text-xs">Time</Label>
+                  <Input id="gp-timeTo" name="timeTo" type="time" defaultValue={timeTo ?? "23:59"} className="h-8 w-28" />
+                </div>
+                <Button type="submit" size="sm" className="self-end">
+                  Apply
+                </Button>
+              </form>
+            )}
+          </div>
         </div>
       </CardHeader>
 

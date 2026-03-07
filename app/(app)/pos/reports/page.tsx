@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, DollarSign, ShoppingBag, BarChart3 } from "lucide-react"
 
 interface ReportsPageProps {
-  searchParams: Promise<{ dateFrom?: string; dateTo?: string; timeFrom?: string; timeTo?: string }>
+  searchParams: Promise<{ dateFrom?: string; dateTo?: string; timeFrom?: string; timeTo?: string; period?: string }>
 }
 
 function fmt(n: number) {
@@ -18,6 +18,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
   const dateTo = params.dateTo
   const timeFrom = params.timeFrom
   const timeTo = params.timeTo
+  const period = params.period
 
   const [storeSettings, { rows, summary }] = await Promise.all([
     getStoreSettings(),
@@ -101,7 +102,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
         </Card>
       </div>
 
-      <GrossProfitTable data={rows} dateFrom={dateFrom} dateTo={dateTo} timeFrom={timeFrom} timeTo={timeTo} storeName={storeName} />
+      <GrossProfitTable data={rows} dateFrom={dateFrom} dateTo={dateTo} timeFrom={timeFrom} timeTo={timeTo} period={period} storeName={storeName} />
     </div>
   )
 }
