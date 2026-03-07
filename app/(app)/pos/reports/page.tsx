@@ -14,11 +14,17 @@ function fmt(n: number) {
 
 export default async function GrossProfitReportPage({ searchParams }: ReportsPageProps) {
   const params = await searchParams
-  const dateFrom = params.dateFrom
-  const dateTo = params.dateTo
-  const timeFrom = params.timeFrom
-  const timeTo = params.timeTo
-  const period = params.period
+
+  // PKT = UTC+5: calculate today's date in Pakistan time (server may be UTC)
+  const nowPKT = new Date(Date.now() + 5 * 60 * 60 * 1000)
+  const todayPKT = nowPKT.toISOString().split("T")[0]
+
+  // Defaults: Today, 9 AM → 12 AM (23:59)
+  const dateFrom = params.dateFrom ?? todayPKT
+  const dateTo = params.dateTo ?? todayPKT
+  const timeFrom = params.timeFrom ?? "09:00"
+  const timeTo = params.timeTo ?? "23:59"
+  const period = params.period ?? "today"
 
   const [storeSettings, { rows, summary }] = await Promise.all([
     getStoreSettings(),
@@ -26,8 +32,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
   ])
   const storeName = storeSettings?.name || "Store"
 
-  const fmtTime = (t?: string) => {
-    if (!t) return ""
+  const fmtTime = (t: string) => {
     const [h, m] = t.split(":")
     const hour = parseInt(h)
     const ampm = hour >= 12 ? "PM" : "AM"
@@ -35,10 +40,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
     return `${h12}:${m} ${ampm}`
   }
 
-  const subtitle =
-    dateFrom || dateTo
-      ? `${dateFrom ?? "Start"} ${timeFrom ? fmtTime(timeFrom) : "09:00 AM"} → ${dateTo ?? "Today"} ${timeTo ? fmtTime(timeTo) : "11:59 PM"}`
-      : "All time — item-wise profitability based on last cost rate"
+  const subtitle = `${dateFrom} ${fmtTime(timeFrom)} → ${dateTo} ${fmtTime(timeTo)}`
 
   return (
     <div className="space-y-4 sm:space-y-6">

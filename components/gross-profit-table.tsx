@@ -43,7 +43,9 @@ function formatReportDateTime(d?: string, t?: string, type: "from" | "to" = "fro
 }
 
 function toDateStr(d: Date): string {
-  return d.toISOString().split("T")[0]
+  // Use PKT (UTC+5) so date is correct even after 7 PM PKT (midnight UTC)
+  const pkt = new Date(d.getTime() + 5 * 60 * 60 * 1000)
+  return pkt.toISOString().split("T")[0]
 }
 
 function getPresetDates(period: PeriodType): { dateFrom: string; dateTo: string } {
@@ -76,8 +78,7 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const initialPeriod: PeriodType =
-    (period as PeriodType) || (dateFrom || dateTo ? "custom" : "today")
+  const initialPeriod: PeriodType = (period as PeriodType) || "today"
   const [activePeriod, setActivePeriod] = useState<PeriodType>(initialPeriod)
 
   // When a preset is chosen, calculate dates and navigate immediately
