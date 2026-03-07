@@ -104,7 +104,7 @@ export default async function GrossProfitReportPage({ searchParams }: ReportsPag
         </Card>
       </div>
 
-      <GrossProfitTable data={rows} dateFrom={dateFrom} dateTo={dateTo} timeFrom={timeFrom} timeTo={timeTo} period={period} storeName={storeName} />
+      <GrossProfitTable key={`${dateFrom}-${dateTo}-${timeFrom}-${timeTo}-${period}`} data={rows} dateFrom={dateFrom} dateTo={dateTo} timeFrom={timeFrom} timeTo={timeTo} period={period} storeName={storeName} />
     </div>
   )
 }

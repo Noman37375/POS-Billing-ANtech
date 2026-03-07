@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useCallback, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -76,53 +76,46 @@ function getPresetDates(period: PeriodType): { dateFrom: string; dateTo: string 
 
 export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, period, storeName }: GrossProfitTableProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  const initialPeriod: PeriodType = (period as PeriodType) || "today"
-  const [activePeriod, setActivePeriod] = useState<PeriodType>(initialPeriod)
+  const [activePeriod, setActivePeriod] = useState<PeriodType>((period as PeriodType) || "today")
+  const [fromDate, setFromDate] = useState(dateFrom ?? "")
+  const [toDate, setToDate] = useState(dateTo ?? "")
+  const [fromTime, setFromTime] = useState(timeFrom ?? "09:00")
+  const [toTime, setToTime] = useState(timeTo ?? "23:59")
 
-  // When a preset is chosen, calculate dates and navigate immediately
+  // When a preset is chosen, update inputs immediately + navigate
   const handlePeriodChange = useCallback(
     (value: string) => {
       const p = value as PeriodType
       setActivePeriod(p)
-      if (p === "custom") {
-        // Just update the period param and keep existing dates
-        const params = new URLSearchParams(searchParams.toString())
-        params.set("period", "custom")
-        router.push(`/pos/reports?${params.toString()}`)
-        return
-      }
+      if (p === "custom") return // just show inputs for user to fill
       const { dateFrom: df, dateTo: dt } = getPresetDates(p)
+      setFromDate(df)
+      setToDate(dt)
       const params = new URLSearchParams()
       params.set("period", p)
       params.set("dateFrom", df)
       params.set("dateTo", dt)
-      params.set("timeFrom", timeFrom || "09:00")
-      params.set("timeTo", timeTo || "23:59")
+      params.set("timeFrom", fromTime)
+      params.set("timeTo", toTime)
       router.push(`/pos/reports?${params.toString()}`)
     },
-    [router, searchParams, timeFrom, timeTo],
+    [router, fromTime, toTime],
   )
 
-  // Custom date form submit
+  // Apply button — navigate with current input values
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
-      const form = e.currentTarget
-      const from = (form.elements.namedItem("dateFrom") as HTMLInputElement)?.value
-      const to = (form.elements.namedItem("dateTo") as HTMLInputElement)?.value
-      const tf = (form.elements.namedItem("timeFrom") as HTMLInputElement)?.value
-      const tt = (form.elements.namedItem("timeTo") as HTMLInputElement)?.value
       const params = new URLSearchParams()
-      params.set("period", "custom")
-      if (from) params.set("dateFrom", from)
-      if (to) params.set("dateTo", to)
-      if (tf) params.set("timeFrom", tf)
-      if (tt) params.set("timeTo", tt)
+      params.set("period", activePeriod)
+      if (fromDate) params.set("dateFrom", fromDate)
+      if (toDate) params.set("dateTo", toDate)
+      if (fromTime) params.set("timeFrom", fromTime)
+      if (toTime) params.set("timeTo", toTime)
       router.push(`/pos/reports?${params.toString()}`)
     },
-    [router],
+    [router, activePeriod, fromDate, toDate, fromTime, toTime],
   )
 
   // Grand total row
@@ -198,30 +191,28 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
               />
             </div>
 
-            {/* Custom date/time inputs — only visible when "Custom Date" is selected */}
-            {activePeriod === "custom" && (
-              <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
-                <div className="space-y-1">
-                  <Label htmlFor="gp-dateFrom" className="text-xs">From Date</Label>
-                  <Input id="gp-dateFrom" name="dateFrom" type="date" defaultValue={dateFrom} className="h-8 w-36" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="gp-timeFrom" className="text-xs">Time</Label>
-                  <Input id="gp-timeFrom" name="timeFrom" type="time" defaultValue={timeFrom ?? "09:00"} className="h-8 w-28" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="gp-dateTo" className="text-xs">To Date</Label>
-                  <Input id="gp-dateTo" name="dateTo" type="date" defaultValue={dateTo} className="h-8 w-36" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="gp-timeTo" className="text-xs">Time</Label>
-                  <Input id="gp-timeTo" name="timeTo" type="time" defaultValue={timeTo ?? "23:59"} className="h-8 w-28" />
-                </div>
-                <Button type="submit" size="sm" className="self-end">
-                  Apply
-                </Button>
-              </form>
-            )}
+            {/* Date + time inputs — always visible for all period types */}
+            <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="gp-dateFrom" className="text-xs">From Date</Label>
+                <Input id="gp-dateFrom" name="dateFrom" type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="h-8 w-36" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="gp-timeFrom" className="text-xs">Time</Label>
+                <Input id="gp-timeFrom" name="timeFrom" type="time" value={fromTime} onChange={e => setFromTime(e.target.value)} className="h-8 w-28" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="gp-dateTo" className="text-xs">To Date</Label>
+                <Input id="gp-dateTo" name="dateTo" type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="h-8 w-36" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="gp-timeTo" className="text-xs">Time</Label>
+                <Input id="gp-timeTo" name="timeTo" type="time" value={toTime} onChange={e => setToTime(e.target.value)} className="h-8 w-28" />
+              </div>
+              <Button type="submit" size="sm" className="self-end">
+                Apply
+              </Button>
+            </form>
           </div>
         </div>
       </CardHeader>
