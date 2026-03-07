@@ -67,11 +67,11 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
   data.items.forEach((item, idx) => {
     itemRows += `
       <tr style="border-bottom:0.5px solid #e0e0e0;">
-        <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;color:#000;">${idx + 1}</td>
-        <td style="padding:0.7mm 0.5mm;text-align:left;vertical-align:top;color:#000;word-break:break-word;">${esc(item.name)}</td>
-        <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;color:#000;">${item.quantity}</td>
-        <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;color:#000;">${fmtNum(item.unitPrice)}</td>
-        <td style="padding:0.7mm 0.5mm;text-align:right;vertical-align:top;font-weight:700;color:#000;">${fmtNum(item.lineTotal)}</td>
+        <td style="padding:0.3mm 0.5mm;text-align:left;vertical-align:top;color:#000;">${idx + 1}</td>
+        <td style="padding:0.3mm 0.5mm;text-align:left;vertical-align:top;color:#000;word-break:break-word;">${esc(item.name)}</td>
+        <td style="padding:0.3mm 0.5mm;text-align:right;vertical-align:top;color:#000;">${item.quantity}</td>
+        <td style="padding:0.3mm 0.5mm;text-align:right;vertical-align:top;color:#000;">${fmtNum(item.unitPrice)}</td>
+        <td style="padding:0.3mm 0.5mm;text-align:right;vertical-align:top;font-weight:700;color:#000;">${fmtNum(item.lineTotal)}</td>
       </tr>`
   })
 
@@ -139,32 +139,32 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
     </table>
 
     <!-- SUMMARY ROW -->
-    <div style="border-top:1.5px solid #000;border-bottom:1px dashed #000;font-size:8px;padding:1mm 0.5mm;margin-top:0;color:#000;">
+    <div style="border-top:1.5px solid #000;border-bottom:1px dashed #000;font-size:8px;padding:0.5mm 0.5mm;margin-top:0;color:#000;">
       No. Of Item(s) ${itemCount} &nbsp;&nbsp; Total Qty: ${totalQty}
     </div>
 
     <!-- TOTALS (right-aligned) -->
-    <table style="width:100%;font-size:9px;margin-top:1mm;color:#000;" cellpadding="0" cellspacing="0">
+    <table style="width:100%;font-size:9px;margin-top:0.5mm;color:#000;" cellpadding="0" cellspacing="0">
       ${data.tax > 0 ? `
       <tr>
         <td></td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;color:#000;">Subtotal:</td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;min-width:18mm;color:#000;">${fmtNum(data.subtotal)}</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;color:#000;">Subtotal:</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;min-width:18mm;color:#000;">${fmtNum(data.subtotal)}</td>
       </tr>
       <tr>
         <td></td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;color:#000;">Tax:</td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;color:#000;">${fmtNum(data.tax)}</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;color:#000;">Tax:</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;color:#000;">${fmtNum(data.tax)}</td>
       </tr>` : ""}
       <tr>
         <td></td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Net Amount:</td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(data.total)}</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Net Amount:</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(data.total)}</td>
       </tr>
       <tr>
         <td></td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${esc(payMethod)} Paid:</td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(cashPaid)}</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${esc(payMethod)} Paid:</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(cashPaid)}</td>
       </tr>
       ${isPending ? `
       <tr>
@@ -172,8 +172,8 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
       </tr>
       <tr>
         <td></td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Remaining Balance:</td>
-        <td style="text-align:right;padding:0.4mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(remainingBalance)}</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Remaining Balance:</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(remainingBalance)}</td>
       </tr>` : ""}
     </table>
 
@@ -219,7 +219,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
   <style>
     @page {
       size: auto;
-      margin: 2mm;
+      margin: 2mm 5mm;
     }
     @media print {
       body {
@@ -243,7 +243,7 @@ export async function printStandardInvoice(data: InvoiceForPrint) {
     }
     .receipt {
       width: 100%;
-      padding: 1mm 1mm 2mm 1mm;
+      padding: 1mm 3mm 2mm 3mm;
     }
     .page-break {
       page-break-after: always;
