@@ -91,7 +91,7 @@ export function ExportButtons({
 </head>
 <body>
   <div class="report-title">${escapeHtml(fullTitle)}</div>
-  <div class="report-params"><strong>Report Parameters</strong><br>${escapeHtml(paramsText)}</div>
+  <div class="report-params">${escapeHtml(paramsText).replace(/\n/g, "<br>")}</div>
   <table>
     <thead><tr>${headerRow}</tr></thead>
     <tbody>${bodyRows}</tbody>

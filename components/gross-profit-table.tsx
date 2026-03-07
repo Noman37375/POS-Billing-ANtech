@@ -30,16 +30,18 @@ function fmtPct(n: number) {
   return fmt(n) + "%"
 }
 
-function formatReportDateTime(d?: string, t?: string, type: "from" | "to" = "from") {
-  if (!d) return "ALL"
-  const [datePart] = d.split("T")
-  const [y, m, day] = datePart.split("-")
-  const time = t || (type === "from" ? "09:00" : "23:59")
-  const [hStr, minStr] = time.split(":")
-  const hour = parseInt(hStr)
+function fmtDatePrint(d?: string): string {
+  if (!d) return "—"
+  const [y, m, day] = d.split("-")
+  return `${day}/${m}/${y}`
+}
+
+function fmtTimePrint(t: string): string {
+  const [h, m] = t.split(":")
+  const hour = parseInt(h)
   const ampm = hour >= 12 ? "PM" : "AM"
-  const h12 = String(hour % 12 || 12).padStart(2, "0")
-  return `${day}/${m}/${y} ${h12}:${minStr}:00 ${ampm}`
+  const h12 = hour % 12 || 12
+  return `${h12}:${m} ${ampm}`
 }
 
 function toDateStr(d: Date): string {
@@ -188,15 +190,33 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
                 </SelectContent>
               </Select>
 
-              <ExportButtons
-                data={exportData}
-                columns={exportColumns}
-                filename={`gross-profit-${new Date().toISOString().split("T")[0]}`}
-                title="Gross Profit Report"
-                printStoreName={storeName}
-                printReportParams={`From Date: ${formatReportDateTime(dateFrom, timeFrom, "from")} AND To Date: ${formatReportDateTime(dateTo, timeTo, "to")} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${storeName || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`}
-                printLocation={storeName}
-              />
+              {(() => {
+                const periodLabel: Record<string, string> = {
+                  today: "Daily Report",
+                  week: "Weekly Report",
+                  month: "Monthly Report",
+                  year: "Yearly Report",
+                  custom: "Custom Report",
+                }
+                const label = periodLabel[activePeriod] ?? "Gross Profit Report"
+                const dateRange = fromDate === toDate
+                  ? `Date: ${fmtDatePrint(fromDate)}`
+                  : `From: ${fmtDatePrint(fromDate)}  —  To: ${fmtDatePrint(toDate)}`
+                const timeRange = showTime
+                  ? `\nTime: ${fmtTimePrint(fromTime)}  to  ${fmtTimePrint(toTime)}`
+                  : ""
+                const params = `${label}\n${dateRange}${timeRange}`
+                return (
+                  <ExportButtons
+                    data={exportData}
+                    columns={exportColumns}
+                    filename={`gross-profit-${new Date().toISOString().split("T")[0]}`}
+                    title="Gross Profit Report"
+                    printStoreName={storeName}
+                    printReportParams={params}
+                  />
+                )
+              })()}
             </div>
 
             {/* Date inputs always visible; time inputs only for Today / Custom */}
