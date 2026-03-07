@@ -55,12 +55,13 @@ export async function getGrossProfitReport(
     .eq("source", "pos")
     .neq("status", "Draft")
 
+  // Use +05:00 (PKT) so "09:00" means 9 AM Pakistan time, not 9 AM UTC (which would be 2 PM PKT)
   if (dateFrom) {
-    const from = dateFrom.includes("T") ? dateFrom : `${dateFrom}T${fromTime}:00.000Z`
+    const from = dateFrom.includes("T") ? dateFrom : `${dateFrom}T${fromTime}:00+05:00`
     invoiceQuery = invoiceQuery.gte("created_at", from)
   }
   if (dateTo) {
-    const to = dateTo.includes("T") ? dateTo : `${dateTo}T${toTime}:59.999Z`
+    const to = dateTo.includes("T") ? dateTo : `${dateTo}T${toTime}:59+05:00`
     invoiceQuery = invoiceQuery.lte("created_at", to)
   }
 
