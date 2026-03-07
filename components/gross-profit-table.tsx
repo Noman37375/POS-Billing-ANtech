@@ -1,13 +1,14 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ExportButtons } from "@/components/export-buttons"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { GrossProfitRow } from "@/app/(app)/pos/reports/actions"
 
 type PeriodType = "today" | "week" | "month" | "year" | "custom"
@@ -78,6 +79,7 @@ function getPresetDates(period: PeriodType): { dateFrom: string; dateTo: string 
 
 export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, period, storeName }: GrossProfitTableProps) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   const [activePeriod, setActivePeriod] = useState<PeriodType>((period as PeriodType) || "today")
   const [fromDate, setFromDate] = useState(dateFrom ?? "")
@@ -108,7 +110,9 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
       params.set("dateTo", dt)
       params.set("timeFrom", tf)
       params.set("timeTo", tt)
-      router.push(`/pos/reports?${params.toString()}`)
+      startTransition(() => {
+        router.push(`/pos/reports?${params.toString()}`)
+      })
     },
     [router],
   )
@@ -123,9 +127,11 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
       if (toDate) params.set("dateTo", toDate)
       if (fromTime) params.set("timeFrom", fromTime)
       if (toTime) params.set("timeTo", toTime)
-      router.push(`/pos/reports?${params.toString()}`)
+      startTransition(() => {
+        router.push(`/pos/reports?${params.toString()}`)
+      })
     },
-    [router, activePeriod, fromDate, toDate, fromTime, toTime],
+    [router, startTransition, activePeriod, fromDate, toDate, fromTime, toTime],
   )
 
   // Grand total row
@@ -250,7 +256,37 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
       </CardHeader>
 
       <CardContent className="p-4 sm:p-6 pt-0">
-        {data.length === 0 ? (
+        {isPending ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[900px]">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b">
+                  {["Bar Code","Item","T.Sale Qty","Avg Price","Sale Amt","Purchase Price","Purchase Amt","G.P.Value","GP% Purchase","GP% Sale"].map((h) => (
+                    <th key={h} className="py-2.5 px-3 text-xs font-medium whitespace-nowrap">
+                      <Skeleton className="h-3 w-16" />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="py-2 px-3"><Skeleton className="h-3 w-14" /></td>
+                    <td className="py-2 px-3"><Skeleton className="h-3 w-36" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-10 ml-auto" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-14 ml-auto" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-16 ml-auto" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-16 ml-auto" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-16 ml-auto" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-16 ml-auto" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-12 ml-auto" /></td>
+                    <td className="py-2 px-3 text-right"><Skeleton className="h-3 w-12 ml-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : data.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground text-sm">
             No sales data found for the selected period.
           </div>
