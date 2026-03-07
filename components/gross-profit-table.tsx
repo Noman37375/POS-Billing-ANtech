@@ -83,6 +83,9 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
   const [fromTime, setFromTime] = useState(timeFrom ?? "09:00")
   const [toTime, setToTime] = useState(timeTo ?? "23:59")
 
+  // Whether this period uses a time filter
+  const showTime = activePeriod === "today" || activePeriod === "custom"
+
   // When a preset is chosen, update inputs immediately + navigate
   const handlePeriodChange = useCallback(
     (value: string) => {
@@ -92,15 +95,20 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
       const { dateFrom: df, dateTo: dt } = getPresetDates(p)
       setFromDate(df)
       setToDate(dt)
+      // Today keeps 9AM-23:59; week/month/year use full day (no time restriction)
+      const tf = p === "today" ? "09:00" : "00:00"
+      const tt = "23:59"
+      setFromTime(tf)
+      setToTime(tt)
       const params = new URLSearchParams()
       params.set("period", p)
       params.set("dateFrom", df)
       params.set("dateTo", dt)
-      params.set("timeFrom", fromTime)
-      params.set("timeTo", toTime)
+      params.set("timeFrom", tf)
+      params.set("timeTo", tt)
       router.push(`/pos/reports?${params.toString()}`)
     },
-    [router, fromTime, toTime],
+    [router],
   )
 
   // Apply button — navigate with current input values
@@ -191,24 +199,28 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
               />
             </div>
 
-            {/* Date + time inputs — always visible for all period types */}
+            {/* Date inputs always visible; time inputs only for Today / Custom */}
             <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
               <div className="space-y-1">
                 <Label htmlFor="gp-dateFrom" className="text-xs">From Date</Label>
                 <Input id="gp-dateFrom" name="dateFrom" type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="h-8 w-36" />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="gp-timeFrom" className="text-xs">Time</Label>
-                <Input id="gp-timeFrom" name="timeFrom" type="time" value={fromTime} onChange={e => setFromTime(e.target.value)} className="h-8 w-28" />
-              </div>
+              {showTime && (
+                <div className="space-y-1">
+                  <Label htmlFor="gp-timeFrom" className="text-xs">Time</Label>
+                  <Input id="gp-timeFrom" name="timeFrom" type="time" value={fromTime} onChange={e => setFromTime(e.target.value)} className="h-8 w-28" />
+                </div>
+              )}
               <div className="space-y-1">
                 <Label htmlFor="gp-dateTo" className="text-xs">To Date</Label>
                 <Input id="gp-dateTo" name="dateTo" type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="h-8 w-36" />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="gp-timeTo" className="text-xs">Time</Label>
-                <Input id="gp-timeTo" name="timeTo" type="time" value={toTime} onChange={e => setToTime(e.target.value)} className="h-8 w-28" />
-              </div>
+              {showTime && (
+                <div className="space-y-1">
+                  <Label htmlFor="gp-timeTo" className="text-xs">Time</Label>
+                  <Input id="gp-timeTo" name="timeTo" type="time" value={toTime} onChange={e => setToTime(e.target.value)} className="h-8 w-28" />
+                </div>
+              )}
               <Button type="submit" size="sm" className="self-end">
                 Apply
               </Button>
