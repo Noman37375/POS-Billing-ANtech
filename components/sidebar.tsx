@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo, useState, useEffect } from "react"
-import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp } from "lucide-react"
+import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp, HardDriveDownload } from "lucide-react"
 import Image from "next/image"
 import { PosUser, ModulePrivilege } from "@/lib/types/user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -172,6 +172,7 @@ export function Sidebar({ user }: SidebarProps) {
         ],
       },
       { href: "/users", label: "User Management", icon: UserCog, privilege: "user_management" as ModulePrivilege },
+      { href: "/backup", label: "Backup", icon: HardDriveDownload, privilege: "dashboard" as ModulePrivilege },
     ],
     [],
   )
