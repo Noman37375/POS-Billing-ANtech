@@ -6,10 +6,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 import { PosUser } from "@/lib/types/user"
 import { createUser, updateUser } from "@/app/(app)/users/actions"
 import { toast } from "sonner"
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  ShoppingCart,
+  FileText,
+  TrendingUp,
+  RotateCcw,
+  UserCog,
+  Database,
+  CreditCard,
+} from "lucide-react"
 
 interface UserDialogProps {
   open: boolean
@@ -40,6 +53,97 @@ interface UserFormData {
   is_active: boolean
 }
 
+// Privilege groups with sub-privileges
+const PRIVILEGE_GROUPS = [
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    description: "View dashboard stats and overview",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+  {
+    key: "parties",
+    label: "Parties",
+    icon: Users,
+    description: "Manage customers and vendors",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+  {
+    key: "inventory",
+    label: "Stock Management",
+    icon: Package,
+    description: "Inventory, categories, units and barcodes",
+    subPrivileges: [
+      { key: "inventory" as keyof UserFormData, label: "Inventory Items" },
+      { key: "inventory_report" as keyof UserFormData, label: "Inventory Reports" },
+      { key: "categories" as keyof UserFormData, label: "Categories" },
+      { key: "units" as keyof UserFormData, label: "Units" },
+      { key: "barcode" as keyof UserFormData, label: "Barcode" },
+    ],
+  },
+  {
+    key: "pos",
+    label: "POS (Point of Sale)",
+    icon: ShoppingCart,
+    description: "New sales, sales history, reports and settings",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+  {
+    key: "invoices",
+    label: "Invoices",
+    icon: FileText,
+    description: "Create and view invoices",
+    subPrivileges: [
+      { key: "invoices_create" as keyof UserFormData, label: "Create Invoice" },
+      { key: "invoices_list" as keyof UserFormData, label: "Invoices List" },
+    ],
+  },
+  {
+    key: "purchases",
+    label: "Purchase Management",
+    icon: CreditCard,
+    description: "Manage vendor purchases and payments",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+  {
+    key: "accounts",
+    label: "Accounts",
+    icon: TrendingUp,
+    description: "Ledgers, financial reports and overview",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+  {
+    key: "returns_refunds",
+    label: "Returns & Refunds",
+    icon: RotateCcw,
+    description: "Sales/purchase returns and refunds",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+  {
+    key: "employees_payroll",
+    label: "Employees & Payroll",
+    icon: UserCog,
+    description: "Employees, salary setup and payroll",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+  {
+    key: "backup",
+    label: "Backup",
+    icon: Database,
+    description: "Download and manage data backups",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
+  },
+]
+
+// For groups that have no sub-privileges, the main key IS the privilege key
+function getGroupPrivilegeKeys(group: (typeof PRIVILEGE_GROUPS)[0]): (keyof UserFormData)[] {
+  if (group.subPrivileges.length === 0) {
+    return [group.key as keyof UserFormData]
+  }
+  return group.subPrivileges.map((s) => s.key)
+}
+
 export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialogProps) {
   const isEditing = !!user
   const [isPending, startTransition] = useTransition()
@@ -68,7 +172,6 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
     },
   })
 
-  // Reset form when dialog opens or user changes
   useEffect(() => {
     if (open) {
       reset({
@@ -95,13 +198,29 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
     }
   }, [open, user, reset])
 
+  // Check if all sub-privileges in a group are enabled
+  const isGroupFullyOn = (group: (typeof PRIVILEGE_GROUPS)[0]) => {
+    const keys = getGroupPrivilegeKeys(group)
+    return keys.every((k) => watch(k) === true)
+  }
+
+  // Check if any sub-privilege in a group is enabled
+  const isGroupPartiallyOn = (group: (typeof PRIVILEGE_GROUPS)[0]) => {
+    const keys = getGroupPrivilegeKeys(group)
+    return keys.some((k) => watch(k) === true) && !isGroupFullyOn(group)
+  }
+
+  // Toggle all sub-privileges when group switch is toggled
+  const toggleGroup = (group: (typeof PRIVILEGE_GROUPS)[0], value: boolean) => {
+    const keys = getGroupPrivilegeKeys(group)
+    keys.forEach((k) => setValue(k, value))
+  }
+
   const onSubmit = async (data: UserFormData) => {
     startTransition(async () => {
       const formData = new FormData()
       formData.append("email", data.email)
-      if (data.password) {
-        formData.append("password", data.password)
-      }
+      if (data.password) formData.append("password", data.password)
       formData.append("name", data.name)
       formData.append("privilege_dashboard", data.dashboard ? "on" : "off")
       formData.append("privilege_parties", data.parties ? "on" : "off")
@@ -145,6 +264,7 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
           <DialogTitle>{isEditing ? "Edit User" : "Create New User"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
@@ -157,176 +277,102 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password {isEditing ? "(leave blank to keep current)" : "*"}</Label>
-            <Input id="password" type="password" minLength={6} required={!isEditing} {...register("password")} />
+            <Label htmlFor="password">
+              Password {isEditing ? "(leave blank to keep current)" : "*"}
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              minLength={6}
+              required={!isEditing}
+              {...register("password")}
+            />
           </div>
 
-          <div className="space-y-4">
-            <Label>Privileges</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_dashboard"
-                  checked={watch("dashboard")}
-                  onCheckedChange={(checked) => setValue("dashboard", checked === true)}
-                />
-                <Label htmlFor="privilege_dashboard" className="font-normal cursor-pointer">
-                  Dashboard
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_parties"
-                  checked={watch("parties")}
-                  onCheckedChange={(checked) => setValue("parties", checked === true)}
-                />
-                <Label htmlFor="privilege_parties" className="font-normal cursor-pointer">
-                  Parties
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_inventory"
-                  checked={watch("inventory")}
-                  onCheckedChange={(checked) => setValue("inventory", checked === true)}
-                />
-                <Label htmlFor="privilege_inventory" className="font-normal cursor-pointer">
-                  Inventory
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_inventory_report"
-                  checked={watch("inventory_report")}
-                  onCheckedChange={(checked) => setValue("inventory_report", checked === true)}
-                />
-                <Label htmlFor="privilege_inventory_report" className="font-normal cursor-pointer">
-                  Inventory Report
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_categories"
-                  checked={watch("categories")}
-                  onCheckedChange={(checked) => setValue("categories", checked === true)}
-                />
-                <Label htmlFor="privilege_categories" className="font-normal cursor-pointer">
-                  Categories
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_units"
-                  checked={watch("units")}
-                  onCheckedChange={(checked) => setValue("units", checked === true)}
-                />
-                <Label htmlFor="privilege_units" className="font-normal cursor-pointer">
-                  Units
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_barcode"
-                  checked={watch("barcode")}
-                  onCheckedChange={(checked) => setValue("barcode", checked === true)}
-                />
-                <Label htmlFor="privilege_barcode" className="font-normal cursor-pointer">
-                  Barcode
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_pos"
-                  checked={watch("pos")}
-                  onCheckedChange={(checked) => setValue("pos", checked === true)}
-                />
-                <Label htmlFor="privilege_pos" className="font-normal cursor-pointer">
-                  POS (Point of Sale)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_invoices_create"
-                  checked={watch("invoices_create")}
-                  onCheckedChange={(checked) => setValue("invoices_create", checked === true)}
-                />
-                <Label htmlFor="privilege_invoices_create" className="font-normal cursor-pointer">
-                  Create Invoice
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_invoices_list"
-                  checked={watch("invoices_list")}
-                  onCheckedChange={(checked) => setValue("invoices_list", checked === true)}
-                />
-                <Label htmlFor="privilege_invoices_list" className="font-normal cursor-pointer">
-                  Invoices List
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_purchases"
-                  checked={watch("purchases")}
-                  onCheckedChange={(checked) => setValue("purchases", checked === true)}
-                />
-                <Label htmlFor="privilege_purchases" className="font-normal cursor-pointer">
-                  Purchase Management
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_accounts"
-                  checked={watch("accounts")}
-                  onCheckedChange={(checked) => setValue("accounts", checked === true)}
-                />
-                <Label htmlFor="privilege_accounts" className="font-normal cursor-pointer">
-                  Accounts
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_returns_refunds"
-                  checked={watch("returns_refunds")}
-                  onCheckedChange={(checked) => setValue("returns_refunds", checked === true)}
-                />
-                <Label htmlFor="privilege_returns_refunds" className="font-normal cursor-pointer">
-                  Returns & Refunds
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_employees_payroll"
-                  checked={watch("employees_payroll")}
-                  onCheckedChange={(checked) => setValue("employees_payroll", checked === true)}
-                />
-                <Label htmlFor="privilege_employees_payroll" className="font-normal cursor-pointer">
-                  Employees & Payroll
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_backup"
-                  checked={watch("backup")}
-                  onCheckedChange={(checked) => setValue("backup", checked === true)}
-                />
-                <Label htmlFor="privilege_backup" className="font-normal cursor-pointer">
-                  Backup
-                </Label>
-              </div>
+          {/* Privileges */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Module Privileges</Label>
+              <span className="text-xs text-muted-foreground">
+                {Object.entries(watch()).filter(([k, v]) =>
+                  k !== "email" && k !== "password" && k !== "name" && k !== "is_active" && v === true
+                ).length} enabled
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {PRIVILEGE_GROUPS.map((group) => {
+                const Icon = group.icon
+                const fullyOn = isGroupFullyOn(group)
+                const partiallyOn = isGroupPartiallyOn(group)
+                const hasSubPrivileges = group.subPrivileges.length > 0
+
+                return (
+                  <div
+                    key={group.key}
+                    className={`rounded-lg border transition-colors ${
+                      fullyOn
+                        ? "border-primary/30 bg-primary/5"
+                        : partiallyOn
+                        ? "border-orange-300/50 bg-orange-50/30 dark:bg-orange-950/10"
+                        : "border-border bg-muted/20"
+                    }`}
+                  >
+                    {/* Group header row */}
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-1.5 rounded-md ${fullyOn ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{group.label}</span>
+                            {partiallyOn && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-orange-400 text-orange-600">
+                                Partial
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{group.description}</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={fullyOn}
+                        onCheckedChange={(val) => toggleGroup(group, val)}
+                      />
+                    </div>
+
+                    {/* Sub-privileges */}
+                    {hasSubPrivileges && (fullyOn || partiallyOn) && (
+                      <div className="border-t border-border/50 px-4 py-2 space-y-2">
+                        {group.subPrivileges.map((sub) => (
+                          <div key={sub.key} className="flex items-center justify-between pl-9 py-1">
+                            <span className="text-xs text-muted-foreground">{sub.label}</span>
+                            <Switch
+                              checked={watch(sub.key) === true}
+                              onCheckedChange={(val) => setValue(sub.key, val)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
 
+          {/* Active toggle */}
           {isEditing && (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="is_active"
+            <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+              <div>
+                <p className="text-sm font-medium">Account Active</p>
+                <p className="text-xs text-muted-foreground">Disable to block this user from logging in</p>
+              </div>
+              <Switch
                 checked={watch("is_active")}
-                onCheckedChange={(checked) => setValue("is_active", checked === true)}
+                onCheckedChange={(val) => setValue("is_active", val)}
               />
-              <Label htmlFor="is_active" className="font-normal cursor-pointer">
-                Active
-              </Label>
             </div>
           )}
 
