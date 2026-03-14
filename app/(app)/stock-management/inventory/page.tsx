@@ -13,11 +13,12 @@ import { requirePrivilege } from "@/lib/auth/privileges"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
-export default async function InventoryPage({ searchParams }: { searchParams: { tab?: string } }) {
+export default async function InventoryPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   // Check if user has inventory privilege
   await requirePrivilege("inventory")
 
-  const tab = searchParams?.tab === "archived" ? "archived" : "active"
+  const { tab: tabParam } = await searchParams
+  const tab = tabParam === "archived" ? "archived" : "active"
 
   const items = await (async () => {
     if (!isSupabaseReady()) return mockInventory
