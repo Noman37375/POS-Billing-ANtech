@@ -326,6 +326,28 @@ export async function deleteInventoryItem(itemId: string) {
     return { error: "Item ID is required" }
   }
 
+  // Check if item is used in any sales invoices
+  const { count } = await supabase
+    .from("sales_invoice_lines")
+    .select("id", { count: "exact", head: true })
+    .eq("item_id", itemId)
+
+  if (count && count > 0) {
+    // Soft delete — archive the item so it disappears from inventory
+    // but sales history remains intact (FK constraint prevents hard delete)
+    const { error: archiveError } = await supabase
+      .from("inventory_items")
+      .update({ is_archived: true })
+      .eq("id", itemId)
+      .eq("user_id", currentUser.id)
+    if (archiveError) {
+      return { error: archiveError.message }
+    }
+    revalidatePath("/stock-management/inventory")
+    revalidatePath("/dashboard")
+    return { error: null, archived: true }
+  }
+
   const { error } = await supabase.from("inventory_items").delete().eq("id", itemId).eq("user_id", currentUser.id)
   if (error) {
     return { error: error.message }
@@ -333,5 +355,5 @@ export async function deleteInventoryItem(itemId: string) {
 
   revalidatePath("/stock-management/inventory")
   revalidatePath("/dashboard")
-  return { error: null }
+  return { error: null, archived: false }
 }

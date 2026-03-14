@@ -22,6 +22,7 @@ export default async function InventoryPage() {
       .from("inventory_items")
       .select("id, name, stock, cost_price, selling_price, category_id, unit_id, barcode, minimum_stock, maximum_stock, created_at, categories:category_id(name), units:unit_id(name, symbol)")
       .eq("user_id", currentUser.id)
+      .eq("is_archived", false)
       .order("created_at", { ascending: false })
     return data
   })()

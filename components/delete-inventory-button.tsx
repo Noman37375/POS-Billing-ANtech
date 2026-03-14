@@ -32,7 +32,11 @@ export function DeleteInventoryButton({ itemId, itemName }: DeleteInventoryButto
       if (result?.error) {
         toast.error(result.error)
       } else {
-        toast.success("Inventory item deleted successfully")
+        if (result?.archived) {
+          toast.success("Item archived — hidden from inventory, sales history preserved.")
+        } else {
+          toast.success("Inventory item deleted successfully")
+        }
         setOpen(false)
       }
     })
