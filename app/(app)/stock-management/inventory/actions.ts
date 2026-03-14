@@ -318,6 +318,29 @@ export async function updateInventoryItem(formData: FormData) {
   return { error: null }
 }
 
+export async function restoreInventoryItem(itemId: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!itemId) {
+    return { error: "Item ID is required" }
+  }
+
+  const { error } = await supabase
+    .from("inventory_items")
+    .update({ is_archived: false })
+    .eq("id", itemId)
+    .eq("user_id", currentUser.id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath("/stock-management/inventory")
+  revalidatePath("/dashboard")
+  return { error: null }
+}
+
 export async function deleteInventoryItem(itemId: string) {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
