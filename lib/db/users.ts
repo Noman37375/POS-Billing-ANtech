@@ -48,7 +48,7 @@ export async function authenticateUser(email: string, password: string): Promise
 // Get user by ID
 export async function getUserById(userId: string): Promise<PosUser | null> {
   const supabase = createClient()
-  
+
   const { data, error } = await supabase
     .from("pos_users")
     .select("*")
@@ -60,7 +60,10 @@ export async function getUserById(userId: string): Promise<PosUser | null> {
     return null
   }
 
-  return data as PosUser
+  // effectiveUserId: sub-users share their parent's data, so use parent_user_id for all data queries
+  const user = data as PosUser
+  user.effectiveUserId = user.parent_user_id ?? user.id
+  return user
 }
 
 // Get user by email

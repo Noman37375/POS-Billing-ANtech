@@ -26,7 +26,7 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
     .from("sales_invoices")
     .select("id, party_id, total")
     .eq("id", payload.sales_invoice_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (invoiceError || !salesInvoice) {
@@ -43,7 +43,7 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
     .from("parties")
     .select("id")
     .eq("id", payload.party_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!party) {
@@ -56,7 +56,7 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
     .from("inventory_items")
     .select("id")
     .in("id", itemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (!items || items.length !== itemIds.length) {
     return { error: "One or more items not found", data: null }
@@ -74,7 +74,7 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
       tax,
       total,
       status: "Completed", // Auto-complete returns
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select("id, return_number")
     .single()
@@ -115,7 +115,7 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
           referenceType: "SaleReturn",
           referenceId: returnData.id,
           notes: `Sale return ${returnData.return_number}`,
-          userId: currentUser.id,
+          userId: currentUser.effectiveUserId,
         })
       }),
     )
@@ -132,7 +132,7 @@ export async function createSaleReturn(payload: CreateSaleReturnInput) {
         amount: r.amount,
         method: r.method,
         reference: r.reference || null,
-        user_id: currentUser.id, // Add user_id for multi-tenant isolation
+        user_id: currentUser.effectiveUserId, // Add user_id for multi-tenant isolation
       }))
 
     if (refundRows.length > 0) {
@@ -165,7 +165,7 @@ export async function createPurchaseReturn(payload: CreatePurchaseReturnInput) {
     .from("purchase_invoices")
     .select("id, party_id, total")
     .eq("id", payload.purchase_invoice_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (invoiceError || !purchaseInvoice) {
@@ -177,7 +177,7 @@ export async function createPurchaseReturn(payload: CreatePurchaseReturnInput) {
     .from("parties")
     .select("id")
     .eq("id", payload.party_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!party) {
@@ -190,7 +190,7 @@ export async function createPurchaseReturn(payload: CreatePurchaseReturnInput) {
     .from("inventory_items")
     .select("id")
     .in("id", itemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (!items || items.length !== itemIds.length) {
     return { error: "One or more items not found", data: null }
@@ -213,7 +213,7 @@ export async function createPurchaseReturn(payload: CreatePurchaseReturnInput) {
       tax,
       total,
       status: "Completed",
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select("id, return_number")
     .single()
@@ -254,7 +254,7 @@ export async function createPurchaseReturn(payload: CreatePurchaseReturnInput) {
           referenceType: "PurchaseReturn",
           referenceId: returnData.id,
           notes: `Purchase return ${returnData.return_number}`,
-          userId: currentUser.id,
+          userId: currentUser.effectiveUserId,
         })
       }),
     )
@@ -274,7 +274,7 @@ export async function createPurchaseReturn(payload: CreatePurchaseReturnInput) {
       }))
 
     if (refundRows.length > 0) {
-      const refundRowsWithUserId = refundRows.map((r) => ({ ...r, user_id: currentUser.id }))
+      const refundRowsWithUserId = refundRows.map((r) => ({ ...r, user_id: currentUser.effectiveUserId }))
       const { error: refundError } = await supabase.from("refunds").insert(refundRowsWithUserId)
       if (refundError) {
         console.error("Error creating refunds:", refundError)
@@ -322,7 +322,7 @@ export async function getReturns(
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (type) {
@@ -403,7 +403,7 @@ export async function getReturnById(returnId: string): Promise<ReturnWithDetails
     `,
     )
     .eq("id", returnId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (returnError || !returnData) {
@@ -437,7 +437,7 @@ export async function getReturnById(returnId: string): Promise<ReturnWithDetails
     .from("refunds")
     .select("*")
     .eq("return_id", returnId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   const partyData = returnData.parties
@@ -517,7 +517,7 @@ export async function createRefund(payload: CreateRefundInput) {
     .from("returns")
     .select("id, total")
     .eq("id", payload.return_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (returnError || !returnData) {
@@ -529,7 +529,7 @@ export async function createRefund(payload: CreateRefundInput) {
     .from("refunds")
     .select("amount")
     .eq("return_id", payload.return_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   const totalRefunded = (existingRefunds ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0)
   const returnTotal = Number(returnData.total ?? 0)
@@ -548,7 +548,7 @@ export async function createRefund(payload: CreateRefundInput) {
       amount: payload.amount,
       method: payload.method,
       reference: payload.reference || null,
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select("id")
     .single()
@@ -589,7 +589,7 @@ export async function getRefunds(returnId?: string, dateFrom?: string, dateTo?: 
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (returnId) {

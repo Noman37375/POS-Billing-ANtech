@@ -20,8 +20,8 @@ export default async function PurchaseCreatePage() {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
   const [{ data: parties = [] }, { data: inventory = [] }] = await Promise.all([
-    supabase.from("parties").select("id, name, type").eq("type", "Vendor").eq("user_id", currentUser.id),
-    supabase.from("inventory_items").select("id, name, stock, cost_price").eq("user_id", currentUser.id),
+    supabase.from("parties").select("id, name, type").eq("type", "Vendor").eq("user_id", currentUser.effectiveUserId),
+    supabase.from("inventory_items").select("id, name, stock, cost_price").eq("user_id", currentUser.effectiveUserId),
   ])
 
   const normalizedInventory = (inventory || []).map((item) => ({

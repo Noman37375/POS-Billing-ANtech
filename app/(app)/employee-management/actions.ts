@@ -36,7 +36,7 @@ export async function getAvailableUsers(excludeEmployeeId?: string): Promise<{ e
     .from("pos_users")
     .select("id, email, name")
     .eq("is_active", true)
-    .or(`id.eq.${currentUser.id},parent_user_id.eq.${currentUser.id}`)
+    .or(`id.eq.${currentUser.effectiveUserId},parent_user_id.eq.${currentUser.effectiveUserId}`)
     .order("email")
 
   if (usersError) {
@@ -48,7 +48,7 @@ export async function getAvailableUsers(excludeEmployeeId?: string): Promise<{ e
     .from("employees")
     .select("user_id")
     .not("user_id", "is", null)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
   
   // If editing an employee, exclude their own user_id from the linked list
   if (excludeEmployeeId) {
@@ -56,13 +56,13 @@ export async function getAvailableUsers(excludeEmployeeId?: string): Promise<{ e
       .from("employees")
       .select("user_id")
       .eq("id", excludeEmployeeId)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .single()
     
     const currentUserId = currentEmployee?.user_id
     
     // Get all linked users except the current employee (for current user only)
-    const { data: linkedUsers } = await linkedQuery.neq("id", excludeEmployeeId).eq("user_id", currentUser.id)
+    const { data: linkedUsers } = await linkedQuery.neq("id", excludeEmployeeId).eq("user_id", currentUser.effectiveUserId)
     const linkedUserIds = new Set(linkedUsers?.map((e) => e.user_id).filter(Boolean) || [])
     
     // Include all users that are not linked, or the current employee's user
@@ -71,7 +71,7 @@ export async function getAvailableUsers(excludeEmployeeId?: string): Promise<{ e
   }
 
   // For new employees, exclude all linked users (for current user only)
-  const { data: linkedUsers } = await linkedQuery.eq("user_id", currentUser.id)
+  const { data: linkedUsers } = await linkedQuery.eq("user_id", currentUser.effectiveUserId)
   const linkedUserIds = new Set(linkedUsers?.map((e) => e.user_id).filter(Boolean) || [])
   const availableUsers = (allUsers || []).filter((u) => !linkedUserIds.has(u.id))
 
@@ -92,7 +92,7 @@ export async function getEmployees(): Promise<{ error: string | null; data: Empl
       *,
       user:pos_users(id, email, name)
     `)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -113,7 +113,7 @@ export async function getEmployeeById(id: string): Promise<{ error: string | nul
       user:pos_users(id, email, name)
     `)
     .eq("id", id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (error) {
@@ -142,7 +142,7 @@ export async function createEmployee(payload: CreateEmployeeInput): Promise<{ er
       join_date: payload.join_date || new Date().toISOString().split("T")[0],
       status: payload.status || "active",
       bank_details: payload.bank_details || null,
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select()
     .single()
@@ -178,7 +178,7 @@ export async function updateEmployee(id: string, payload: UpdateEmployeeInput): 
     .from("employees")
     .update(updateData)
     .eq("id", id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .select()
     .single()
 
@@ -204,7 +204,7 @@ export async function deleteEmployee(employeeId: string): Promise<{ error: strin
     .from("employees")
     .select("id")
     .eq("id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!employee) {
@@ -216,14 +216,14 @@ export async function deleteEmployee(employeeId: string): Promise<{ error: strin
     .from("payroll_lines")
     .select("id")
     .eq("employee_id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .limit(1)
 
   const { data: ledgerEntries } = await supabase
     .from("employee_ledger_entries")
     .select("id")
     .eq("employee_id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .limit(1)
 
   if (payrollLines && payrollLines.length > 0) {
@@ -234,7 +234,7 @@ export async function deleteEmployee(employeeId: string): Promise<{ error: strin
     return { error: "Cannot delete employee with ledger entries. Set status to 'terminated' instead." }
   }
 
-  const { error } = await supabase.from("employees").delete().eq("id", employeeId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("employees").delete().eq("id", employeeId).eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return { error: error.message }
@@ -258,7 +258,7 @@ export async function getSalaryByEmployee(employeeId: string): Promise<{ error: 
     .from("employees")
     .select("id")
     .eq("id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!employee) {
@@ -269,7 +269,7 @@ export async function getSalaryByEmployee(employeeId: string): Promise<{ error: 
     .from("employee_salaries")
     .select("*")
     .eq("employee_id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .lte("effective_from", new Date().toISOString().split("T")[0])
     .order("effective_from", { ascending: false })
     .limit(1)
@@ -295,7 +295,7 @@ export async function getAllCurrentSalaries(): Promise<{ error: string | null; d
     .from("employees")
     .select("id, name, designation")
     .eq("status", "active")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (employeesError) {
     return { error: employeesError.message, data: null }
@@ -347,7 +347,7 @@ export async function createOrUpdateEmployeeSalary(payload: CreateEmployeeSalary
     .from("employees")
     .select("id")
     .eq("id", payload.employee_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!employee) {
@@ -362,7 +362,7 @@ export async function createOrUpdateEmployeeSalary(payload: CreateEmployeeSalary
       basic_salary: payload.basic_salary,
       allowances: payload.allowances || [],
       deductions: payload.deductions || [],
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select()
     .single()
@@ -393,7 +393,7 @@ export async function createPayrollRun(payload: CreatePayrollRunInput): Promise<
     .from("payroll_runs")
     .select("id")
     .eq("month", payload.month)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (existing) {
@@ -405,7 +405,7 @@ export async function createPayrollRun(payload: CreatePayrollRunInput): Promise<
     .insert({
       month: payload.month,
       status: "draft",
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select()
     .single()
@@ -426,7 +426,7 @@ export async function getPayrollRuns(): Promise<{ error: string | null; data: Pa
   const { data, error } = await supabase
     .from("payroll_runs")
     .select("*")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("month", { ascending: false })
 
   if (error) {
@@ -444,7 +444,7 @@ export async function getPayrollRunWithLines(payrollId: string): Promise<{ error
     .from("payroll_runs")
     .select("*")
     .eq("id", payrollId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (payrollError || !payrollRun) {
@@ -458,7 +458,7 @@ export async function getPayrollRunWithLines(payrollId: string): Promise<{ error
       employee:employees(id, name, designation)
     `)
     .eq("payroll_id", payrollId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: true })
 
   if (linesError) {
@@ -489,7 +489,7 @@ export async function processPayrollRun(payload: ProcessPayrollInput): Promise<{
     .from("payroll_runs")
     .select("*")
     .eq("id", payload.payroll_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (payrollError || !payrollRun) {
@@ -505,7 +505,7 @@ export async function processPayrollRun(payload: ProcessPayrollInput): Promise<{
     .from("employees")
     .select("id")
     .eq("status", "active")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (employeesError) {
     return { error: employeesError.message, data: null }
@@ -525,7 +525,7 @@ export async function processPayrollRun(payload: ProcessPayrollInput): Promise<{
       .from("employee_salaries")
       .select("*")
       .eq("employee_id", employee.id)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .lte("effective_from", today)
       .order("effective_from", { ascending: false })
       .limit(1)
@@ -548,7 +548,7 @@ export async function processPayrollRun(payload: ProcessPayrollInput): Promise<{
         deductions: totalDeductions,
         net,
         payment_status: "pending",
-        user_id: currentUser.id,
+        user_id: currentUser.effectiveUserId,
       })
     }
   }
@@ -572,7 +572,7 @@ export async function processPayrollRun(payload: ProcessPayrollInput): Promise<{
       processed_at: new Date().toISOString(),
     })
     .eq("id", payload.payroll_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (updateError) {
     return { error: updateError.message, data: null }
@@ -590,7 +590,7 @@ export async function markPayrollLinePaid(lineId: string): Promise<{ error: stri
     .from("payroll_lines")
     .select("*, employee:employees(id, name)")
     .eq("id", lineId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (lineError || !line) {
@@ -606,7 +606,7 @@ export async function markPayrollLinePaid(lineId: string): Promise<{ error: stri
     .from("payroll_runs")
     .select("month")
     .eq("id", line.payroll_id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   const monthStr = payrollRun?.month ? new Date(payrollRun.month).toISOString().slice(0, 7) : ""
@@ -621,7 +621,7 @@ export async function markPayrollLinePaid(lineId: string): Promise<{ error: stri
       credit: line.net,
       reference_type: "salary_payment",
       reference_id: lineId,
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select()
     .single()
@@ -658,7 +658,7 @@ export async function markPayrollRunPaid(runId: string): Promise<{ error: string
     .from("payroll_runs")
     .select("id")
     .eq("id", runId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!payrollRun) {
@@ -669,7 +669,7 @@ export async function markPayrollRunPaid(runId: string): Promise<{ error: string
     .from("payroll_lines")
     .select("id")
     .eq("payroll_id", runId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .eq("payment_status", "pending")
 
   if (linesError) {
@@ -693,7 +693,7 @@ export async function markPayrollRunPaid(runId: string): Promise<{ error: string
     .from("payroll_runs")
     .update({ status: "paid" })
     .eq("id", runId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (updateError) {
     return { error: updateError.message }
@@ -717,7 +717,7 @@ export async function getEmployeeLedgerEntries(employeeId: string): Promise<{ er
     .from("employees")
     .select("id")
     .eq("id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!employee) {
@@ -731,7 +731,7 @@ export async function getEmployeeLedgerEntries(employeeId: string): Promise<{ er
       employee:employees(id, name)
     `)
     .eq("employee_id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("entry_date", { ascending: false })
     .order("created_at", { ascending: false })
 
@@ -751,7 +751,7 @@ export async function getEmployeeBalance(employeeId: string): Promise<{ error: s
     .from("employees")
     .select("id")
     .eq("id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!employee) {
@@ -762,7 +762,7 @@ export async function getEmployeeBalance(employeeId: string): Promise<{ error: s
     .from("employee_ledger_entries")
     .select("debit, credit")
     .eq("employee_id", employeeId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return { error: error.message, data: 0 }
@@ -783,7 +783,7 @@ export async function getPayrollSummary(month?: string): Promise<{ error: string
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
 
-  let query = supabase.from("payroll_runs").select("*").eq("user_id", currentUser.id)
+  let query = supabase.from("payroll_runs").select("*").eq("user_id", currentUser.effectiveUserId)
 
   if (month) {
     query = query.eq("month", month)
@@ -802,7 +802,7 @@ export async function getPayrollSummary(month?: string): Promise<{ error: string
       .from("payroll_lines")
       .select("gross, deductions, net, payment_status")
       .eq("payroll_id", run.id)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     const total_employees = lines?.length || 0
     const total_gross = lines?.reduce((sum, l) => sum + Number(l.gross || 0), 0) || 0
@@ -839,7 +839,7 @@ export async function getEmployeesReport(): Promise<{ error: string | null; data
       status,
       user:pos_users(email)
     `)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (employeesError) {
@@ -855,7 +855,7 @@ export async function getEmployeesReport(): Promise<{ error: string | null; data
       .from("employee_salaries")
       .select("*")
       .eq("employee_id", emp.id)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .lte("effective_from", today)
       .order("effective_from", { ascending: false })
       .limit(1)

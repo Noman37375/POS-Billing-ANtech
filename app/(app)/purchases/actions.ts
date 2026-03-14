@@ -25,7 +25,7 @@ export async function createPurchase(payload: {
     .from("parties")
     .select("id")
     .eq("id", payload.partyId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!party) {
@@ -38,7 +38,7 @@ export async function createPurchase(payload: {
     .from("inventory_items")
     .select("id")
     .in("id", itemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (!items || items.length !== itemIds.length) {
     return { error: "One or more items not found" }
@@ -57,7 +57,7 @@ export async function createPurchase(payload: {
       tax,
       total,
       status: payload.status || "Draft",
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select("id")
     .single()
@@ -97,7 +97,7 @@ export async function createPurchase(payload: {
           referenceType: "Purchase",
           referenceId: purchase.id,
           notes: `Purchased via purchase invoice ${purchase.id.substring(0, 8).toUpperCase()}`,
-          userId: currentUser.id,
+          userId: currentUser.effectiveUserId,
         })
       }),
     )
@@ -133,7 +133,7 @@ export async function getPurchaseForPDF(purchaseId: string) {
     `,
     )
     .eq("id", purchaseId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (purchaseError || !purchase) {
@@ -218,7 +218,7 @@ export async function updatePurchase(
     .from("parties")
     .select("id")
     .eq("id", payload.partyId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!party) {
@@ -231,7 +231,7 @@ export async function updatePurchase(
     .from("inventory_items")
     .select("id")
     .in("id", itemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (!items || items.length !== itemIds.length) {
     return { error: "One or more items not found" }
@@ -242,7 +242,7 @@ export async function updatePurchase(
     .from("purchase_invoices")
     .select("status")
     .eq("id", purchaseId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!currentPurchase) {
@@ -273,7 +273,7 @@ export async function updatePurchase(
           .from("inventory_items")
           .select("stock")
           .eq("id", line.item_id)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
         if (item) {
           // Restore stock by subtracting the old quantity (opposite of sales)
@@ -293,7 +293,7 @@ export async function updatePurchase(
             referenceType: "Purchase",
             referenceId: purchaseId,
             notes: `Stock restored from purchase update`,
-            userId: currentUser.id,
+            userId: currentUser.effectiveUserId,
           })
         }
       }
@@ -318,7 +318,7 @@ export async function updatePurchase(
       status: payload.status || "Draft",
     })
     .eq("id", purchaseId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (purchaseError) {
     return { error: purchaseError.message }
@@ -356,7 +356,7 @@ export async function updatePurchase(
           .from("inventory_items")
           .select("stock")
           .eq("id", item.itemId)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
         if (invItem) {
           // Increment stock by adding the new quantity
@@ -373,7 +373,7 @@ export async function updatePurchase(
             referenceType: "Purchase",
             referenceId: purchaseId,
             notes: `Purchased via purchase invoice ${purchaseId.substring(0, 8).toUpperCase()}`,
-            userId: currentUser.id,
+            userId: currentUser.effectiveUserId,
           })
         }
       }
@@ -396,7 +396,7 @@ export async function getPurchaseForEdit(purchaseId: string) {
     .from("purchase_invoices")
     .select("id, party_id, subtotal, tax, total, status, created_at")
     .eq("id", purchaseId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (purchaseError || !purchase) {
@@ -446,7 +446,7 @@ export async function deletePurchase(purchaseId: string) {
     .from("purchase_invoices")
     .select("id, status")
     .eq("id", purchaseId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!purchase) {
@@ -471,7 +471,7 @@ export async function deletePurchase(purchaseId: string) {
           .from("inventory_items")
           .select("stock")
           .eq("id", line.item_id)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
         if (item) {
           const { error: updateError } = await supabase
@@ -489,7 +489,7 @@ export async function deletePurchase(purchaseId: string) {
             referenceType: "Purchase",
             referenceId: purchaseId,
             notes: `Stock restored from purchase deletion`,
-            userId: currentUser.id,
+            userId: currentUser.effectiveUserId,
           })
         }
       }
@@ -509,7 +509,7 @@ export async function deletePurchase(purchaseId: string) {
   }
 
   // Delete purchase invoice (verify ownership)
-  const { error } = await supabase.from("purchase_invoices").delete().eq("id", purchaseId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("purchase_invoices").delete().eq("id", purchaseId).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -538,7 +538,7 @@ export async function getPurchases(dateFrom?: string, dateTo?: string) {
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (dateFrom) {
@@ -591,7 +591,7 @@ export async function createPurchasePayment(payload: {
     .from("purchase_invoices")
     .select("id")
     .eq("id", payload.purchaseInvoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!purchase) {
@@ -603,7 +603,7 @@ export async function createPurchasePayment(payload: {
     amount: payload.amount,
     method: payload.method,
     reference: payload.reference || null,
-    user_id: currentUser.id,
+    user_id: currentUser.effectiveUserId,
   })
 
   if (error) {
@@ -625,7 +625,7 @@ export async function getPurchasePayments(purchaseInvoiceId: string) {
     .from("purchase_invoices")
     .select("id")
     .eq("id", purchaseInvoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!purchase) {
@@ -636,7 +636,7 @@ export async function getPurchasePayments(purchaseInvoiceId: string) {
     .from("purchase_payments")
     .select("id, amount, method, reference, created_at")
     .eq("purchase_invoice_id", purchaseInvoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: true })
 
   if (error) {
@@ -654,7 +654,7 @@ export async function deletePurchasePayment(paymentId: string) {
     return { error: "Payment ID is required" }
   }
 
-  const { error } = await supabase.from("purchase_payments").delete().eq("id", paymentId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("purchase_payments").delete().eq("id", paymentId).eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return { error: error.message }
@@ -690,7 +690,7 @@ export async function getAllPurchasePayments() {
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -742,7 +742,7 @@ export async function getPaidPurchases() {
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (purchaseError) {
@@ -757,7 +757,7 @@ export async function getPaidPurchases() {
       .from("purchase_payments")
       .select("purchase_invoice_id, amount, method, created_at")
       .in("purchase_invoice_id", purchaseIds)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
     allPayments = paymentsData || []
   }
 

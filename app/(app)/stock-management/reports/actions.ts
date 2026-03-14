@@ -9,7 +9,7 @@ export async function getStockLevels() {
   const { data, error } = await supabase
     .from("inventory_items")
     .select("id, name, stock, cost_price, selling_price, minimum_stock")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("stock", { ascending: true })
 
   if (error) {
@@ -65,7 +65,7 @@ export async function getStockMovements(startDate?: string, endDate?: string) {
       )
     `
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
     .limit(100)
 
@@ -101,7 +101,7 @@ export async function getInventoryValueAnalysis() {
   const { data, error } = await supabase
     .from("inventory_items")
     .select("stock, cost_price, selling_price, category_id, minimum_stock")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return {
@@ -125,7 +125,7 @@ export async function getInventoryValueAnalysis() {
     .from("categories")
     .select("id, name")
     .in("id", categoryIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   const categoryLookup = new Map(categories.map((cat) => [cat.id, cat.name]))
 

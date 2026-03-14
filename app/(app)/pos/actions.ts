@@ -25,7 +25,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     .from("parties")
     .select("id")
     .eq("id", payload.partyId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!party) {
@@ -38,7 +38,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     .from("inventory_items")
     .select("id, cost_price")
     .in("id", itemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (!invItems || invItems.length !== itemIds.length) {
     return { error: "One or more items not found", data: null }
@@ -70,7 +70,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
       total,
       status,
       source: "pos",
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select("id")
     .single()
@@ -101,7 +101,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
         amount: p.amount,
         method: p.method,
         reference: p.reference ?? null,
-        user_id: currentUser.id,
+        user_id: currentUser.effectiveUserId,
       }))
 
     if (paymentRows.length > 0) {
@@ -127,7 +127,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
           referenceType: "Invoice",
           referenceId: invoice.id,
           notes: `POS sale ${invoice.id.substring(0, 8).toUpperCase()}`,
-          userId: currentUser.id,
+          userId: currentUser.effectiveUserId,
         })
       }),
     )
@@ -167,7 +167,7 @@ export async function getPOSSales(dateFrom?: string, dateTo?: string) {
     `,
     )
     .eq("source", "pos")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (dateFrom) {
@@ -514,7 +514,7 @@ export async function createCustomerPayment(payload: {
     .from("sales_invoices")
     .select("id, total, status")
     .eq("id", payload.invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!invoice) {
@@ -526,7 +526,7 @@ export async function createCustomerPayment(payload: {
     amount: payload.amount,
     method: payload.method,
     reference: payload.reference || null,
-    user_id: currentUser.id,
+    user_id: currentUser.effectiveUserId,
   })
 
   if (insertError) {
@@ -538,7 +538,7 @@ export async function createCustomerPayment(payload: {
     .from("payments")
     .select("amount")
     .eq("invoice_id", payload.invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   const totalPaid = (allPayments || []).reduce((sum, p) => sum + Number(p.amount || 0), 0)
   const invoiceTotal = Number(invoice.total || 0)
@@ -548,7 +548,7 @@ export async function createCustomerPayment(payload: {
     .from("sales_invoices")
     .update({ status: newStatus })
     .eq("id", payload.invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   revalidatePath("/pos")
   revalidatePath("/pos/sales")
@@ -567,7 +567,7 @@ export async function getCustomerPayments(invoiceId: string) {
     .from("sales_invoices")
     .select("id")
     .eq("id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!invoice) {
@@ -578,7 +578,7 @@ export async function getCustomerPayments(invoiceId: string) {
     .from("payments")
     .select("id, amount, method, reference, created_at")
     .eq("invoice_id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: true })
 
   if (fetchError) {
@@ -601,7 +601,7 @@ export async function deleteCustomerPayment(paymentId: string) {
     .from("payments")
     .select("id, invoice_id")
     .eq("id", paymentId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!payment) {
@@ -614,7 +614,7 @@ export async function deleteCustomerPayment(paymentId: string) {
     .from("payments")
     .delete()
     .eq("id", paymentId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (deleteError) {
     return { error: deleteError.message }
@@ -625,7 +625,7 @@ export async function deleteCustomerPayment(paymentId: string) {
     .from("sales_invoices")
     .select("id, total")
     .eq("id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (inv) {
@@ -633,7 +633,7 @@ export async function deleteCustomerPayment(paymentId: string) {
       .from("payments")
       .select("amount")
       .eq("invoice_id", invoiceId)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     const totalPaid = (remaining || []).reduce((sum, p) => sum + Number(p.amount || 0), 0)
     const invoiceTotal = Number(inv.total || 0)
@@ -650,7 +650,7 @@ export async function deleteCustomerPayment(paymentId: string) {
       .from("sales_invoices")
       .update({ status: newStatus })
       .eq("id", invoiceId)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
   }
 
   revalidatePath("/pos")
@@ -686,7 +686,7 @@ export async function getAllCustomerPayments() {
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (fetchError) {
@@ -741,7 +741,7 @@ export async function getPaidSales() {
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .eq("source", "pos")
     .order("created_at", { ascending: false })
 
@@ -756,7 +756,7 @@ export async function getPaidSales() {
       .from("payments")
       .select("invoice_id, amount, method, created_at")
       .in("invoice_id", saleIds)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
     allPayments = paymentsData || []
   }
 
@@ -807,7 +807,7 @@ export async function getUnpaidPOSSales() {
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .eq("source", "pos")
     .in("status", ["Draft", "Pending"])
     .order("created_at", { ascending: false })
@@ -823,7 +823,7 @@ export async function getUnpaidPOSSales() {
       .from("payments")
       .select("invoice_id, amount")
       .in("invoice_id", saleIds)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
     allPayments = paymentsData || []
   }
 

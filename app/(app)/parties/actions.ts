@@ -13,7 +13,7 @@ export async function createParty(formData: FormData) {
     phone: String(formData.get("phone") || "").trim(),
     type: String(formData.get("type") || "Customer"),
     address: String(formData.get("address") || "").trim() || null,
-    user_id: currentUser.id,
+    user_id: currentUser.effectiveUserId,
   }
 
   if (!payload.name || !payload.phone) {
@@ -46,7 +46,7 @@ export async function updateParty(formData: FormData) {
     return { error: "ID, name, and phone are required" }
   }
 
-  const { error } = await supabase.from("parties").update(payload).eq("id", id).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("parties").update(payload).eq("id", id).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -63,7 +63,7 @@ export async function deleteParty(partyId: string) {
     return { error: "Party ID is required" }
   }
 
-  const { error } = await supabase.from("parties").delete().eq("id", partyId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("parties").delete().eq("id", partyId).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -81,7 +81,7 @@ export async function getPartyBalances() {
   const { data: parties, error: partiesError } = await supabase
     .from("parties")
     .select("id, type")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (partiesError || !parties) {
     return {}
@@ -91,45 +91,45 @@ export async function getPartyBalances() {
   const { data: salesInvoices } = await supabase
     .from("sales_invoices")
     .select("id, party_id, total, status")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   // Get payment totals per invoice (for sales)
   const { data: payments } = await supabase
     .from("payments")
     .select("invoice_id, amount")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   // Get purchase invoices with id, party_id, status, and total (for vendors)
   const { data: purchaseInvoices } = await supabase
     .from("purchase_invoices")
     .select("id, party_id, total, status")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   // Get purchase payment totals per purchase invoice (for vendors)
   const { data: purchasePayments } = await supabase
     .from("purchase_payments")
     .select("purchase_invoice_id, amount")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   // Get sale returns (reduce receivables)
   const { data: saleReturns } = await supabase
     .from("returns")
     .select("id, party_id, total, status")
     .eq("type", "sale")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   // Get purchase returns (reduce payables)
   const { data: purchaseReturns } = await supabase
     .from("returns")
     .select("id, party_id, total, status")
     .eq("type", "purchase")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   // Get refunds (linked to returns)
   const { data: refunds } = await supabase
     .from("refunds")
     .select("id, return_id, amount, returns!inner(type, party_id)")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   // Calculate balance per party
   const balances: Record<string, number> = {}
@@ -211,7 +211,7 @@ export async function getPartyLedger(partyId: string) {
     .from("parties")
     .select("id, name, type")
     .eq("id", partyId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (partyError || !party) {
@@ -224,7 +224,7 @@ export async function getPartyLedger(partyId: string) {
       .from("sales_invoices")
       .select("id, total, created_at, status")
       .eq("party_id", partyId)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .order("created_at", { ascending: true })
 
     const invoiceIds = invoices?.map((inv) => inv.id) || []
@@ -234,7 +234,7 @@ export async function getPartyLedger(partyId: string) {
         .from("payments")
         .select("id, invoice_id, amount, method, created_at")
         .in("invoice_id", invoiceIds)
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
         .order("created_at", { ascending: true })
       payments = paymentsData || []
     }
@@ -312,7 +312,7 @@ export async function getPartyLedger(partyId: string) {
       .from("purchase_invoices")
       .select("id, total, created_at, status")
       .eq("party_id", partyId)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .order("created_at", { ascending: true })
 
     const purchaseIds = purchases?.map((purch) => purch.id) || []
@@ -322,7 +322,7 @@ export async function getPartyLedger(partyId: string) {
         .from("purchase_payments")
         .select("id, purchase_invoice_id, amount, method, created_at")
         .in("purchase_invoice_id", purchaseIds)
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
         .order("created_at", { ascending: true })
       purchasePayments = paymentsData || []
     }

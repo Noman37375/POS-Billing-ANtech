@@ -9,7 +9,7 @@ export async function getUnitsForSelect() {
   const { data, error } = await supabase
     .from("units")
     .select("id, name, symbol")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("name", { ascending: true })
 
   if (error) {

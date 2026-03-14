@@ -20,7 +20,7 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
     .from("parties")
     .select("id")
     .eq("id", payload.partyId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!party) {
@@ -33,7 +33,7 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
     .from("inventory_items")
     .select("id, cost_price")
     .in("id", itemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (!invItems || invItems.length !== itemIds.length) {
     return { error: "One or more items not found" }
@@ -54,7 +54,7 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
       tax,
       total,
       status: "Draft",
-      user_id: currentUser.id,
+      user_id: currentUser.effectiveUserId,
     })
     .select("id")
     .single()
@@ -95,7 +95,7 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
           referenceType: "Invoice",
           referenceId: invoice.id,
           notes: `Sold via invoice ${invoice.id.substring(0, 8).toUpperCase()}`,
-          userId: currentUser.id,
+          userId: currentUser.effectiveUserId,
         })
       }),
     )
@@ -130,7 +130,7 @@ export async function getInvoiceForPDF(invoiceId: string) {
     `,
     )
     .eq("id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (invoiceError || !invoice) {
@@ -215,7 +215,7 @@ export async function updateInvoice(
     .from("parties")
     .select("id")
     .eq("id", payload.partyId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!party) {
@@ -228,7 +228,7 @@ export async function updateInvoice(
     .from("inventory_items")
     .select("id")
     .in("id", itemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (!items || items.length !== itemIds.length) {
     return { error: "One or more items not found" }
@@ -239,7 +239,7 @@ export async function updateInvoice(
     .from("sales_invoices")
     .select("status")
     .eq("id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!currentInvoice) {
@@ -270,7 +270,7 @@ export async function updateInvoice(
           .from("inventory_items")
           .select("stock")
           .eq("id", line.item_id)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
         if (item) {
           // Restore stock by adding back the old quantity
@@ -287,7 +287,7 @@ export async function updateInvoice(
             referenceType: "Invoice",
             referenceId: invoiceId,
             notes: `Stock restored from invoice update`,
-            userId: currentUser.id,
+            userId: currentUser.effectiveUserId,
           })
         }
       }
@@ -312,7 +312,7 @@ export async function updateInvoice(
       status: payload.status || "Draft",
     })
     .eq("id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (invoiceError) {
     return { error: invoiceError.message }
@@ -333,7 +333,7 @@ export async function updateInvoice(
     .from("inventory_items")
     .select("id, cost_price")
     .in("id", payloadItemIds)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
   const costPriceByItemId = new Map((invItems || []).map((row) => [row.id, Number((row as { cost_price?: number }).cost_price ?? 0)]))
 
   // Insert new line items
@@ -360,7 +360,7 @@ export async function updateInvoice(
           .from("inventory_items")
           .select("stock")
           .eq("id", item.itemId)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
         if (invItem) {
           // Decrement stock by subtracting the new quantity
@@ -377,7 +377,7 @@ export async function updateInvoice(
             referenceType: "Invoice",
             referenceId: invoiceId,
             notes: `Sold via invoice ${invoiceId.substring(0, 8).toUpperCase()}`,
-            userId: currentUser.id,
+            userId: currentUser.effectiveUserId,
           })
         }
       }
@@ -399,7 +399,7 @@ export async function getInvoiceForEdit(invoiceId: string) {
     .from("sales_invoices")
     .select("id, party_id, subtotal, tax, total, status, created_at")
     .eq("id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (invoiceError || !invoice) {
@@ -449,7 +449,7 @@ export async function deleteInvoice(invoiceId: string) {
     .from("sales_invoices")
     .select("id, status")
     .eq("id", invoiceId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!invoice) {
@@ -475,7 +475,7 @@ export async function deleteInvoice(invoiceId: string) {
           .from("inventory_items")
           .select("stock")
           .eq("id", line.item_id)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
         if (item) {
           // Restore stock by adding back the quantity
@@ -492,7 +492,7 @@ export async function deleteInvoice(invoiceId: string) {
             referenceType: "Invoice",
             referenceId: invoiceId,
             notes: `Stock restored from invoice deletion`,
-            userId: currentUser.id,
+            userId: currentUser.effectiveUserId,
           })
         }
       }
@@ -509,7 +509,7 @@ export async function deleteInvoice(invoiceId: string) {
   }
 
   // Delete invoice (verify ownership)
-  const { error } = await supabase.from("sales_invoices").delete().eq("id", invoiceId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("sales_invoices").delete().eq("id", invoiceId).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }

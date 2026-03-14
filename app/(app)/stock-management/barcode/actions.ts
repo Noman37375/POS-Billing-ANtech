@@ -16,7 +16,7 @@ export async function generateBarcode(itemId: string, format: string = "CODE128"
     .from("inventory_items")
     .update({ barcode })
     .eq("id", itemId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return { error: error.message, barcode: null }
@@ -38,7 +38,7 @@ export async function bulkGenerateBarcodes(itemIds: string[]) {
       .from("inventory_items")
       .update({ barcode })
       .eq("id", itemId)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     results.push({
       itemId,
@@ -61,7 +61,7 @@ export async function lookupItemByBarcode(barcode: string) {
     .from("inventory_items")
     .select("id, name, stock, cost_price, selling_price, barcode")
     .eq("barcode", barcode)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   // 2. If not found, try partial match — many barcode scanners strip the EAN check digit
@@ -72,7 +72,7 @@ export async function lookupItemByBarcode(barcode: string) {
     const { data: startsWith } = await supabase
       .from("inventory_items")
       .select("id, name, stock, cost_price, selling_price, barcode")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .like("barcode", `${barcode}%`)
       .limit(1)
       .single()
@@ -85,7 +85,7 @@ export async function lookupItemByBarcode(barcode: string) {
       .from("inventory_items")
       .select("id, name, stock, cost_price, selling_price, barcode")
       .eq("barcode", barcode.slice(0, -1))
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .single()
     matched = withoutCheck
   }
@@ -116,7 +116,7 @@ export async function getItemsWithoutBarcode() {
     .from("inventory_items")
     .select("id, name")
     .is("barcode", null)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("name", { ascending: true })
 
   if (error) {
@@ -133,7 +133,7 @@ export async function getAllItemsWithBarcodes() {
     .from("inventory_items")
     .select("id, name, barcode, stock, cost_price, selling_price")
     .not("barcode", "is", null)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("name", { ascending: true })
 
   if (error) {
@@ -169,7 +169,7 @@ export async function updateBarcode(itemId: string, newBarcode: string) {
     .from("inventory_items")
     .select("id")
     .eq("barcode", trimmedBarcode)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .neq("id", itemId)
     .single()
 
@@ -182,7 +182,7 @@ export async function updateBarcode(itemId: string, newBarcode: string) {
     .from("inventory_items")
     .update({ barcode: trimmedBarcode })
     .eq("id", itemId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return { error: error.message, barcode: null }

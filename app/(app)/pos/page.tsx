@@ -32,8 +32,8 @@ export default async function POSNewSalePage({
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
   const [{ data: parties = [] }, { data: inventory = [] }] = await Promise.all([
-    supabase.from("parties").select("id, name, address").eq("type", "Customer").eq("user_id", currentUser.id).order("name"),
-    supabase.from("inventory_items").select("id, name, stock, selling_price").eq("user_id", currentUser.id).order("name"),
+    supabase.from("parties").select("id, name, address").eq("type", "Customer").eq("user_id", currentUser.effectiveUserId).order("name"),
+    supabase.from("inventory_items").select("id, name, stock, selling_price").eq("user_id", currentUser.effectiveUserId).order("name"),
   ])
 
   const normalizedInventory = (inventory || []).map((item) => ({

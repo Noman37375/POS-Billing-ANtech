@@ -51,7 +51,7 @@ export async function getGrossProfitReport(
   let invoiceQuery = supabase
     .from("sales_invoices")
     .select("id")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .eq("source", "pos")
     .neq("status", "Draft")
 

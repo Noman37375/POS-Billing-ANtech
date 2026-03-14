@@ -47,51 +47,51 @@ export async function getAccountsOverview(): Promise<{ error: string | null; dat
 
   try {
     // Get all parties for current user
-    const { data: parties } = await supabase.from("parties").select("id, type").eq("user_id", currentUser.id)
+    const { data: parties } = await supabase.from("parties").select("id, type").eq("user_id", currentUser.effectiveUserId)
 
     // Get sales invoices for current user
     const { data: salesInvoices } = await supabase
       .from("sales_invoices")
       .select("id, party_id, total, status")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     // Get customer payments for current user
     const { data: customerPayments } = await supabase
       .from("payments")
       .select("invoice_id, amount")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     // Get purchase invoices for current user
     const { data: purchaseInvoices } = await supabase
       .from("purchase_invoices")
       .select("id, party_id, total, status")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     // Get vendor payments for current user
     const { data: vendorPayments } = await supabase
       .from("purchase_payments")
       .select("purchase_invoice_id, amount")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     // Get sale returns (reduce receivables) for current user
     const { data: saleReturns } = await supabase
       .from("returns")
       .select("id, party_id, total, status")
       .eq("type", "sale")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     // Get purchase returns (reduce payables) for current user
     const { data: purchaseReturns } = await supabase
       .from("returns")
       .select("id, party_id, total, status")
       .eq("type", "purchase")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     // Get refunds (linked to returns) for current user
     const { data: refunds } = await supabase
       .from("refunds")
       .select("id, return_id, amount, returns!inner(type, party_id)")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
 
     // Calculate receivables (customers owe us)
     let totalReceivables = 0
@@ -207,7 +207,7 @@ export async function getLedgersByType(
       const { data: invoices } = await supabase
         .from("sales_invoices")
         .select("id, party_id, total, created_at, status, parties(name)")
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
         .order("created_at", { ascending: false })
 
       invoices?.forEach((inv: any) => {
@@ -227,7 +227,7 @@ export async function getLedgersByType(
       const { data: purchases } = await supabase
         .from("purchase_invoices")
         .select("id, party_id, total, created_at, status, parties(name)")
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
         .order("created_at", { ascending: false })
 
       purchases?.forEach((purch: any) => {
@@ -248,7 +248,7 @@ export async function getLedgersByType(
       const { data: customerPayments } = await supabase
         .from("payments")
         .select("id, invoice_id, amount, method, created_at")
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
         .order("created_at", { ascending: false })
 
       customerPayments?.forEach((pay) => {
@@ -266,7 +266,7 @@ export async function getLedgersByType(
       const { data: vendorPayments } = await supabase
         .from("purchase_payments")
         .select("id, purchase_invoice_id, amount, method, created_at")
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
         .order("created_at", { ascending: false })
 
       vendorPayments?.forEach((pay) => {
@@ -289,7 +289,7 @@ export async function getLedgersByType(
         .from("parties")
         .select("id, name, phone, type")
         .eq("type", type === "customer" ? "Customer" : "Vendor")
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
 
       parties?.forEach((party) => {
         const balance = balances[party.id] || 0
@@ -322,7 +322,7 @@ export async function getCustomerLedgers(): Promise<{ error: string | null; data
       .from("parties")
       .select("id, name, phone, type")
       .eq("type", "Customer")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .order("name", { ascending: true })
 
     const customerLedgers: PartyLedgerSummary[] =
@@ -350,7 +350,7 @@ export async function getVendorLedgers(): Promise<{ error: string | null; data: 
       .from("parties")
       .select("id, name, phone, type")
       .eq("type", "Vendor")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .order("name", { ascending: true })
 
     const vendorLedgers: PartyLedgerSummary[] =

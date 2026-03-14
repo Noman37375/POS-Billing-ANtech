@@ -47,7 +47,7 @@ export async function fetchBackupData(
       const { data, error } = await supabase
         .from(table)
         .select("*")
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
 
       if (!error && data) {
         result[table] = data as Record<string, unknown>[]
@@ -67,8 +67,8 @@ export async function markBackupDone() {
 
   await supabase.from("user_settings").upsert(
     [
-      { user_id: currentUser.id, key: BACKUP_DUE_KEY, value: "false" },
-      { user_id: currentUser.id, key: LAST_BACKUP_AT_KEY, value: now },
+      { user_id: currentUser.effectiveUserId, key: BACKUP_DUE_KEY, value: "false" },
+      { user_id: currentUser.effectiveUserId, key: LAST_BACKUP_AT_KEY, value: now },
     ],
     { onConflict: "user_id,key" }
   )
@@ -84,7 +84,7 @@ export async function getBackupStatus(): Promise<{
   const { data } = await supabase
     .from("user_settings")
     .select("key, value")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .in("key", [BACKUP_DUE_KEY, LAST_BACKUP_AT_KEY])
 
   const map = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]))

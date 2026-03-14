@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const { data: parties = [] } = await supabase
     .from("parties")
     .select("id, name, type")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
   const { data: inventory = [] } = await supabase
     .from("inventory_items")
     .select("id, stock, cost_price")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("stock", { ascending: false })
     .limit(10) // Limit to top 10 items by stock
 
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
   const { data: invoices = [] } = await supabase
     .from("sales_invoices")
     .select("id, total, status, created_at")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .gte("created_at", monthStart)
     .limit(100) // Reasonable limit for monthly data
 

@@ -56,7 +56,7 @@ export async function createInventoryItem(formData: FormData) {
           .from("inventory_items")
           .select("id")
           .eq("barcode", finalBarcode)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
 
         if (!existing) {
@@ -123,7 +123,7 @@ export async function createInventoryItem(formData: FormData) {
         .from("categories")
         .select("id")
         .eq("id", categoryId)
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
         .single()
       
       if (!categoryExists) {
@@ -132,7 +132,7 @@ export async function createInventoryItem(formData: FormData) {
     }
 
     // Add user_id to payload
-    payload.user_id = currentUser.id
+    payload.user_id = currentUser.effectiveUserId
 
     const { data: newItem, error } = await supabase.from("inventory_items").insert(payload).select("id").single()
     if (error) {
@@ -152,7 +152,7 @@ export async function createInventoryItem(formData: FormData) {
           .from("inventory_items")
           .select("id")
           .eq("barcode", generatedBarcode)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", currentUser.effectiveUserId)
           .single()
 
         if (!existing) {
@@ -186,7 +186,7 @@ export async function createInventoryItem(formData: FormData) {
           quantity: payload.stock,
           referenceType: "Manual",
           notes: "Initial stock",
-          userId: currentUser.id,
+          userId: currentUser.effectiveUserId,
         })
       } catch (movementError) {
         console.error("Failed to record stock movement:", movementError)
@@ -260,7 +260,7 @@ export async function updateInventoryItem(formData: FormData) {
       .from("inventory_items")
       .select("id")
       .eq("barcode", barcode)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .neq("id", id)
       .single()
 
@@ -281,7 +281,7 @@ export async function updateInventoryItem(formData: FormData) {
     .from("inventory_items")
     .select("stock")
     .eq("id", id)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .single()
 
   if (!currentItem) {
@@ -292,7 +292,7 @@ export async function updateInventoryItem(formData: FormData) {
   const newStock = payload.stock
   const stockDifference = newStock - currentStock
 
-  const { error } = await supabase.from("inventory_items").update(payload).eq("id", id).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("inventory_items").update(payload).eq("id", id).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -306,7 +306,7 @@ export async function updateInventoryItem(formData: FormData) {
         quantity: Math.abs(stockDifference),
         referenceType: "Adjustment",
         notes: `Stock adjusted from ${currentStock} to ${newStock}`,
-        userId: currentUser.id,
+        userId: currentUser.effectiveUserId,
       })
     } catch (movementError) {
       console.error("Failed to record stock movement:", movementError)
@@ -330,7 +330,7 @@ export async function restoreInventoryItem(itemId: string) {
     .from("inventory_items")
     .update({ is_archived: false })
     .eq("id", itemId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return { error: error.message }
@@ -362,7 +362,7 @@ export async function deleteInventoryItem(itemId: string) {
       .from("inventory_items")
       .update({ is_archived: true })
       .eq("id", itemId)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
     if (archiveError) {
       return { error: archiveError.message }
     }
@@ -371,7 +371,7 @@ export async function deleteInventoryItem(itemId: string) {
     return { error: null, archived: true }
   }
 
-  const { error } = await supabase.from("inventory_items").delete().eq("id", itemId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("inventory_items").delete().eq("id", itemId).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }

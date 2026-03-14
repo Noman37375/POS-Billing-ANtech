@@ -48,7 +48,7 @@ export default async function PurchaseEditPage({ params }: { params: Promise<{ i
       .from("parties")
       .select("id, name, type")
       .eq("type", "Vendor")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
     return (data || []).map((p) => ({ id: p.id, name: p.name || "" }))
   })()
 
@@ -61,7 +61,7 @@ export default async function PurchaseEditPage({ params }: { params: Promise<{ i
     const { data = [] } = await supabase
       .from("inventory_items")
       .select("id, name, stock, cost_price")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
     return (data || []).map((item) => ({
       id: item.id,
       name: item.name || "",

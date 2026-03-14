@@ -23,7 +23,7 @@ export default async function PartyReportsPage() {
     const { data = [] } = await supabase
       .from("parties")
       .select("id, name, type, created_at")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .order("name", { ascending: true })
     return data
   })()

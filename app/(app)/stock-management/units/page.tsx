@@ -28,7 +28,7 @@ export default async function UnitsPage() {
         .from("inventory_items")
         .select("*", { count: "exact", head: true })
         .eq("unit_id", unit.id)
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
       return { ...unit, itemCount: count || 0 }
     })
   )

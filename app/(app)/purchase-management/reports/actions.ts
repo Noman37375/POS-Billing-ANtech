@@ -41,7 +41,7 @@ export async function getPurchaseTrends(dateFrom?: string, dateTo?: string) {
   let query = supabase
     .from("purchase_invoices")
     .select("id, total, created_at, status")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (dateFrom) {
@@ -99,7 +99,7 @@ export async function getTopVendors(limit: number = 10) {
       )
     `,
     )
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("created_at", { ascending: false })
 
   if (error) {

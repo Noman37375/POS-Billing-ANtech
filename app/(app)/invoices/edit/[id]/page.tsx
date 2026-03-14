@@ -44,7 +44,7 @@ export default async function InvoiceEditPage({ params }: { params: Promise<{ id
     const { getSessionOrRedirect } = await import("@/lib/auth")
     const currentUser = await getSessionOrRedirect()
     const supabase = createClient()
-    const { data = [] } = await supabase.from("parties").select("id, name").eq("user_id", currentUser.id)
+    const { data = [] } = await supabase.from("parties").select("id, name").eq("user_id", currentUser.effectiveUserId)
     return (data || []).map((p) => ({ id: p.id, name: p.name || "" }))
   })()
 
@@ -57,7 +57,7 @@ export default async function InvoiceEditPage({ params }: { params: Promise<{ id
     const { data = [] } = await supabase
       .from("inventory_items")
       .select("id, name, stock, selling_price")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
     return (data || []).map((item) => ({
       id: item.id,
       name: item.name || "",

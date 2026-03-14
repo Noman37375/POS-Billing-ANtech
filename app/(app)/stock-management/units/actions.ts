@@ -10,7 +10,7 @@ export async function createUnit(formData: FormData) {
   const payload = {
     name: String(formData.get("name") || "").trim(),
     symbol: String(formData.get("symbol") || "").trim() || null,
-    user_id: currentUser.id,
+    user_id: currentUser.effectiveUserId,
   }
 
   if (!payload.name) {
@@ -40,7 +40,7 @@ export async function updateUnit(formData: FormData) {
     return { error: "ID and unit name are required" }
   }
 
-  const { error } = await supabase.from("units").update(payload).eq("id", id).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("units").update(payload).eq("id", id).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -62,7 +62,7 @@ export async function deleteUnit(unitId: string) {
     .from("inventory_items")
     .select("id")
     .eq("unit_id", unitId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .limit(1)
 
   if (checkError) {
@@ -73,7 +73,7 @@ export async function deleteUnit(unitId: string) {
     return { error: "Cannot delete unit. It has items assigned to it." }
   }
 
-  const { error } = await supabase.from("units").delete().eq("id", unitId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("units").delete().eq("id", unitId).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -88,7 +88,7 @@ export async function fetchUnits() {
   const { data, error } = await supabase
     .from("units")
     .select("id, name, symbol, created_at")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("name", { ascending: true })
 
   if (error) {

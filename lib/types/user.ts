@@ -46,6 +46,8 @@ export interface PosUser {
   is_active: boolean
   created_at: string
   updated_at: string
+  // Computed: for data queries, sub-users share their parent's data
+  effectiveUserId: string
 }
 
 export interface CreateSubUserInput {

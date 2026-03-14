@@ -28,7 +28,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
     const { data = [] } = await supabase
       .from("inventory_items")
       .select("id, name, stock, cost_price, selling_price, category_id, unit_id, barcode, minimum_stock, maximum_stock, created_at, categories:category_id(name), units:unit_id(name, symbol)")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .eq("is_archived", tab === "archived")
       .order("created_at", { ascending: false })
     return data

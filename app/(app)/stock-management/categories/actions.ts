@@ -10,7 +10,7 @@ export async function createCategory(formData: FormData) {
   const payload = {
     name: String(formData.get("name") || "").trim(),
     description: String(formData.get("description") || "").trim() || null,
-    user_id: currentUser.id,
+    user_id: currentUser.effectiveUserId,
   }
 
   if (!payload.name) {
@@ -40,7 +40,7 @@ export async function updateCategory(formData: FormData) {
     return { error: "ID and category name are required" }
   }
 
-  const { error } = await supabase.from("categories").update(payload).eq("id", id).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("categories").update(payload).eq("id", id).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -62,7 +62,7 @@ export async function deleteCategory(categoryId: string) {
     .from("inventory_items")
     .select("id")
     .eq("category_id", categoryId)
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .limit(1)
 
   if (checkError) {
@@ -73,7 +73,7 @@ export async function deleteCategory(categoryId: string) {
     return { error: "Cannot delete category. It has items assigned to it." }
   }
 
-  const { error } = await supabase.from("categories").delete().eq("id", categoryId).eq("user_id", currentUser.id)
+  const { error } = await supabase.from("categories").delete().eq("id", categoryId).eq("user_id", currentUser.effectiveUserId)
   if (error) {
     return { error: error.message }
   }
@@ -88,7 +88,7 @@ export async function fetchCategories() {
   const { data, error } = await supabase
     .from("categories")
     .select("id, name, description, created_at")
-    .eq("user_id", currentUser.id)
+    .eq("user_id", currentUser.effectiveUserId)
     .order("name", { ascending: true })
 
   if (error) {

@@ -22,7 +22,7 @@ export default async function InvoicesListPage() {
     const { data = [] } = await supabase
       .from("sales_invoices")
       .select("id, status, total, created_at")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", currentUser.effectiveUserId)
       .order("created_at", { ascending: false })
     return data || []
   })()

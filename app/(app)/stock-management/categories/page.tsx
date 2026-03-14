@@ -28,7 +28,7 @@ export default async function CategoriesPage() {
         .from("inventory_items")
         .select("*", { count: "exact", head: true })
         .eq("category_id", category.id)
-        .eq("user_id", currentUser.id)
+        .eq("user_id", currentUser.effectiveUserId)
       return { ...category, itemCount: count || 0 }
     })
   )
