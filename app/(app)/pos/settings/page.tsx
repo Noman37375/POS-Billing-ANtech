@@ -1,8 +1,10 @@
 import { getUserPrintFormat, getStoreSettings } from "../actions"
 import { POSSettingsForm } from "@/components/pos-settings-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function POSSettingsPage() {
+  await requirePrivilege("pos")
   const defaultFormat = await getUserPrintFormat()
   const storeSettings = await getStoreSettings()
 

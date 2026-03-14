@@ -2,7 +2,7 @@
 
 export type UserRole = "pos_user" | "sub_pos_user"
 
-export type ModulePrivilege = 
+export type ModulePrivilege =
   | "dashboard"
   | "parties"
   | "inventory"
@@ -16,6 +16,8 @@ export type ModulePrivilege =
   | "accounts"
   | "returns_refunds"
   | "employees_payroll"
+  | "purchases"
+  | "backup"
   | "user_management" // Only for pos_user (admin)
 
 export interface UserPrivileges {
@@ -32,6 +34,8 @@ export interface UserPrivileges {
   accounts: boolean
   returns_refunds: boolean
   employees_payroll: boolean
+  purchases: boolean
+  backup: boolean
   user_management?: boolean // Only for admin
 }
 

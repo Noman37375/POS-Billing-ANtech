@@ -1,10 +1,13 @@
+import { requirePrivilege } from "@/lib/auth/privileges"
 import { getEmployees } from "../actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Users, UserCheck, UserX, Briefcase } from "lucide-react"
 import { EmployeesList } from "@/components/employees-list"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function EmployeesPage() {
+  await requirePrivilege("employees_payroll")
   const result = await getEmployees()
 
   if (result.error) {

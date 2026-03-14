@@ -3,12 +3,14 @@ import { POSSalesList } from "@/components/pos-sales-list"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { POSSalesFilters } from "@/components/pos-sales-filters"
 import { ExportButtons } from "@/components/export-buttons"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 interface POSSalesPageProps {
   searchParams: Promise<{ dateFrom?: string; dateTo?: string }>
 }
 
 export default async function POSSalesPage({ searchParams }: POSSalesPageProps) {
+  await requirePrivilege("pos")
   const params = await searchParams
   const dateFrom = params.dateFrom
   const dateTo = params.dateTo

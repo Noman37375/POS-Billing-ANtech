@@ -5,7 +5,7 @@ import { mockInventory, mockParties } from "@/lib/supabase/mock"
 import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function PurchaseCreatePage() {
-  await requirePrivilege("parties")
+  await requirePrivilege("purchases")
 
   if (!isSupabaseReady()) {
     return (

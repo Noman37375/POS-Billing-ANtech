@@ -7,7 +7,7 @@ import { notFound } from "next/navigation"
 import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function PurchaseEditPage({ params }: { params: Promise<{ id: string }> }) {
-  await requirePrivilege("parties")
+  await requirePrivilege("purchases")
   const { id } = await params
   const purchaseId = id
 

@@ -12,7 +12,7 @@ import { DeletePurchaseButton } from "@/components/delete-purchase-button"
 import { PurchaseDownloadButton } from "@/components/purchase-download-button"
 
 export default async function PurchasesListPage() {
-  await requirePrivilege("parties")
+  await requirePrivilege("purchases")
 
   const purchases = await (async () => {
     if (!isSupabaseReady()) return []

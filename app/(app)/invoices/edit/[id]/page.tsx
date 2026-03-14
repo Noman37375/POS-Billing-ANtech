@@ -4,8 +4,10 @@ import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory, mockParties, mockInvoices } from "@/lib/supabase/mock"
 import { getInvoiceForEdit } from "@/app/(app)/invoices/actions"
 import { notFound } from "next/navigation"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function InvoiceEditPage({ params }: { params: Promise<{ id: string }> }) {
+  await requirePrivilege("invoices_create")
   const { id } = await params
   const invoiceId = id
 

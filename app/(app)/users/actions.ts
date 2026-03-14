@@ -23,9 +23,16 @@ export async function createUser(formData: FormData) {
     inventory: formData.get("privilege_inventory") === "on",
     inventory_report: formData.get("privilege_inventory_report") === "on",
     categories: formData.get("privilege_categories") === "on",
+    units: formData.get("privilege_units") === "on",
     barcode: formData.get("privilege_barcode") === "on",
+    pos: formData.get("privilege_pos") === "on",
     invoices_create: formData.get("privilege_invoices_create") === "on",
     invoices_list: formData.get("privilege_invoices_list") === "on",
+    accounts: formData.get("privilege_accounts") === "on",
+    returns_refunds: formData.get("privilege_returns_refunds") === "on",
+    employees_payroll: formData.get("privilege_employees_payroll") === "on",
+    purchases: formData.get("privilege_purchases") === "on",
+    backup: formData.get("privilege_backup") === "on",
   }
 
   if (!email || !password) {
@@ -67,9 +74,16 @@ export async function updateUser(userId: string, formData: FormData) {
     inventory: formData.get("privilege_inventory") === "on",
     inventory_report: formData.get("privilege_inventory_report") === "on",
     categories: formData.get("privilege_categories") === "on",
+    units: formData.get("privilege_units") === "on",
     barcode: formData.get("privilege_barcode") === "on",
+    pos: formData.get("privilege_pos") === "on",
     invoices_create: formData.get("privilege_invoices_create") === "on",
     invoices_list: formData.get("privilege_invoices_list") === "on",
+    accounts: formData.get("privilege_accounts") === "on",
+    returns_refunds: formData.get("privilege_returns_refunds") === "on",
+    employees_payroll: formData.get("privilege_employees_payroll") === "on",
+    purchases: formData.get("privilege_purchases") === "on",
+    backup: formData.get("privilege_backup") === "on",
   }
 
   const input: UpdateSubUserInput = {

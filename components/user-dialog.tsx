@@ -27,9 +27,16 @@ interface UserFormData {
   inventory: boolean
   inventory_report: boolean
   categories: boolean
+  units: boolean
   barcode: boolean
+  pos: boolean
   invoices_create: boolean
   invoices_list: boolean
+  accounts: boolean
+  returns_refunds: boolean
+  employees_payroll: boolean
+  purchases: boolean
+  backup: boolean
   is_active: boolean
 }
 
@@ -47,9 +54,16 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
       inventory: false,
       inventory_report: false,
       categories: false,
+      units: false,
       barcode: false,
+      pos: false,
       invoices_create: false,
       invoices_list: false,
+      accounts: false,
+      returns_refunds: false,
+      employees_payroll: false,
+      purchases: false,
+      backup: false,
       is_active: true,
     },
   })
@@ -66,9 +80,16 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
         inventory: user?.privileges.inventory || false,
         inventory_report: user?.privileges.inventory_report || false,
         categories: user?.privileges.categories || false,
+        units: user?.privileges.units || false,
         barcode: user?.privileges.barcode || false,
+        pos: user?.privileges.pos || false,
         invoices_create: user?.privileges.invoices_create || false,
         invoices_list: user?.privileges.invoices_list || false,
+        accounts: user?.privileges.accounts || false,
+        returns_refunds: user?.privileges.returns_refunds || false,
+        employees_payroll: user?.privileges.employees_payroll || false,
+        purchases: user?.privileges.purchases || false,
+        backup: user?.privileges.backup || false,
         is_active: user?.is_active ?? true,
       })
     }
@@ -87,9 +108,16 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
       formData.append("privilege_inventory", data.inventory ? "on" : "off")
       formData.append("privilege_inventory_report", data.inventory_report ? "on" : "off")
       formData.append("privilege_categories", data.categories ? "on" : "off")
+      formData.append("privilege_units", data.units ? "on" : "off")
       formData.append("privilege_barcode", data.barcode ? "on" : "off")
+      formData.append("privilege_pos", data.pos ? "on" : "off")
       formData.append("privilege_invoices_create", data.invoices_create ? "on" : "off")
       formData.append("privilege_invoices_list", data.invoices_list ? "on" : "off")
+      formData.append("privilege_accounts", data.accounts ? "on" : "off")
+      formData.append("privilege_returns_refunds", data.returns_refunds ? "on" : "off")
+      formData.append("privilege_employees_payroll", data.employees_payroll ? "on" : "off")
+      formData.append("privilege_purchases", data.purchases ? "on" : "off")
+      formData.append("privilege_backup", data.backup ? "on" : "off")
       formData.append("is_active", data.is_active ? "on" : "off")
 
       let result
@@ -188,12 +216,32 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
+                  id="privilege_units"
+                  checked={watch("units")}
+                  onCheckedChange={(checked) => setValue("units", checked === true)}
+                />
+                <Label htmlFor="privilege_units" className="font-normal cursor-pointer">
+                  Units
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
                   id="privilege_barcode"
                   checked={watch("barcode")}
                   onCheckedChange={(checked) => setValue("barcode", checked === true)}
                 />
                 <Label htmlFor="privilege_barcode" className="font-normal cursor-pointer">
                   Barcode
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="privilege_pos"
+                  checked={watch("pos")}
+                  onCheckedChange={(checked) => setValue("pos", checked === true)}
+                />
+                <Label htmlFor="privilege_pos" className="font-normal cursor-pointer">
+                  POS (Point of Sale)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -214,6 +262,56 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
                 />
                 <Label htmlFor="privilege_invoices_list" className="font-normal cursor-pointer">
                   Invoices List
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="privilege_purchases"
+                  checked={watch("purchases")}
+                  onCheckedChange={(checked) => setValue("purchases", checked === true)}
+                />
+                <Label htmlFor="privilege_purchases" className="font-normal cursor-pointer">
+                  Purchase Management
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="privilege_accounts"
+                  checked={watch("accounts")}
+                  onCheckedChange={(checked) => setValue("accounts", checked === true)}
+                />
+                <Label htmlFor="privilege_accounts" className="font-normal cursor-pointer">
+                  Accounts
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="privilege_returns_refunds"
+                  checked={watch("returns_refunds")}
+                  onCheckedChange={(checked) => setValue("returns_refunds", checked === true)}
+                />
+                <Label htmlFor="privilege_returns_refunds" className="font-normal cursor-pointer">
+                  Returns & Refunds
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="privilege_employees_payroll"
+                  checked={watch("employees_payroll")}
+                  onCheckedChange={(checked) => setValue("employees_payroll", checked === true)}
+                />
+                <Label htmlFor="privilege_employees_payroll" className="font-normal cursor-pointer">
+                  Employees & Payroll
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="privilege_backup"
+                  checked={watch("backup")}
+                  onCheckedChange={(checked) => setValue("backup", checked === true)}
+                />
+                <Label htmlFor="privilege_backup" className="font-normal cursor-pointer">
+                  Backup
                 </Label>
               </div>
             </div>

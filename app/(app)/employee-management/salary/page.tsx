@@ -5,8 +5,10 @@ import { DollarSign, Plus } from "lucide-react"
 import { SalaryList } from "@/components/salary-list"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function SalaryPage() {
+  await requirePrivilege("employees_payroll")
   const salariesResult = await getAllCurrentSalaries()
   const employeesResult = await getEmployees()
 

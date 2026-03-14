@@ -7,7 +7,7 @@ import { TrendingUp, ShoppingBag, DollarSign, FileText, AlertCircle } from "luci
 import { ExportButtons } from "@/components/export-buttons"
 
 export default async function PurchaseReportsPage() {
-  await requirePrivilege("parties")
+  await requirePrivilege("purchases")
 
   const [summary, trends, topVendors, paymentSummary] = await Promise.all([
     getPurchaseSummary(),

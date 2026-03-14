@@ -11,8 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function ReportsPage() {
+  await requirePrivilege("employees_payroll")
   const employeesReportResult = await getEmployeesReport()
   const payrollSummaryResult = await getPayrollSummary()
 

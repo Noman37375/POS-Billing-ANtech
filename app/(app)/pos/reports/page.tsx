@@ -3,6 +3,7 @@ import { getGrossProfitReport } from "./actions"
 import { GrossProfitTable } from "@/components/gross-profit-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, DollarSign, ShoppingBag, BarChart3 } from "lucide-react"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 interface ReportsPageProps {
   searchParams: Promise<{ dateFrom?: string; dateTo?: string; timeFrom?: string; timeTo?: string; period?: string }>
@@ -13,6 +14,7 @@ function fmt(n: number) {
 }
 
 export default async function GrossProfitReportPage({ searchParams }: ReportsPageProps) {
+  await requirePrivilege("pos")
   const params = await searchParams
 
   // PKT = UTC+5: calculate today's date in Pakistan time (server may be UTC)

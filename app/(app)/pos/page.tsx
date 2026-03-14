@@ -2,12 +2,14 @@ import { createClient } from "@/lib/supabase/server"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory, mockParties } from "@/lib/supabase/mock"
 import { POSNewSaleForm } from "@/components/pos-new-sale-form"
+import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function POSNewSalePage({
   searchParams,
 }: {
   searchParams: Promise<{ itemId?: string; autoAdd?: string }>
 }) {
+  await requirePrivilege("pos")
   const params = await searchParams
   const initialItemId = params?.itemId ?? null
   const autoAdd = params?.autoAdd === "true"

@@ -10,7 +10,7 @@ import { DeletePurchasePaymentButton } from "@/components/delete-purchase-paymen
 import { ExportButtons } from "@/components/export-buttons"
 
 export default async function VendorPaymentsPage() {
-  await requirePrivilege("parties")
+  await requirePrivilege("purchases")
 
   const [payments, purchases, paidPurchases] = await Promise.all([
     (async () => {
