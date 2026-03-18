@@ -14,7 +14,8 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     return { error: "Customer and at least one line item are required", data: null }
   }
 
-  const isDraft = payload.status === "Draft" || !payload.payments?.length || payload.payments.every((p) => p.amount <= 0)
+  const isCredit = payload.status === "Credit"
+  const isDraft = isCredit || payload.status === "Draft" || !payload.payments?.length || payload.payments.every((p) => p.amount <= 0)
 
   if (!isDraft && (!payload.payments?.length || payload.payments.every((p) => p.amount <= 0))) {
     return { error: "At least one payment is required", data: null }
@@ -53,7 +54,9 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
   const paymentTotal = isDraft ? 0 : (payload.payments ?? []).reduce((sum, p) => sum + p.amount, 0)
 
   let status: string
-  if (isDraft) {
+  if (isCredit) {
+    status = "Credit"
+  } else if (isDraft) {
     status = "Draft"
   } else if (paymentTotal >= total) {
     status = "Paid"
@@ -266,7 +269,8 @@ export async function getInvoiceForPrint(invoiceId: string) {
       parties:party_id (
         id,
         name,
-        phone
+        phone,
+        address
       )
     `,
     )
@@ -321,6 +325,7 @@ export async function getInvoiceForPrint(invoiceId: string) {
     ? {
         name: (partyData as { name?: string })?.name || "Unknown",
         phone: (partyData as { phone?: string })?.phone,
+        address: (partyData as { address?: string })?.address,
       }
     : null
 

@@ -187,6 +187,10 @@ export async function printA4Invoice(data: InvoiceForPrint) {
             <td style="font-weight:700;padding-right:6px;white-space:nowrap;">Contact No:</td>
             <td style="white-space:nowrap;">${data.party?.phone ? esc(data.party.phone) : ""}</td>
           </tr>
+          ${data.party?.address ? `<tr>
+            <td style="font-weight:700;padding-right:6px;white-space:nowrap;">Address:</td>
+            <td>${esc(data.party.address)}</td>
+          </tr>` : ""}
           ${cashier ? `<tr>
             <td style="font-weight:700;padding-right:6px;white-space:nowrap;">User:</td>
             <td style="white-space:nowrap;">${esc(cashier)}</td>

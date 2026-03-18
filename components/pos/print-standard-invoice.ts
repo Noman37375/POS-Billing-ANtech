@@ -51,13 +51,14 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
 
   const cashPaid   = data.payments && data.payments.length > 0
     ? data.payments.reduce((s, p) => s + Number(p.amount || 0), 0)
-    : (data.status === "Pending" || data.status === "Draft") ? 0 : data.total
+    : (data.status === "Pending" || data.status === "Draft" || data.status === "Credit") ? 0 : data.total
   const payMethod  = data.payments && data.payments.length > 0
     ? [...new Set(data.payments.map((p) => p.method))].join(" / ")
     : "Cash"
   const remainingBalance = data.total - cashPaid
   const isDraft   = data.status === "Draft"
-  const isPending = data.status === "Pending" && remainingBalance > 0
+  const isCredit  = data.status === "Credit"
+  const isPending = (data.status === "Pending" || isCredit) && remainingBalance > 0
 
   const itemCount  = data.items.length
   const totalQty   = data.items.reduce((s, i) => s + i.quantity, 0)
@@ -95,7 +96,7 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
 
     <!-- SALES RECEIPT BAR -->
     <div style="background:#000;color:#fff;text-align:center;font-weight:700;font-size:9.5px;padding:2px 0;margin:1.5mm 0;">
-      ${isDraft ? "Pre-Paid Invoice" : "Sales Receipt"}
+      ${isDraft ? "Draft Invoice" : isCredit ? "Credit Sale (Udhaar)" : "Sales Receipt"}
     </div>
 
     <!-- BILL INFO -->
@@ -113,6 +114,9 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
       <tr>
         <td colspan="2" style="padding:0.3mm 0;color:#000;">Customer Name: ${data.party?.name ? esc(data.party.name) : ""}</td>
       </tr>
+      ${data.party?.address ? `<tr>
+        <td colspan="2" style="padding:0.3mm 0;color:#000;">Customer Address: ${esc(data.party.address)}</td>
+      </tr>` : ""}
     </table>
 
     <!-- ITEMS TABLE -->

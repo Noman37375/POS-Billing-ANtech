@@ -2,13 +2,14 @@
 
 import { useMemo, useState, useTransition, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Loader2, Printer, X, FileText } from "lucide-react"
+import { Plus, Trash2, Loader2, Printer, X, FileText, CheckCircle2 } from "lucide-react"
 import { createPOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { useCurrency } from "@/contexts/currency-context"
 import type { PaymentMethod } from "@/lib/types/pos"
@@ -28,12 +29,15 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
   const [taxRate, setTaxRate] = useState(0)
   const [selectedItem, setSelectedItem] = useState("")
   const [quantity, setQuantity] = useState(1)
-  const [saleMode, setSaleMode] = useState<"sale" | "draft">("sale")
+  const [saleMode, setSaleMode] = useState<"sale" | "credit" | "draft">("sale")
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash")
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
   const [lastInvoiceId, setLastInvoiceId] = useState<string | null>(null)
-  const [lastSaleMode, setLastSaleMode] = useState<"sale" | "draft">("sale")
+  const [lastSaleMode, setLastSaleMode] = useState<"sale" | "credit" | "draft">("sale")
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false)
+  const [completedTotal, setCompletedTotal] = useState(0)
+  const [completedCustomer, setCompletedCustomer] = useState("")
   const [showCustomerResults, setShowCustomerResults] = useState(false)
   const [showItemResults, setShowItemResults] = useState(false)
   const [customerQuery, setCustomerQuery] = useState("")
@@ -326,7 +330,13 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
       return
     }
     startTransition(async () => {
-      const isDraft = saleMode === "draft"
+      const payload =
+        saleMode === "sale"
+          ? { payments: [{ amount: computed.total, method: paymentMethod }] }
+          : saleMode === "credit"
+          ? { status: "Credit" as const }
+          : { status: "Draft" as const }
+
       const result = await createPOSSale({
         partyId,
         items: computed.detailed.map((line) => ({
@@ -335,26 +345,26 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
           unitPrice: line.unitPrice,
         })),
         taxRate,
-        ...(isDraft
-          ? { status: "Draft" as const }
-          : { payments: [{ amount: computed.total, method: paymentMethod }] }),
+        ...payload,
       })
       if (result.error) {
         toast.error(result.error)
         return
       }
-      if (isDraft) {
-        toast.success("Draft saved")
-        setLastSaleMode("draft")
-        setLastInvoiceId(result.data?.invoiceId ?? null)
-        setItems([])
-        setPartyId("")
+      setLastInvoiceId(result.data?.invoiceId ?? null)
+      setLastSaleMode(saleMode)
+      const customerName = parties.find((p) => p.id === partyId)?.name ?? ""
+      setItems([])
+      setPartyId("")
+      setCustomerQuery("")
+      if (saleMode === "sale") {
+        setCompletedTotal(computed.total)
+        setCompletedCustomer(customerName)
+        setShowCompleteDialog(true)
+      } else if (saleMode === "credit") {
+        toast.success("Credit (Udhaar) saved")
       } else {
-        toast.success("Sale completed")
-        setLastSaleMode("sale")
-        setLastInvoiceId(result.data?.invoiceId ?? null)
-        setItems([])
-        setPartyId("")
+        toast.success("Draft saved")
       }
     })
   }
@@ -604,12 +614,13 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <Label className="text-sm">Mode</Label>
-                <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "draft")}>
-                  <SelectTrigger className="w-32">
+                <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "credit" | "draft")}>
+                  <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="sale">Sale</SelectItem>
+                    <SelectItem value="credit">Credit (Udhaar)</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
                   </SelectContent>
                 </Select>
@@ -634,20 +645,25 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
                 onClick={handleCompleteSale}
                 disabled={pending || !partyId}
                 className="w-full sm:w-auto"
-                variant={saleMode === "draft" ? "outline" : "default"}
+                variant={saleMode === "sale" ? "default" : "outline"}
               >
                 {pending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {saleMode === "draft" ? "Saving..." : "Completing..."}
+                    {saleMode === "sale" ? "Completing..." : "Saving..."}
                   </>
-                ) : saleMode === "draft" ? (
+                ) : saleMode === "sale" ? (
+                  "Complete Sale"
+                ) : saleMode === "credit" ? (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Save Credit (Udhaar)
+                  </>
+                ) : (
                   <>
                     <FileText className="w-4 h-4 mr-2" />
                     Save Draft
                   </>
-                ) : (
-                  "Complete Sale"
                 )}
               </Button>
             </div>
@@ -656,7 +672,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
 
         {lastInvoiceId && (
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-            <span className="text-sm">{lastSaleMode === "draft" ? "Draft saved." : "Sale completed."} Invoice: {lastInvoiceId.substring(0, 8).toUpperCase()} • Press <kbd className="px-2 py-1 bg-background border rounded text-xs font-semibold">F7</kbd> to print</span>
+            <span className="text-sm">{lastSaleMode === "draft" ? "Draft saved." : lastSaleMode === "credit" ? "Credit (Udhaar) saved." : "Sale completed."} Invoice: {lastInvoiceId.substring(0, 8).toUpperCase()} • Press <kbd className="px-2 py-1 bg-background border rounded text-xs font-semibold">F7</kbd> to print</span>
             <Button variant="outline" size="sm" onClick={handlePrint} disabled={printPending}>
               {printPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -673,6 +689,30 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
           </div>
         )}
       </CardContent>
+
+      {/* Sale Completed Dialog */}
+      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+        <DialogContent className="sm:max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="flex flex-col items-center gap-3 text-xl">
+              <CheckCircle2 className="w-14 h-14 text-green-500" />
+              Sale is Completed!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1 text-sm text-muted-foreground py-2">
+            {completedCustomer && <p>Customer: <span className="font-semibold text-foreground">{completedCustomer}</span></p>}
+            <p>Total: <span className="font-semibold text-foreground">{formatCurrency(completedTotal)}</span></p>
+          </div>
+          <div className="flex gap-2 justify-center mt-2">
+            <Button onClick={() => { setShowCompleteDialog(false); handlePrint() }} disabled={printPending} variant="outline">
+              {printPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Printer className="w-4 h-4 mr-2" />Print</>}
+            </Button>
+            <Button onClick={() => { setShowCompleteDialog(false); setLastInvoiceId(null) }}>
+              New Sale
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
