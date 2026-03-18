@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2, Loader2, Printer, X, FileText, CheckCircle2 } from "lucide-react"
-import { createPOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
+import { createPOSSale, updatePOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,12 +21,19 @@ interface POSNewSaleFormProps {
   inventory: InventoryOption[]
   initialItemId?: string | null
   autoAdd?: boolean
+  initialSale?: {
+    invoiceId: string
+    partyId: string
+    taxRate: number
+    items: Array<{ itemId: string; quantity: number; unitPrice: number }>
+  }
 }
 
-export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: POSNewSaleFormProps) {
-  const [partyId, setPartyId] = useState("")
-  const [items, setItems] = useState<Array<{ itemId: string; quantity: number; unitPrice: number }>>([])
-  const [taxRate, setTaxRate] = useState(0)
+export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, initialSale }: POSNewSaleFormProps) {
+  const [partyId, setPartyId] = useState(initialSale?.partyId ?? "")
+  const [items, setItems] = useState<Array<{ itemId: string; quantity: number; unitPrice: number }>>(initialSale?.items ?? [])
+  const [taxRate, setTaxRate] = useState(initialSale?.taxRate ?? 0)
+  const editInvoiceId = initialSale?.invoiceId ?? null
   const [selectedItem, setSelectedItem] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [saleMode, setSaleMode] = useState<"sale" | "credit" | "draft">("sale")
@@ -330,6 +337,24 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
       return
     }
     startTransition(async () => {
+      const lineItems = computed.detailed.map((line) => ({
+        itemId: line.itemId,
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+      }))
+
+      // Edit mode — update existing Draft
+      if (editInvoiceId) {
+        const result = await updatePOSSale(editInvoiceId, { partyId, items: lineItems, taxRate })
+        if (result.error) {
+          toast.error(result.error)
+          return
+        }
+        toast.success("Draft updated")
+        router.push("/pos/sales")
+        return
+      }
+
       const payload =
         saleMode === "sale"
           ? { payments: [{ amount: computed.total, method: paymentMethod }] }
@@ -337,16 +362,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
           ? { status: "Credit" as const }
           : { status: "Draft" as const }
 
-      const result = await createPOSSale({
-        partyId,
-        items: computed.detailed.map((line) => ({
-          itemId: line.itemId,
-          quantity: line.quantity,
-          unitPrice: line.unitPrice,
-        })),
-        taxRate,
-        ...payload,
-      })
+      const result = await createPOSSale({ partyId, items: lineItems, taxRate, ...payload })
       if (result.error) {
         toast.error(result.error)
         return
@@ -612,20 +628,22 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm">Mode</Label>
-                <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "credit" | "draft")}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sale">Sale</SelectItem>
-                    <SelectItem value="credit">Credit (Udhaar)</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {saleMode === "sale" && (
+              {!editInvoiceId && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Mode</Label>
+                  <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "credit" | "draft")}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sale">Sale</SelectItem>
+                      <SelectItem value="credit">Credit (Udhaar)</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {!editInvoiceId && saleMode === "sale" && (
                 <div className="flex items-center gap-2">
                   <Label className="text-sm">Payment</Label>
                   <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
@@ -645,12 +663,17 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd }: P
                 onClick={handleCompleteSale}
                 disabled={pending || !partyId}
                 className="w-full sm:w-auto"
-                variant={saleMode === "sale" ? "default" : "outline"}
+                variant={editInvoiceId || saleMode !== "sale" ? "outline" : "default"}
               >
                 {pending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {saleMode === "sale" ? "Completing..." : "Saving..."}
+                    {editInvoiceId ? "Updating..." : saleMode === "sale" ? "Completing..." : "Saving..."}
+                  </>
+                ) : editInvoiceId ? (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Update Draft
                   </>
                 ) : saleMode === "sale" ? (
                   "Complete Sale"

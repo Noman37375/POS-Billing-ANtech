@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Printer, Loader2, Eye, Search, X } from "lucide-react"
+import { Printer, Loader2, Eye, Search, X, Pencil } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +26,7 @@ export function POSSalesList({ sales }: POSSalesListProps) {
   const [printPendingId, setPrintPendingId] = useState<string | null>(null)
   const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null)
   const [search, setSearch] = useState("")
+  const router = useRouter()
 
   const filtered = search.trim()
     ? sales.filter((sale) => {
@@ -127,6 +129,16 @@ export function POSSalesList({ sales }: POSSalesListProps) {
                   </td>
                   <td className="px-4 py-2 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {sale.status === "Draft" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Edit Draft"
+                          onClick={() => router.push(`/pos?editDraft=${sale.id}`)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      )}
                       <Dialog
                         open={viewInvoiceId === sale.id}
                         onOpenChange={(open) => setViewInvoiceId(open ? sale.id : null)}

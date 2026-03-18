@@ -50,9 +50,9 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
   const invoiceDropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  // Filter to show only unpaid sales (Draft/Pending with outstanding balance)
+  // Filter to show only unpaid sales (Credit/Pending with outstanding balance)
   const availableSales = sales.filter(
-    (s) => (s.status === "Draft" || s.status === "Pending") && (s.balance ?? s.total) > 0
+    (s) => (s.status === "Credit" || s.status === "Pending") && (s.balance ?? s.total) > 0
   )
 
   const selectedSale = availableSales.find((s) => s.id === invoiceId)
@@ -235,7 +235,7 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
                       >
                         <span className="font-mono font-semibold">{sale.invoiceNumber}</span>
                         {" — "}{sale.customerName}
-                        <span className={`ml-1 text-xs ${sale.status === "Draft" ? "text-gray-500" : "text-amber-600"}`}>
+                        <span className={`ml-1 text-xs ${sale.status === "Credit" ? "text-blue-600" : "text-amber-600"}`}>
                           ({sale.status})
                         </span>
                       </button>

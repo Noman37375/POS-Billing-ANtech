@@ -814,7 +814,7 @@ export async function getUnpaidPOSSales() {
     )
     .eq("user_id", currentUser.effectiveUserId)
     .eq("source", "pos")
-    .in("status", ["Draft", "Pending"])
+    .in("status", ["Credit", "Pending"])
     .order("created_at", { ascending: false })
 
   if (salesError) {
@@ -854,4 +854,136 @@ export async function getUnpaidPOSSales() {
   })
 
   return { error: null, data: unpaidSales }
+}
+
+export async function getPOSSaleForEdit(invoiceId: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  const { data: invoice } = await supabase
+    .from("sales_invoices")
+    .select("id, party_id, subtotal, tax, total, status")
+    .eq("id", invoiceId)
+    .eq("user_id", currentUser.effectiveUserId)
+    .eq("status", "Draft")
+    .single()
+
+  if (!invoice) return { error: "Draft not found", data: null }
+
+  const { data: lines } = await supabase
+    .from("sales_invoice_lines")
+    .select("item_id, quantity, unit_price")
+    .eq("invoice_id", invoiceId)
+
+  const subtotal = Number(invoice.subtotal) || 0
+  const tax = Number(invoice.tax) || 0
+  const taxRate = subtotal > 0 ? Math.round((tax / subtotal) * 100) : 0
+
+  return {
+    error: null,
+    data: {
+      invoiceId: invoice.id,
+      partyId: invoice.party_id as string,
+      taxRate,
+      items: (lines || []).map((l: any) => ({
+        itemId: l.item_id as string,
+        quantity: Number(l.quantity),
+        unitPrice: Number(l.unit_price),
+      })),
+    },
+  }
+}
+
+export async function updatePOSSale(
+  invoiceId: string,
+  payload: { partyId: string; items: Array<{ itemId: string; quantity: number; unitPrice: number }>; taxRate?: number }
+) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  const { data: invoice } = await supabase
+    .from("sales_invoices")
+    .select("id, status")
+    .eq("id", invoiceId)
+    .eq("user_id", currentUser.effectiveUserId)
+    .eq("status", "Draft")
+    .single()
+
+  if (!invoice) return { error: "Draft not found or already completed", data: null }
+
+  // Fetch old line items to restore stock
+  const { data: oldLines = [] } = await supabase
+    .from("sales_invoice_lines")
+    .select("item_id, quantity")
+    .eq("invoice_id", invoiceId)
+
+  // Restore stock for old items
+  for (const line of oldLines || []) {
+    const { data: invItem } = await supabase
+      .from("inventory_items")
+      .select("stock")
+      .eq("id", (line as any).item_id)
+      .single()
+    if (invItem) {
+      await supabase
+        .from("inventory_items")
+        .update({ stock: Number((invItem as any).stock) + Number((line as any).quantity) })
+        .eq("id", (line as any).item_id)
+    }
+  }
+
+  // Delete old line items
+  await supabase.from("sales_invoice_lines").delete().eq("invoice_id", invoiceId)
+
+  // Calculate new totals
+  const taxRate = payload.taxRate ?? 0
+  const subtotal = payload.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+  const tax = subtotal * (taxRate / 100)
+  const total = subtotal + tax
+
+  // Update invoice header
+  await supabase
+    .from("sales_invoices")
+    .update({ party_id: payload.partyId, subtotal, tax, total })
+    .eq("id", invoiceId)
+    .eq("user_id", currentUser.effectiveUserId)
+
+  // Insert new line items
+  const lineItems = payload.items.map((item) => ({
+    invoice_id: invoiceId,
+    item_id: item.itemId,
+    quantity: item.quantity,
+    unit_price: item.unitPrice,
+    line_total: item.quantity * item.unitPrice,
+  }))
+  await supabase.from("sales_invoice_lines").insert(lineItems)
+
+  // Decrement stock for new items
+  try {
+    await Promise.all(
+      payload.items.map(async (item) => {
+        const { error } = await supabase.rpc("decrement_inventory_stock", {
+          item_id: item.itemId,
+          quantity: item.quantity,
+        })
+        if (error) throw new Error(`Failed to decrement stock: ${error.message}`)
+        await recordStockMovement({
+          itemId: item.itemId,
+          movementType: "OUT",
+          quantity: item.quantity,
+          referenceType: "Invoice",
+          referenceId: invoiceId,
+          notes: `POS draft update ${invoiceId.substring(0, 8).toUpperCase()}`,
+          userId: currentUser.effectiveUserId,
+        })
+      })
+    )
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Failed to update inventory", data: null }
+  }
+
+  revalidatePath("/pos")
+  revalidatePath("/pos/sales")
+  revalidatePath("/dashboard")
+  return { error: null, data: { invoiceId } }
 }
