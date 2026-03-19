@@ -3,7 +3,7 @@ import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory, mockParties } from "@/lib/supabase/mock"
 import { POSNewSaleForm } from "@/components/pos-new-sale-form"
 import { requirePrivilege } from "@/lib/auth/privileges"
-import { getPOSSaleForEdit } from "@/app/(app)/pos/actions"
+import { getPOSSaleForEdit, getOrCreateWalkInParty } from "@/app/(app)/pos/actions"
 
 export default async function POSNewSalePage({
   searchParams,
@@ -35,9 +35,10 @@ export default async function POSNewSalePage({
   const { getSessionOrRedirect } = await import("@/lib/auth")
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
-  const [{ data: parties = [] }, { data: inventory = [] }] = await Promise.all([
+  const [{ data: parties = [] }, { data: inventory = [] }, walkIn] = await Promise.all([
     supabase.from("parties").select("id, name, address").eq("type", "Customer").eq("user_id", currentUser.effectiveUserId).order("name"),
     supabase.from("inventory_items").select("id, name, stock, selling_price").eq("user_id", currentUser.effectiveUserId).order("name"),
+    getOrCreateWalkInParty(),
   ])
 
   const normalizedInventory = (inventory || []).map((item) => ({
@@ -64,6 +65,7 @@ export default async function POSNewSalePage({
         initialItemId={initialItemId}
         autoAdd={autoAdd}
         initialSale={initialSale}
+        walkInPartyId={walkIn.id}
       />
     </div>
   )

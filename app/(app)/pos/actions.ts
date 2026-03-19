@@ -407,6 +407,29 @@ export interface StoreSettings {
   email?: string
 }
 
+export async function getOrCreateWalkInParty(): Promise<{ id: string }> {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  const { data: existing } = await supabase
+    .from("parties")
+    .select("id")
+    .eq("user_id", currentUser.effectiveUserId)
+    .eq("name", "Walk-in Customer")
+    .eq("type", "Customer")
+    .maybeSingle()
+
+  if (existing) return { id: existing.id }
+
+  const { data: created } = await supabase
+    .from("parties")
+    .insert({ name: "Walk-in Customer", type: "Customer", user_id: currentUser.effectiveUserId })
+    .select("id")
+    .single()
+
+  return { id: created?.id ?? "" }
+}
+
 // Get store settings for current user
 export async function getStoreSettings(): Promise<StoreSettings> {
   const user = await getSessionOrRedirect()

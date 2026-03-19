@@ -21,6 +21,7 @@ interface GrossProfitTableProps {
   timeTo?: string
   period?: string
   storeName?: string
+  baseUrl?: string
 }
 
 function fmt(n: number) {
@@ -77,8 +78,9 @@ function getPresetDates(period: PeriodType): { dateFrom: string; dateTo: string 
   }
 }
 
-export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, period, storeName }: GrossProfitTableProps) {
+export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, period, storeName, baseUrl }: GrossProfitTableProps) {
   const router = useRouter()
+  const navBase = baseUrl ?? "/pos/reports"
   const [isPending, startTransition] = useTransition()
 
   const [activePeriod, setActivePeriod] = useState<PeriodType>((period as PeriodType) || "today")
@@ -111,7 +113,7 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
       params.set("timeFrom", tf)
       params.set("timeTo", tt)
       startTransition(() => {
-        router.push(`/pos/reports?${params.toString()}`)
+        router.push(`${navBase}?${params.toString()}`)
       })
     },
     [router],
@@ -128,7 +130,7 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
       if (fromTime) params.set("timeFrom", fromTime)
       if (toTime) params.set("timeTo", toTime)
       startTransition(() => {
-        router.push(`/pos/reports?${params.toString()}`)
+        router.push(`${navBase}?${params.toString()}`)
       })
     },
     [router, startTransition, activePeriod, fromDate, toDate, fromTime, toTime],

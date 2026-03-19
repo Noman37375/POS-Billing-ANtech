@@ -21,6 +21,7 @@ interface POSNewSaleFormProps {
   inventory: InventoryOption[]
   initialItemId?: string | null
   autoAdd?: boolean
+  walkInPartyId?: string
   initialSale?: {
     invoiceId: string
     partyId: string
@@ -29,7 +30,7 @@ interface POSNewSaleFormProps {
   }
 }
 
-export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, initialSale }: POSNewSaleFormProps) {
+export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, initialSale, walkInPartyId }: POSNewSaleFormProps) {
   const [partyId, setPartyId] = useState(initialSale?.partyId ?? "")
   const [items, setItems] = useState<Array<{ itemId: string; quantity: number; unitPrice: number }>>(initialSale?.items ?? [])
   const [taxRate, setTaxRate] = useState(initialSale?.taxRate ?? 0)
@@ -443,7 +444,18 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
       <CardContent className="space-y-4 p-4 sm:p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>Customer</Label>
+            <div className="flex items-center justify-between">
+              <Label>Customer</Label>
+              {walkInPartyId && !partyId && (
+                <button
+                  type="button"
+                  onClick={() => { setPartyId(walkInPartyId); setCustomerQuery(""); setShowCustomerResults(false) }}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  + Walk-in
+                </button>
+              )}
+            </div>
             <div className="relative">
               <Input
                 ref={customerInputRef}
@@ -503,12 +515,18 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
           </div>
           <div className="space-y-2">
             <Label>Address</Label>
-            <Input
-              placeholder="Customer address..."
-              value={partyId ? parties.find((p) => p.id === partyId)?.address || "" : ""}
-              readOnly
-              className="bg-muted/50"
-            />
+            {partyId === walkInPartyId ? (
+              <div className="h-10 px-3 flex items-center rounded-md border bg-muted/50 text-sm text-muted-foreground">
+                Walk-in Customer — no address
+              </div>
+            ) : (
+              <Input
+                placeholder="Customer address..."
+                value={partyId ? parties.find((p) => p.id === partyId)?.address || "" : ""}
+                readOnly
+                className="bg-muted/50"
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label>Tax rate (%)</Label>
