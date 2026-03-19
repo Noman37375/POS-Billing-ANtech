@@ -62,8 +62,8 @@ export async function printA4Invoice(data: InvoiceForPrint) {
   const dateStr       = data.date ? fmtDate(data.date) : ""
   const timeStr       = data.date ? fmtTime(data.date) : ""
 
-  const discount      = 0 // POS doesn't track invoice-level discount
-  const grossAmount   = data.subtotal
+  const discount      = Number(data.discount || 0)
+  const grossAmount   = data.subtotal + (data.tax || 0)
   const netAmount     = data.total
   const amountWords   = numberToWords(Math.round(netAmount))
 
@@ -289,7 +289,7 @@ export async function printA4Invoice(data: InvoiceForPrint) {
           </tr>
           <tr>
             <td class="lbl">Less Discount:</td>
-            <td class="val">0.00</td>
+            <td class="val">${fmtMoney(discount)}</td>
           </tr>
           <tr>
             <td class="lbl net">Net Amount:</td>

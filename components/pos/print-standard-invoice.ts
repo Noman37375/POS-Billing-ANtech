@@ -49,6 +49,7 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
   const printDate  = data.date ? fmtDate(data.date) : ""
   const printTime  = data.date ? fmtTimeFull(data.date) : ""
 
+  const discount   = Number(data.discount || 0)
   const cashPaid   = data.payments && data.payments.length > 0
     ? data.payments.reduce((s, p) => s + Number(p.amount || 0), 0)
     : (data.status === "Pending" || data.status === "Draft" || data.status === "Credit") ? 0 : data.total
@@ -160,16 +161,23 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
         <td style="text-align:right;padding:0.3mm 0.5mm;color:#000;">Tax:</td>
         <td style="text-align:right;padding:0.3mm 0.5mm;color:#000;">${fmtNum(data.tax)}</td>
       </tr>` : ""}
+      ${discount > 0 ? `
+      <tr>
+        <td></td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;color:#000;">Discount:</td>
+        <td style="text-align:right;padding:0.3mm 0.5mm;color:#000;">-${fmtNum(discount)}</td>
+      </tr>` : ""}
       <tr>
         <td></td>
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Net Amount:</td>
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(data.total)}</td>
       </tr>
+      ${cashPaid > 0 ? `
       <tr>
         <td></td>
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${esc(payMethod)} Paid:</td>
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(cashPaid)}</td>
-      </tr>
+      </tr>` : ""}
       ${isPending ? `
       <tr>
         <td colspan="3"><div style="border-top:1px dashed #000;margin:1mm 0;"></div></td>

@@ -36,6 +36,8 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const editInvoiceId = initialSale?.invoiceId ?? null
   const [selectedItem, setSelectedItem] = useState("")
   const [quantity, setQuantity] = useState(1)
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [payingNow, setPayingNow] = useState(0)
   const [saleMode, setSaleMode] = useState<"sale" | "credit" | "draft">("sale")
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash")
   const [pending, startTransition] = useTransition()
@@ -278,9 +280,11 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
     })
     const subtotal = detailed.reduce((sum, line) => sum + line.amount, 0)
     const tax = taxRate > 0 ? subtotal * (taxRate / 100) : 0
-    const total = subtotal + tax
-    return { detailed, subtotal, tax, total }
-  }, [inventory, items, taxRate])
+    const discount = discountAmount > 0 ? Math.min(discountAmount, subtotal + tax) : 0
+    const total = subtotal + tax - discount
+    const balance = saleMode === "credit" ? Math.max(0, total - payingNow) : 0
+    return { detailed, subtotal, tax, discount, total, balance }
+  }, [inventory, items, taxRate, discountAmount, saleMode, payingNow])
 
   const addLine = () => {
     if (!selectedItem || quantity <= 0) {
@@ -379,10 +383,10 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         saleMode === "sale"
           ? { payments: [{ amount: computed.total, method: paymentMethod }] }
           : saleMode === "credit"
-          ? { status: "Credit" as const }
+          ? { status: "Credit" as const, ...(payingNow > 0 ? { payments: [{ amount: payingNow, method: paymentMethod }] } : {}) }
           : { status: "Draft" as const }
 
-      const result = await createPOSSale({ partyId, items: lineItems, taxRate, ...payload })
+      const result = await createPOSSale({ partyId, items: lineItems, taxRate, discount: computed.discount, ...payload })
       if (result.error) {
         toast.error(result.error)
         return
@@ -638,14 +642,49 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 <span>Subtotal</span>
                 <span className="font-medium">{formatCurrency(computed.subtotal)}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span>Tax ({taxRate}%)</span>
-                <span className="font-medium">{formatCurrency(computed.tax)}</span>
+              {taxRate > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span>Tax ({taxRate}%)</span>
+                  <span className="font-medium">{formatCurrency(computed.tax)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm items-center gap-2">
+                <span className="shrink-0">Discount</span>
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={discountAmount || ""}
+                  onChange={(e) => setDiscountAmount(Math.max(0, Number(e.target.value) || 0))}
+                  placeholder="0"
+                  className="h-7 w-28 text-sm text-right"
+                />
               </div>
               <div className="flex justify-between font-semibold text-base pt-2 border-t">
                 <span>Total</span>
                 <span>{formatCurrency(computed.total)}</span>
               </div>
+              {saleMode === "credit" && (
+                <>
+                  <div className="flex justify-between text-sm items-center gap-2 pt-1">
+                    <span className="shrink-0">Paying Now</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={computed.total}
+                      step={1}
+                      value={payingNow || ""}
+                      onChange={(e) => setPayingNow(Math.max(0, Math.min(computed.total, Number(e.target.value) || 0)))}
+                      placeholder="0"
+                      className="h-7 w-28 text-sm text-right"
+                    />
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold text-orange-600 dark:text-orange-400">
+                    <span>Balance</span>
+                    <span>{formatCurrency(computed.balance)}</span>
+                  </div>
+                </>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -661,7 +700,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                   </SelectContent>
                 </Select>
               </div>
-              {saleMode === "sale" && (
+              {(saleMode === "sale" || (saleMode === "credit" && payingNow > 0)) && (
                 <div className="flex items-center gap-2">
                   <Label className="text-sm">Payment</Label>
                   <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>

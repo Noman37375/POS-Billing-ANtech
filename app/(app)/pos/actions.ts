@@ -14,10 +14,12 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     return { error: "Customer and at least one line item are required", data: null }
   }
 
-  const isCredit = payload.status === "Credit"
-  const isDraft = isCredit || payload.status === "Draft" || !payload.payments?.length || payload.payments.every((p) => p.amount <= 0)
+  const isExplicitCredit = payload.status === "Credit"
+  const isExplicitDraft = payload.status === "Draft"
+  const hasPayment = payload.payments?.some((p) => p.amount > 0) ?? false
 
-  if (!isDraft && (!payload.payments?.length || payload.payments.every((p) => p.amount <= 0))) {
+  // Require payment only for Sale mode (no explicit status)
+  if (!isExplicitDraft && !isExplicitCredit && !hasPayment) {
     return { error: "At least one payment is required", data: null }
   }
 
@@ -47,21 +49,24 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
 
   const costPriceByItemId = new Map(invItems.map((row) => [row.id, Number((row as { cost_price?: number }).cost_price ?? 0)]))
 
-  const taxRate = payload.taxRate ?? 18
+  const taxRate = payload.taxRate ?? 0
+  const discount = Number(payload.discount ?? 0)
   const subtotal = payload.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const tax = subtotal * (taxRate / 100)
-  const total = subtotal + tax
-  const paymentTotal = isDraft ? 0 : (payload.payments ?? []).reduce((sum, p) => sum + p.amount, 0)
+  const total = subtotal + tax - discount
+  const paymentTotal = hasPayment ? (payload.payments ?? []).reduce((sum, p) => sum + p.amount, 0) : 0
 
   let status: string
-  if (isCredit) {
-    status = "Credit"
-  } else if (isDraft) {
+  if (isExplicitDraft) {
     status = "Draft"
+  } else if (isExplicitCredit && !hasPayment) {
+    status = "Credit"
   } else if (paymentTotal >= total) {
     status = "Paid"
-  } else {
+  } else if (paymentTotal > 0) {
     status = "Pending"
+  } else {
+    status = "Credit"
   }
 
   const { data: invoice, error: invoiceError } = await supabase
@@ -69,6 +74,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     .insert({
       party_id: payload.partyId,
       subtotal,
+      discount,
       tax,
       total,
       status,
@@ -96,7 +102,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     return { error: lineError.message, data: null }
   }
 
-  if (!isDraft && payload.payments?.length) {
+  if (hasPayment && payload.payments?.length) {
     const paymentRows = payload.payments
       .filter((p) => p.amount > 0)
       .map((p) => ({
@@ -262,6 +268,7 @@ export async function getInvoiceForPrint(invoiceId: string) {
       `
       id,
       subtotal,
+      discount,
       tax,
       total,
       status,
@@ -374,6 +381,7 @@ export async function getInvoiceForPrint(invoiceId: string) {
     date: invoice.created_at || new Date().toISOString(),
     party,
     subtotal: invoice.subtotal || 0,
+    discount: Number((invoice as any).discount || 0),
     tax: invoice.tax || 0,
     total: invoice.total || 0,
     status: invoice.status || "Draft",
