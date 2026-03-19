@@ -896,14 +896,20 @@ export async function getPOSSaleForEdit(invoiceId: string) {
 
 export async function updatePOSSale(
   invoiceId: string,
-  payload: { partyId: string; items: Array<{ itemId: string; quantity: number; unitPrice: number }>; taxRate?: number }
+  payload: {
+    partyId: string
+    items: Array<{ itemId: string; quantity: number; unitPrice: number }>
+    taxRate?: number
+    status?: "Draft" | "Credit" | "Paid"
+    payment?: { amount: number; method: string }
+  }
 ) {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
 
   const { data: invoice } = await supabase
     .from("sales_invoices")
-    .select("id, status")
+    .select("id, status, total")
     .eq("id", invoiceId)
     .eq("user_id", currentUser.effectiveUserId)
     .eq("status", "Draft")
@@ -941,12 +947,25 @@ export async function updatePOSSale(
   const tax = subtotal * (taxRate / 100)
   const total = subtotal + tax
 
-  // Update invoice header
+  // Determine final status
+  const newStatus = payload.status ?? "Draft"
+
+  // Update invoice header + status
   await supabase
     .from("sales_invoices")
-    .update({ party_id: payload.partyId, subtotal, tax, total })
+    .update({ party_id: payload.partyId, subtotal, tax, total, status: newStatus })
     .eq("id", invoiceId)
     .eq("user_id", currentUser.effectiveUserId)
+
+  // If completing as Sale, insert payment record
+  if (newStatus === "Paid" && payload.payment) {
+    await supabase.from("payments").insert({
+      invoice_id: invoiceId,
+      amount: payload.payment.amount,
+      method: payload.payment.method,
+      user_id: currentUser.effectiveUserId,
+    })
+  }
 
   // Insert new line items
   const lineItems = payload.items.map((item) => ({

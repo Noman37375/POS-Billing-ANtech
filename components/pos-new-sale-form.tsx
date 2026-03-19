@@ -343,15 +343,35 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         unitPrice: line.unitPrice,
       }))
 
-      // Edit mode — update existing Draft
+      // Edit mode — update existing Draft (with optional status change)
       if (editInvoiceId) {
-        const result = await updatePOSSale(editInvoiceId, { partyId, items: lineItems, taxRate })
+        const updatePayload =
+          saleMode === "sale"
+            ? { partyId, items: lineItems, taxRate, status: "Paid" as const, payment: { amount: computed.total, method: paymentMethod } }
+            : saleMode === "credit"
+            ? { partyId, items: lineItems, taxRate, status: "Credit" as const }
+            : { partyId, items: lineItems, taxRate, status: "Draft" as const }
+
+        const result = await updatePOSSale(editInvoiceId, updatePayload)
         if (result.error) {
           toast.error(result.error)
           return
         }
-        toast.success("Draft updated")
-        router.push("/pos/sales")
+
+        if (saleMode === "sale") {
+          const customerName = parties.find((p) => p.id === partyId)?.name ?? ""
+          setLastInvoiceId(editInvoiceId)
+          setLastSaleMode("sale")
+          setCompletedTotal(computed.total)
+          setCompletedCustomer(customerName)
+          setItems([])
+          setPartyId("")
+          setCustomerQuery("")
+          setShowCompleteDialog(true)
+        } else {
+          toast.success(saleMode === "credit" ? "Saved as Credit (Udhaar)" : "Draft updated")
+          router.push("/pos/sales")
+        }
         return
       }
 
@@ -628,22 +648,20 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {!editInvoiceId && (
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">Mode</Label>
-                  <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "credit" | "draft")}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sale">Sale</SelectItem>
-                      <SelectItem value="credit">Credit (Udhaar)</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {!editInvoiceId && saleMode === "sale" && (
+              <div className="flex items-center gap-2">
+                <Label className="text-sm">Mode</Label>
+                <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "credit" | "draft")}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sale">Sale</SelectItem>
+                    <SelectItem value="credit">Credit (Udhaar)</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {saleMode === "sale" && (
                 <div className="flex items-center gap-2">
                   <Label className="text-sm">Payment</Label>
                   <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
@@ -663,29 +681,24 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 onClick={handleCompleteSale}
                 disabled={pending || !partyId}
                 className="w-full sm:w-auto"
-                variant={editInvoiceId || saleMode !== "sale" ? "outline" : "default"}
+                variant={saleMode === "sale" ? "default" : "outline"}
               >
                 {pending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {editInvoiceId ? "Updating..." : saleMode === "sale" ? "Completing..." : "Saving..."}
-                  </>
-                ) : editInvoiceId ? (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Update Draft
+                    {saleMode === "sale" ? "Completing..." : "Saving..."}
                   </>
                 ) : saleMode === "sale" ? (
-                  "Complete Sale"
+                  editInvoiceId ? "Complete Sale" : "Complete Sale"
                 ) : saleMode === "credit" ? (
                   <>
                     <FileText className="w-4 h-4 mr-2" />
-                    Save Credit (Udhaar)
+                    {editInvoiceId ? "Save as Credit (Udhaar)" : "Save Credit (Udhaar)"}
                   </>
                 ) : (
                   <>
                     <FileText className="w-4 h-4 mr-2" />
-                    Save Draft
+                    {editInvoiceId ? "Update Draft" : "Save Draft"}
                   </>
                 )}
               </Button>
