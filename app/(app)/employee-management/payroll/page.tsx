@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CreditCard, Plus } from "lucide-react"
 import { PayrollRunsList } from "@/components/payroll-runs-list"
-import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function PayrollPage() {
   await requirePrivilege("employees_payroll")
