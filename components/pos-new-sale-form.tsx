@@ -14,7 +14,7 @@ import { toast } from "sonner"
 import { useCurrency } from "@/contexts/currency-context"
 import type { PaymentMethod } from "@/lib/types/pos"
 type PartyOption = { id: string; name: string; address?: string | null }
-type InventoryOption = { id: string; name: string; stock: number; unitPrice: number }
+type InventoryOption = { id: string; name: string; stock: number; unitPrice: number; cashPrice?: number; creditPrice?: number; supplierPrice?: number }
 
 interface POSNewSaleFormProps {
   parties: PartyOption[]
@@ -32,7 +32,7 @@ interface POSNewSaleFormProps {
 
 export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, initialSale, walkInPartyId }: POSNewSaleFormProps) {
   const [partyId, setPartyId] = useState(initialSale?.partyId ?? "")
-  const [items, setItems] = useState<Array<{ itemId: string; quantity: number; unitPrice: number }>>(initialSale?.items ?? [])
+  const [items, setItems] = useState<Array<{ itemId: string; quantity: number; unitPrice: number; priceType?: "cash" | "credit" | "supplier" }>>(initialSale?.items ?? [])
   const [taxRate, setTaxRate] = useState(initialSale?.taxRate ?? 0)
   const editInvoiceId = initialSale?.invoiceId ?? null
   const [selectedItem, setSelectedItem] = useState("")
@@ -41,6 +41,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const [payingNow, setPayingNow] = useState(0)
   const [saleMode, setSaleMode] = useState<"sale" | "credit" | "draft">("sale")
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash")
+  const [priceType, setPriceType] = useState<"cash" | "credit" | "supplier">("cash")
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
   const [lastInvoiceId, setLastInvoiceId] = useState<string | null>(null)
@@ -168,6 +169,20 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         toast.error(`${inv.name} is out of stock`)
         return
       }
+
+      // Get price based on selected priceType
+      const selectedPrice = (() => {
+        switch (priceType) {
+          case "credit":
+            return inv.creditPrice ?? inv.unitPrice
+          case "supplier":
+            return inv.supplierPrice ?? inv.unitPrice
+          case "cash":
+          default:
+            return inv.cashPrice ?? inv.unitPrice
+        }
+      })()
+
       setItems((prev) => {
         const existingIdx = prev.findIndex((i) => i.itemId === itemId)
         const currentQty = existingIdx >= 0 ? prev[existingIdx].quantity : 0
@@ -180,11 +195,11 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
             i === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
           )
         }
-        return [...prev, { itemId, quantity: 1, unitPrice: inv.unitPrice }]
+        return [...prev, { itemId, quantity: 1, unitPrice: selectedPrice, priceType }]
       })
       toast.success(`Added 1x ${inv.name}`)
     },
-    [inventory]
+    [inventory, priceType]
   )
 
   // Listen for barcode scans from the global BarcodeScanToPOS component (same-page event)
@@ -300,16 +315,30 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
       toast.error(`Insufficient stock. Available: ${inv.stock}`)
       return
     }
+
+    // Get price based on selected priceType
+    const selectedPrice = (() => {
+      switch (priceType) {
+        case "credit":
+          return inv.creditPrice ?? inv.unitPrice
+        case "supplier":
+          return inv.supplierPrice ?? inv.unitPrice
+        case "cash":
+        default:
+          return inv.cashPrice ?? inv.unitPrice
+      }
+    })()
+
     if (existingIdx >= 0) {
       setItems((prev) =>
         prev.map((item, i) => (i === existingIdx ? { ...item, quantity: newQty } : item)),
       )
     } else {
-      setItems((prev) => [...prev, { itemId: selectedItem, quantity, unitPrice: inv.unitPrice }])
+      setItems((prev) => [...prev, { itemId: selectedItem, quantity, unitPrice: selectedPrice, priceType }])
     }
     setSelectedItem("")
     setQuantity(1)
-    toast.success("Item added")
+    toast.success(`Item added (${priceType})`)
   }
 
   const updateLineQuantity = (index: number, newQty: number) => {
@@ -597,6 +626,16 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
               onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
               className="w-24"
             />
+            <Select value={priceType} onValueChange={(value: any) => setPriceType(value)}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cash">💵 Cash</SelectItem>
+                <SelectItem value="credit">📱 Credit</SelectItem>
+                <SelectItem value="supplier">🏢 Supplier</SelectItem>
+              </SelectContent>
+            </Select>
             <Button ref={addButtonRef} type="button" onClick={addLine} disabled={!selectedItem}>
               <Plus className="w-4 h-4 mr-2" />
               Add

@@ -19,17 +19,27 @@ export async function createInventoryItem(formData: FormData) {
     const name = String(formData.get("name") || "").trim()
     const stock = Number(formData.get("stock") || 0)
     const costPrice = Number(formData.get("cost_price") || 0)
-    const sellingPrice = Number(formData.get("selling_price") || 0)
+    const cashPrice = Number(formData.get("cash_price") || 0)
+    const creditPrice = Number(formData.get("credit_price") || 0)
+    const supplierPrice = Number(formData.get("supplier_price") || 0)
     const minimumStockValue = formData.get("minimum_stock")
     const minimumStock = minimumStockValue && String(minimumStockValue).trim() ? Number(minimumStockValue) : null
     const maximumStockValue = formData.get("maximum_stock")
     const maximumStock = maximumStockValue && String(maximumStockValue).trim() ? Number(maximumStockValue) : null
 
+    // Calculate profit (based on cash_price)
+    const profitValue = costPrice > 0 ? Math.max(0, cashPrice - costPrice) : 0
+    const profitPercentage = costPrice > 0 ? Math.round((profitValue / costPrice) * 100 * 100) / 100 : 0
+
     const payload: any = {
       name,
       stock,
       cost_price: costPrice,
-      selling_price: sellingPrice,
+      cash_price: cashPrice,
+      credit_price: creditPrice,
+      supplier_price: supplierPrice,
+      profit_value: profitValue,
+      profit_percentage: profitPercentage,
     }
 
     if (categoryId) {
@@ -105,16 +115,35 @@ export async function createInventoryItem(formData: FormData) {
     if (!payload.name || payload.name.trim() === "") {
       return { error: "Item name is required" }
     }
-    
+
     if (payload.stock < 0) {
       return { error: "Stock cannot be negative" }
     }
-    
+
     if (payload.cost_price <= 0) {
       return { error: "Cost price must be greater than 0" }
     }
-    if (payload.selling_price <= 0) {
-      return { error: "Selling price must be greater than 0" }
+
+    // Validate multi-tier prices
+    if (payload.cash_price <= 0) {
+      return { error: "Cash amount must be greater than 0" }
+    }
+    if (payload.credit_price <= 0) {
+      return { error: "Credit amount must be greater than 0" }
+    }
+    if (payload.supplier_price <= 0) {
+      return { error: "Supplier amount must be greater than 0" }
+    }
+
+    // Validate that all prices >= cost_price
+    if (payload.cash_price < payload.cost_price) {
+      return { error: `Cash amount (${payload.cash_price}) cannot be less than cost price (${payload.cost_price})` }
+    }
+    if (payload.credit_price < payload.cost_price) {
+      return { error: `Credit amount (${payload.credit_price}) cannot be less than cost price (${payload.cost_price})` }
+    }
+    if (payload.supplier_price < payload.cost_price) {
+      return { error: `Supplier amount (${payload.supplier_price}) cannot be less than cost price (${payload.cost_price})` }
     }
 
     // Validate category_id if provided (must belong to user)
@@ -217,17 +246,27 @@ export async function updateInventoryItem(formData: FormData) {
   const name = String(formData.get("name") || "").trim()
   const stock = Number(formData.get("stock") || 0)
   const costPrice = Number(formData.get("cost_price") || 0)
-  const sellingPrice = Number(formData.get("selling_price") || 0)
+  const cashPrice = Number(formData.get("cash_price") || 0)
+  const creditPrice = Number(formData.get("credit_price") || 0)
+  const supplierPrice = Number(formData.get("supplier_price") || 0)
   const minimumStockValue = formData.get("minimum_stock")
   const minimumStock = minimumStockValue && String(minimumStockValue).trim() ? Number(minimumStockValue) : null
   const maximumStockValue = formData.get("maximum_stock")
   const maximumStock = maximumStockValue && String(maximumStockValue).trim() ? Number(maximumStockValue) : null
 
+  // Calculate profit (based on cash_price)
+  const profitValue = costPrice > 0 ? Math.max(0, cashPrice - costPrice) : 0
+  const profitPercentage = costPrice > 0 ? Math.round((profitValue / costPrice) * 100 * 100) / 100 : 0
+
   const payload: any = {
     name,
     stock,
     cost_price: costPrice,
-    selling_price: sellingPrice,
+    cash_price: cashPrice,
+    credit_price: creditPrice,
+    supplier_price: supplierPrice,
+    profit_value: profitValue,
+    profit_percentage: profitPercentage,
   }
 
   // Always set category_id (null if empty)
@@ -272,8 +311,31 @@ export async function updateInventoryItem(formData: FormData) {
     payload.barcode = null
   }
 
-  if (!id || !payload.name || payload.stock < 0 || payload.cost_price <= 0 || payload.selling_price <= 0) {
-    return { error: "ID, name, stock, cost price, and selling price are required" }
+  // Validate required fields
+  if (!id || !payload.name || payload.stock < 0 || payload.cost_price <= 0) {
+    return { error: "ID, name, stock, and cost price are required" }
+  }
+
+  // Validate multi-tier prices
+  if (payload.cash_price <= 0) {
+    return { error: "Cash amount must be greater than 0" }
+  }
+  if (payload.credit_price <= 0) {
+    return { error: "Credit amount must be greater than 0" }
+  }
+  if (payload.supplier_price <= 0) {
+    return { error: "Supplier amount must be greater than 0" }
+  }
+
+  // Validate that all prices >= cost_price
+  if (payload.cash_price < payload.cost_price) {
+    return { error: `Cash amount (${payload.cash_price}) cannot be less than cost price (${payload.cost_price})` }
+  }
+  if (payload.credit_price < payload.cost_price) {
+    return { error: `Credit amount (${payload.credit_price}) cannot be less than cost price (${payload.cost_price})` }
+  }
+  if (payload.supplier_price < payload.cost_price) {
+    return { error: `Supplier amount (${payload.supplier_price}) cannot be less than cost price (${payload.cost_price})` }
   }
 
   // Get current stock to calculate difference (verify item belongs to user)

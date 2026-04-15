@@ -12,6 +12,7 @@ export interface InvoicePDFData {
   status: string
   items: Array<{ name: string; quantity: number; unitPrice: number; lineTotal: number }>
   currency?: string
+  payments?: Array<{ amount: number }> | null
 }
 
 // Helper function to convert number to words
@@ -285,8 +286,10 @@ export async function generateInvoicePDF(data: InvoicePDFData) {
   doc.text(`Total: ${formatCurrency(data.total)}`, summaryX, currentY)
   currentY += 7
 
-  // Calculate received and balance based on status
-  const received = data.status === "Paid" ? data.total : data.status === "Draft" ? 0 : data.total * 0.7
+  // Calculate received and balance based on actual payments
+  const received = data.payments && data.payments.length > 0
+    ? data.payments.reduce((s, p) => s + Number(p.amount || 0), 0)
+    : (data.status === "Paid" ? data.total : 0)
   const balance = data.total - received
 
   doc.text(`Received: ${formatCurrency(received)}`, summaryX, currentY)

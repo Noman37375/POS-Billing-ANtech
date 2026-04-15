@@ -47,21 +47,28 @@ export function InventoryReportClient({ initialMovements }: InventoryReportClien
         <div className="space-y-4">
           {/* Date Filters */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
+            <div className="space-y-2 min-w-0">
+              <Label htmlFor="startDate" className="truncate block">Start Date</Label>
               <Input
                 id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                className="w-full"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <div className="space-y-2 min-w-0">
+              <Label htmlFor="endDate" className="truncate block">End Date</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full"
+              />
             </div>
-            <div className="space-y-2">
-              <Label>&nbsp;</Label>
+            <div className="space-y-2 min-w-0">
+              <Label className="block">&nbsp;</Label>
               <Button onClick={handleFilter} disabled={isPending} className="w-full">
                 {isPending ? "Filtering..." : "Filter"}
               </Button>

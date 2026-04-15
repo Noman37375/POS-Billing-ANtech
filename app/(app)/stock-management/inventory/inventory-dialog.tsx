@@ -19,7 +19,12 @@ interface InventoryItem {
   name: string
   stock: number
   cost_price: number
-  selling_price: number
+  selling_price?: number // deprecated, keep for migration
+  cash_price?: number
+  credit_price?: number
+  supplier_price?: number
+  profit_percentage?: number
+  profit_value?: number
   category_id?: string | null
   unit_id?: string | null
   barcode?: string | null
@@ -50,6 +55,10 @@ export default function InventoryDialog({ item, trigger }: InventoryDialogProps)
   const [selectedCategory, setSelectedCategory] = useState<string>("__none__")
   const [selectedUnit, setSelectedUnit] = useState<string>("__none__")
   const [barcode, setBarcode] = useState<string>("")
+  const [costPrice, setCostPrice] = useState<string>("")
+  const [cashPrice, setCashPrice] = useState<string>("")
+  const [creditPrice, setCreditPrice] = useState<string>("")
+  const [supplierPrice, setSupplierPrice] = useState<string>("")
   const [mounted, setMounted] = useState(false)
   const wasPendingRef = useRef(false)
   const isEdit = !!item
@@ -101,12 +110,27 @@ export default function InventoryDialog({ item, trigger }: InventoryDialogProps)
         } else {
           formData.append("barcode", "")
         }
+
+        // Add multi-tier pricing fields
+        if (costPrice) {
+          formData.append("cost_price", costPrice)
+        }
+        if (cashPrice) {
+          formData.append("cash_price", cashPrice)
+        }
+        if (creditPrice) {
+          formData.append("credit_price", creditPrice)
+        }
+        if (supplierPrice) {
+          formData.append("supplier_price", supplierPrice)
+        }
+
         const result = isEdit ? await updateInventoryItem(formData) : await createInventoryItem(formData)
-        
+
         if (result?.error) {
           return { error: result.error }
         }
-        
+
         return { error: "" }
       } catch (error) {
         console.error("Form submission error:", error)
@@ -123,15 +147,25 @@ export default function InventoryDialog({ item, trigger }: InventoryDialogProps)
       setSelectedCategory(item?.category_id || "__none__")
       setSelectedUnit(item?.unit_id || "__none__")
       setBarcode(item?.barcode || "")
+
+      // Set price fields (handle both new and old field names for migration)
+      setCostPrice(String(item?.cost_price || ""))
+      setCashPrice(String(item?.cash_price || item?.selling_price || ""))
+      setCreditPrice(String(item?.credit_price || ""))
+      setSupplierPrice(String(item?.supplier_price || ""))
     } else {
       // Reset when dialog closes
       setSelectedCategory("__none__")
       setSelectedUnit("__none__")
       setBarcode("")
+      setCostPrice("")
+      setCashPrice("")
+      setCreditPrice("")
+      setSupplierPrice("")
       setCategories([])
       setUnits([])
     }
-  }, [open, item?.category_id, item?.unit_id, item?.barcode, item?.minimum_stock, item?.maximum_stock])
+  }, [open, item?.category_id, item?.unit_id, item?.barcode, item?.cost_price, item?.cash_price, item?.credit_price, item?.supplier_price, item?.selling_price])
   
   // Track pending state to detect when submission completes
   useEffect(() => {
@@ -192,29 +226,111 @@ export default function InventoryDialog({ item, trigger }: InventoryDialogProps)
               <Label htmlFor="cost_price">Cost Price (PKR)</Label>
               <Input
                 id="cost_price"
-                name="cost_price"
                 type="number"
                 min="0.01"
                 step="0.01"
                 placeholder="1500"
-                defaultValue={item?.cost_price ?? (item as { unit_price?: number })?.unit_price ?? ""}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="selling_price">Selling Price (PKR)</Label>
-              <Input
-                id="selling_price"
-                name="selling_price"
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="2000"
-                defaultValue={item?.selling_price ?? (item as { unit_price?: number })?.unit_price ?? ""}
+                value={costPrice}
+                onChange={(e) => setCostPrice(e.target.value)}
                 required
               />
             </div>
           </div>
+
+          {/* SELLING AMOUNTS BY CUSTOMER TYPE */}
+          <div className="border-t pt-4 mt-4">
+            <h4 className="font-semibold text-sm mb-3 text-foreground">Selling Amounts by Customer Type</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cash_price">Cash Amount (PKR)</Label>
+                <Input
+                  id="cash_price"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="2500"
+                  value={cashPrice}
+                  onChange={(e) => setCashPrice(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">For direct/cash payments</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="credit_price">Credit Amount (PKR)</Label>
+                <Input
+                  id="credit_price"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="2800"
+                  value={creditPrice}
+                  onChange={(e) => setCreditPrice(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">For Udhaar/credit sales</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier_price">Supplier Amount (PKR)</Label>
+                <Input
+                  id="supplier_price"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="2000"
+                  value={supplierPrice}
+                  onChange={(e) => setSupplierPrice(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">For supplier-type customers</p>
+              </div>
+            </div>
+          </div>
+
+          {/* PROFIT TRACKING (AUTO-CALCULATED FOR ALL TYPES) */}
+          <div className="border-t pt-4 mt-4 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+            <h4 className="font-semibold text-sm mb-3 text-foreground">Profit Tracking (Auto-Calculated)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* CASH PROFIT */}
+              <div className="space-y-2 p-2 bg-white dark:bg-slate-800 rounded border border-border">
+                <Label className="text-xs font-semibold">💵 Cash Profit</Label>
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">%:</span> <span className="text-primary font-semibold">{parseFloat(costPrice) > 0 && parseFloat(cashPrice) > 0 ? Math.round(((parseFloat(cashPrice) - parseFloat(costPrice)) / parseFloat(costPrice)) * 100 * 100) / 100 : 0}%</span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">PKR:</span> <span className="text-green-600 font-semibold">PKR {parseFloat(costPrice) > 0 && parseFloat(cashPrice) > 0 ? (parseFloat(cashPrice) - parseFloat(costPrice)).toFixed(2) : "0.00"}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* CREDIT PROFIT */}
+              <div className="space-y-2 p-2 bg-white dark:bg-slate-800 rounded border border-border">
+                <Label className="text-xs font-semibold">📱 Credit Profit</Label>
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">%:</span> <span className="text-primary font-semibold">{parseFloat(costPrice) > 0 && parseFloat(creditPrice) > 0 ? Math.round(((parseFloat(creditPrice) - parseFloat(costPrice)) / parseFloat(costPrice)) * 100 * 100) / 100 : 0}%</span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">PKR:</span> <span className="text-green-600 font-semibold">PKR {parseFloat(costPrice) > 0 && parseFloat(creditPrice) > 0 ? (parseFloat(creditPrice) - parseFloat(costPrice)).toFixed(2) : "0.00"}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* SUPPLIER PROFIT */}
+              <div className="space-y-2 p-2 bg-white dark:bg-slate-800 rounded border border-border">
+                <Label className="text-xs font-semibold">🏢 Supplier Profit</Label>
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">%:</span> <span className="text-primary font-semibold">{parseFloat(costPrice) > 0 && parseFloat(supplierPrice) > 0 ? Math.round(((parseFloat(supplierPrice) - parseFloat(costPrice)) / parseFloat(costPrice)) * 100 * 100) / 100 : 0}%</span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">PKR:</span> <span className="text-green-600 font-semibold">PKR {parseFloat(costPrice) > 0 && parseFloat(supplierPrice) > 0 ? (parseFloat(supplierPrice) - parseFloat(costPrice)).toFixed(2) : "0.00"}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="minimum_stock">Minimum Stock</Label>

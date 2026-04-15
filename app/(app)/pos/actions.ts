@@ -310,12 +310,11 @@ export async function getInvoiceForPrint(invoiceId: string) {
     return { error: lineError.message, data: null }
   }
 
-  // Fetch payments (filter by user_id)
+  // Fetch payments
   const { data: payments = [], error: paymentsError } = await supabase
     .from("payments")
     .select("id, amount, method, reference, created_at")
     .eq("invoice_id", invoiceId)
-    .eq("user_id", user.id)
     .order("created_at", { ascending: true })
 
   if (paymentsError) {

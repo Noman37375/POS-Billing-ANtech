@@ -27,7 +27,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
     const supabase = createClient()
     const { data = [] } = await supabase
       .from("inventory_items")
-      .select("id, name, stock, cost_price, selling_price, category_id, unit_id, barcode, minimum_stock, maximum_stock, created_at, categories:category_id(name), units:unit_id(name, symbol)")
+      .select("id, name, stock, cost_price, selling_price, cash_price, credit_price, supplier_price, profit_percentage, profit_value, category_id, unit_id, barcode, minimum_stock, maximum_stock, created_at, categories:category_id(name), units:unit_id(name, symbol)")
       .eq("user_id", currentUser.effectiveUserId)
       .eq("is_archived", tab === "archived")
       .order("created_at", { ascending: false })
@@ -79,13 +79,14 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[20%]">Item</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[10%]">Stock</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden md:table-cell w-[12%]">Cost Price</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden md:table-cell w-[12%]">Selling Price</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[12%]">Gross Profit</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[10%]">Gross Profit %</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[12%]">Stock Value</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[18%]">Item</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[8%]">Stock</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden md:table-cell w-[10%]">Cost</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[10%]">💵 Cash</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[10%]">📱 Credit</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden xl:table-cell w-[10%]">🏢 Supplier</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden xl:table-cell w-[10%]">Profit %</th>
+                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[10%]">Value</th>
                   <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Actions</th>
                 </tr>
               </thead>
@@ -94,10 +95,11 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                   const stock = Number(item.stock || 0)
                   const minStock = item.minimum_stock !== null ? Number(item.minimum_stock) : null
                   const costPrice = Number((item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0)
-                  const sellingPrice = Number((item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0)
-                  const grossProfit = sellingPrice - costPrice
-                  const grossProfitPercent = sellingPrice > 0 ? Math.round((grossProfit / sellingPrice) * 100) : 0
-                  const stockValue = stock * sellingPrice
+                  const cashPrice = Number((item as { cash_price?: number }).cash_price ?? (item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0)
+                  const creditPrice = Number((item as { credit_price?: number }).credit_price ?? cashPrice)
+                  const supplierPrice = Number((item as { supplier_price?: number }).supplier_price ?? cashPrice)
+                  const profitPercentage = Number((item as { profit_percentage?: number }).profit_percentage ?? 0)
+                  const stockValue = stock * cashPrice
 
                   // Determine stock status
                   let stockStatus: { label: string; variant: "default" | "destructive" | "secondary" | "outline" } = {
@@ -130,7 +132,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                           </div>
                           <div className="flex items-center gap-2 md:hidden mt-1">
                             <span className="text-[10px] text-muted-foreground">
-                              Cost: <CurrencyDisplay amount={costPrice} /> | Sell: <CurrencyDisplay amount={sellingPrice} />
+                              💵 <CurrencyDisplay amount={cashPrice} />
                             </span>
                           </div>
                           <span className="text-[10px] text-muted-foreground sm:hidden">
@@ -148,23 +150,25 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                           )}
                         </div>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden md:table-cell w-[12%]">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden md:table-cell w-[10%]">
                         <span className="truncate block">
                           <CurrencyDisplay amount={costPrice} />
                         </span>
                       </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden md:table-cell w-[12%]">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden lg:table-cell w-[10%]">
                         <span className="truncate block">
-                          <CurrencyDisplay amount={sellingPrice} />
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden lg:table-cell w-[12%]">
-                        <span className="truncate block">
-                          <CurrencyDisplay amount={grossProfit} />
+                          <CurrencyDisplay amount={cashPrice} />
                         </span>
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden lg:table-cell w-[10%]">
-                        <span className="truncate block">{grossProfitPercent}%</span>
+                        <span className="truncate block">
+                          <CurrencyDisplay amount={creditPrice} />
+                        </span>
+                      </td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden xl:table-cell w-[10%]">
+                        <span className="truncate block">
+                          <CurrencyDisplay amount={supplierPrice} />
+                        </span>
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm hidden sm:table-cell w-[12%]">
                         <span className="truncate block">
@@ -181,7 +185,9 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
                                   name: item.name,
                                   stock: Number(item.stock || 0),
                                   cost_price: costPrice,
-                                  selling_price: sellingPrice,
+                                  cash_price: cashPrice,
+                                  credit_price: creditPrice,
+                                  supplier_price: supplierPrice,
                                   category_id: item.category_id,
                                   unit_id: item.unit_id,
                                   barcode: item.barcode,

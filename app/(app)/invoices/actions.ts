@@ -157,6 +157,18 @@ export async function getInvoiceForPDF(invoiceId: string) {
     return { error: lineError.message, data: null }
   }
 
+  // Fetch payments
+  const { data: payments = [], error: paymentsError } = await supabase
+    .from("payments")
+    .select("id, amount, method, reference, created_at")
+    .eq("invoice_id", invoiceId)
+    .order("created_at", { ascending: true })
+
+  if (paymentsError) {
+    // Payments are optional, so we don't fail if there's an error
+    console.warn("Failed to fetch payments:", paymentsError.message)
+  }
+
   // Type-safe party extraction
   const partyData = invoice.parties
     ? (Array.isArray(invoice.parties) ? invoice.parties[0] : invoice.parties)
@@ -183,6 +195,11 @@ export async function getInvoiceForPDF(invoiceId: string) {
     }
   })
 
+  // Format payments
+  const formattedPayments = (payments || []).map((p: any) => ({
+    amount: Number(p.amount || 0),
+  }))
+
   return {
     error: null,
     data: {
@@ -195,6 +212,7 @@ export async function getInvoiceForPDF(invoiceId: string) {
       total: invoice.total || 0,
       status: invoice.status || "Draft",
       items,
+      payments: formattedPayments.length > 0 ? formattedPayments : undefined,
     },
   }
 }

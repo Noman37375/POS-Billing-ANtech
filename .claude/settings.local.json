@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(wc -l \"/c/Users/user/Documents/POS-Billing/app/\\(app\\)/pos/actions.ts\")",
+      "Bash(ls -la /c/Users/user/Documents/POS-Billing/app/\\\\\\(app\\\\\\)/pos/)"
     ]
   }
 }

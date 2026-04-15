@@ -178,7 +178,6 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${esc(payMethod)} Paid:</td>
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(cashPaid)}</td>
       </tr>` : ""}
-      ${isPending ? `
       <tr>
         <td colspan="3"><div style="border-top:1px dashed #000;margin:1mm 0;"></div></td>
       </tr>
@@ -186,7 +185,7 @@ function buildCopy(data: InvoiceForPrint, copyLabel: "Customer Copy" | "Merchant
         <td></td>
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">Remaining Balance:</td>
         <td style="text-align:right;padding:0.3mm 0.5mm;font-weight:700;font-size:9.5px;color:#000;">${fmtNum(remainingBalance)}</td>
-      </tr>` : ""}
+      </tr>
     </table>
 
     <!-- DASHED SEPARATOR -->
