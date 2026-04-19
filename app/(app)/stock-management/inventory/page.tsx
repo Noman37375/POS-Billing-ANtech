@@ -1,15 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory } from "@/lib/supabase/mock"
 import InventoryDialog from "./inventory-dialog"
-import { Button } from "@/components/ui/button"
-import { Pencil } from "lucide-react"
-import { DeleteInventoryButton } from "@/components/delete-inventory-button"
-import { RestoreInventoryButton } from "@/components/restore-inventory-button"
-import { CurrencyDisplay } from "@/components/currency-display"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { InventoryPageClient } from "./inventory-page-client"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -70,158 +64,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
         </Link>
       </div>
 
-      <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="text-base sm:text-lg">{tab === "archived" ? "Archived Items" : "Items"}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[18%]">Item</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[8%]">Stock</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden md:table-cell w-[10%]">Cost</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[10%]">💵 Cash</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden lg:table-cell w-[10%]">📱 Credit</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden xl:table-cell w-[10%]">🏢 Supplier</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden xl:table-cell w-[10%]">Profit %</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm hidden sm:table-cell w-[10%]">Value</th>
-                  <th className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm w-[12%]">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="[&>tr:not(:last-child)]:border-b">
-                {(items || []).map((item) => {
-                  const stock = Number(item.stock || 0)
-                  const minStock = item.minimum_stock !== null ? Number(item.minimum_stock) : null
-                  const costPrice = Number((item as { cost_price?: number }).cost_price ?? (item as { unit_price?: number }).unit_price ?? 0)
-                  const cashPrice = Number((item as { cash_price?: number }).cash_price ?? (item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0)
-                  const creditPrice = Number((item as { credit_price?: number }).credit_price ?? cashPrice)
-                  const supplierPrice = Number((item as { supplier_price?: number }).supplier_price ?? cashPrice)
-                  const profitPercentage = Number((item as { profit_percentage?: number }).profit_percentage ?? 0)
-                  const stockValue = stock * cashPrice
-
-                  // Determine stock status
-                  let stockStatus: { label: string; variant: "default" | "destructive" | "secondary" | "outline" } = {
-                    label: "In Stock",
-                    variant: "default"
-                  }
-
-                  if (stock === 0) {
-                    stockStatus = { label: "Out of Stock", variant: "destructive" }
-                  } else if (minStock !== null && stock < minStock) {
-                    stockStatus = { label: "Low Stock", variant: "destructive" }
-                  } else {
-                    stockStatus = { label: "In Stock", variant: "default" }
-                  }
-
-                  return (
-                    <tr key={item.id} className="hover:bg-muted/50">
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 font-medium text-foreground text-xs sm:text-sm w-[20%]">
-                        <div className="flex flex-col min-w-0 overflow-hidden">
-                          <span className="truncate break-words">{item.name}</span>
-                          <div className="flex items-center gap-2 mt-1">
-                            {item.categories && (
-                              <Badge variant="outline" className="text-[10px]">
-                                {(item.categories as { name: string }).name || (Array.isArray(item.categories) && item.categories[0]?.name) || ""}
-                              </Badge>
-                            )}
-                            {item.barcode && (
-                              <span className="text-[10px] text-muted-foreground">BC: {item.barcode}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 md:hidden mt-1">
-                            <span className="text-[10px] text-muted-foreground">
-                              💵 <CurrencyDisplay amount={cashPrice} />
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground sm:hidden">
-                            Value: <CurrencyDisplay amount={stockValue} />
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[10%]">
-                        <div className="flex items-center gap-2">
-                          <span className="whitespace-nowrap">{item.stock}</span>
-                          {tab === "active" && stockStatus.label !== "In Stock" && (
-                            <Badge variant={stockStatus.variant} className="text-[10px] whitespace-nowrap">
-                              {stockStatus.label}
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden md:table-cell w-[10%]">
-                        <span className="truncate block">
-                          <CurrencyDisplay amount={costPrice} />
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden lg:table-cell w-[10%]">
-                        <span className="truncate block">
-                          <CurrencyDisplay amount={cashPrice} />
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden lg:table-cell w-[10%]">
-                        <span className="truncate block">
-                          <CurrencyDisplay amount={creditPrice} />
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm hidden xl:table-cell w-[10%]">
-                        <span className="truncate block">
-                          <CurrencyDisplay amount={supplierPrice} />
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm hidden sm:table-cell w-[12%]">
-                        <span className="truncate block">
-                          <CurrencyDisplay amount={stockValue} />
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 w-[12%]">
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          {tab === "active" ? (
-                            <>
-                              <InventoryDialog
-                                item={{
-                                  id: item.id,
-                                  name: item.name,
-                                  stock: Number(item.stock || 0),
-                                  cost_price: costPrice,
-                                  cash_price: cashPrice,
-                                  credit_price: creditPrice,
-                                  supplier_price: supplierPrice,
-                                  category_id: item.category_id,
-                                  unit_id: item.unit_id,
-                                  barcode: item.barcode,
-                                  minimum_stock: item.minimum_stock !== null ? Number(item.minimum_stock) : null,
-                                  maximum_stock: item.maximum_stock !== null ? Number(item.maximum_stock) : null,
-                                }}
-                                trigger={
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
-                                    <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
-                                  </Button>
-                                }
-                              />
-                              <DeleteInventoryButton itemId={item.id} itemName={item.name} />
-                            </>
-                          ) : (
-                            <RestoreInventoryButton itemId={item.id} itemName={item.name} />
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-                {(!items || items.length === 0) && (
-                  <tr>
-                    <td colSpan={8} className="py-6 text-center text-muted-foreground text-xs sm:text-sm px-4">
-                      {tab === "archived" ? "No archived items." : "No items yet. Add your first service or SKU."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <InventoryPageClient items={items as any} tab={tab} />
     </div>
   )
 }

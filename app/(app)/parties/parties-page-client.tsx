@@ -34,17 +34,22 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
   const [typeFilter, setTypeFilter] = useState<"all" | "Customer" | "Vendor">(
     (searchParams.get("type") as "all" | "Customer" | "Vendor") || "all"
   )
+  const [balanceFilter, setBalanceFilter] = useState<"all" | "receivable" | "payable">("all")
 
   // Filter parties
   const filteredParties = useMemo(() => {
     let filtered = parties
 
-    // Filter by type
     if (typeFilter !== "all") {
       filtered = filtered.filter((p) => p.type === typeFilter)
     }
 
-    // Filter by search query
+    if (balanceFilter === "receivable") {
+      filtered = filtered.filter((p) => (balances[p.id] ?? 0) > 0)
+    } else if (balanceFilter === "payable") {
+      filtered = filtered.filter((p) => (balances[p.id] ?? 0) < 0)
+    }
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
@@ -53,7 +58,7 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
     }
 
     return filtered
-  }, [parties, typeFilter, searchQuery])
+  }, [parties, typeFilter, balanceFilter, searchQuery, balances])
 
   const handleTypeChange = (value: string) => {
     const newType = value as "all" | "Customer" | "Vendor"
@@ -84,7 +89,7 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <CardTitle className="text-base sm:text-lg">All parties</CardTitle>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-wrap">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -92,7 +97,7 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
                 placeholder="Search by name or phone..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="pl-8 w-full sm:w-64"
+                className="pl-8 w-full sm:w-56"
               />
             </div>
             {/* Type Filter */}
@@ -103,6 +108,22 @@ export function PartiesPageClient({ parties, balances }: PartiesPageClientProps)
                 <TabsTrigger value="Vendor">Vendors</TabsTrigger>
               </TabsList>
             </Tabs>
+            {/* Balance Filter */}
+            <div className="flex items-center gap-1">
+              {(["all", "receivable", "payable"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setBalanceFilter(f)}
+                  className={`px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ${
+                    balanceFilter === f
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  {f === "all" ? "All Balance" : f === "receivable" ? "Receivable" : "Payable"}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </CardHeader>
