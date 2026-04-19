@@ -49,6 +49,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const [discountMode, setDiscountMode] = useState<"percent" | "pkr">("percent")
   const [showMargin, setShowMargin] = useState(false)
   const isFirstRender = useRef(true)
+  const belowCostItems = useRef<Set<string>>(new Set())
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
   const [lastInvoiceId, setLastInvoiceId] = useState<string | null>(null)
@@ -335,6 +336,26 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
     const balance = saleMode === "credit" ? Math.max(0, total - payingNow) : 0
     return { detailed, subtotal, totalItemDiscount, tax, discount: globalDisc, total, balance }
   }, [inventory, items, taxRate, discountAmount, saleMode, payingNow, discountMode])
+
+  // Warn when any item transitions into below-cost territory
+  useEffect(() => {
+    const prev = belowCostItems.current
+    const next = new Set<string>()
+    computed.detailed.forEach((line) => {
+      if (line.belowCost) {
+        next.add(line.itemId)
+        if (!prev.has(line.itemId)) {
+          const effectivePrice = line.quantity > 0 ? line.amount / line.quantity : 0
+          const lossPerUnit = line.costPrice - effectivePrice
+          toast.warning(`Nuqsan! Selling below cost — ${line.name}`, {
+            description: `Effective price: Rs. ${effectivePrice.toFixed(0)} | Cost price: Rs. ${line.costPrice.toFixed(0)} | Loss per unit: Rs. ${lossPerUnit.toFixed(0)}`,
+            duration: 6000,
+          })
+        }
+      }
+    })
+    belowCostItems.current = next
+  }, [computed.detailed])
 
   const addLine = () => {
     if (!selectedItem || quantity <= 0) {
