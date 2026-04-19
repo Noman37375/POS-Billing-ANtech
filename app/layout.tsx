@@ -1,6 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
+
+const isVercel = process.env.VERCEL === "1"
 import { Plus_Jakarta_Sans, IBM_Plex_Mono, Lora } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { CurrencyProvider } from "@/contexts/currency-context"
@@ -39,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CurrencyProvider>
             {children}
             <CookieConsent />
-            <Analytics />
+            {isVercel && <Analytics />}
           </CurrencyProvider>
         </ThemeProvider>
       </body>
