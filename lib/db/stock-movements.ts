@@ -12,7 +12,42 @@ export interface StockMovementInput {
   referenceType?: StockReferenceType
   referenceId?: string
   notes?: string
-  userId: string // Required: user_id for multi-tenant isolation
+  userId: string
+}
+
+// Check if all items have sufficient stock before creating invoice
+// Returns { ok: true } or { ok: false, itemName: string, available: number, requested: number }
+export async function checkStockAvailability(
+  items: Array<{ itemId: string; quantity: number }>,
+  userId: string
+): Promise<{ ok: true } | { ok: false; itemName: string; available: number; requested: number }> {
+  const supabase = createClient()
+  const itemIds = items.map((i) => i.itemId)
+
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .select("id, name, stock")
+    .in("id", itemIds)
+    .eq("user_id", userId)
+
+  if (error || !data) {
+    return { ok: false, itemName: "Unknown", available: 0, requested: 0 }
+  }
+
+  for (const item of items) {
+    const inv = data.find((d) => d.id === item.itemId)
+    const available = Number(inv?.stock ?? 0)
+    if (available < item.quantity) {
+      return {
+        ok: false,
+        itemName: (inv as { name?: string })?.name ?? "Unknown item",
+        available,
+        requested: item.quantity,
+      }
+    }
+  }
+
+  return { ok: true }
 }
 
 // Record a stock movement

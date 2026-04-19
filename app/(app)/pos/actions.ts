@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { recordStockMovement } from "@/lib/db/stock-movements"
+import { recordStockMovement, checkStockAvailability } from "@/lib/db/stock-movements"
 import { getSessionOrRedirect } from "@/lib/auth"
 import type { CreatePOSSaleInput, Sale, PaymentMethod, InvoiceForPrint } from "@/lib/types/pos"
 
@@ -45,6 +45,15 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
 
   if (!invItems || invItems.length !== itemIds.length) {
     return { error: "One or more items not found", data: null }
+  }
+
+  // Check stock availability BEFORE creating any DB records
+  const stockCheck = await checkStockAvailability(payload.items, currentUser.effectiveUserId)
+  if (!stockCheck.ok) {
+    return {
+      error: `Insufficient stock for "${stockCheck.itemName}". Available: ${stockCheck.available}, Requested: ${stockCheck.requested}`,
+      data: null,
+    }
   }
 
   const costPriceByItemId = new Map(invItems.map((row) => [row.id, Number((row as { cost_price?: number }).cost_price ?? 0)]))
@@ -141,6 +150,8 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
       }),
     )
   } catch (error) {
+    // Rollback: delete the invoice (cascades to line items and payments)
+    await supabase.from("sales_invoices").delete().eq("id", invoice.id).eq("user_id", currentUser.effectiveUserId)
     return { error: error instanceof Error ? error.message : "Failed to process inventory", data: null }
   }
 
