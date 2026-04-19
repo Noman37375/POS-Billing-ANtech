@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
-import { SettingsDialog } from "@/components/settings-dialog"
 
 interface HeaderProps {
   businessName: string
