@@ -399,6 +399,24 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
     setItems((prev) => prev.map((item, i) => i === index ? { ...item, discount: Math.max(0, value) } : item))
   }
 
+  const applyGlobalDiscount = (totalPKR: number) => {
+    if (totalPKR <= 0 || items.length === 0) return
+    const totalGross = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+    if (totalGross <= 0) return
+    setItems((prev) =>
+      prev.map((item) => {
+        const itemGross = item.unitPrice * item.quantity
+        const proportionalPKR = totalPKR * (itemGross / totalGross)
+        if (discountMode === "percent") {
+          const pct = itemGross > 0 ? (proportionalPKR / itemGross) * 100 : 0
+          return { ...item, discount: Math.round(pct * 100) / 100 }
+        }
+        return { ...item, discount: Math.round(proportionalPKR * 100) / 100 }
+      })
+    )
+    setDiscountAmount(0)
+  }
+
   const removeLine = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index))
   }
@@ -754,22 +772,34 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                       />
                     </td>
                     <td className="px-2 py-1">
-                      <div className="relative w-24">
-                        <Input
-                          type="number"
-                          min={0}
-                          step={discountMode === "percent" ? 1 : 0.01}
-                          max={discountMode === "percent" ? 100 : undefined}
-                          value={line.discount || ""}
-                          onChange={(e) => updateLineDiscount(idx, Number(e.target.value) || 0)}
-                          placeholder="0"
-                          className={`w-24 h-8 text-sm pr-6 ${line.belowCost ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                        />
-                        {line.belowCost && (
-                          <span
-                            title={`Below cost price! (Cost: Rs. ${line.costPrice})`}
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-red-500 text-xs cursor-help"
-                          >⚠</span>
+                      <div>
+                        <div className="relative w-24">
+                          <Input
+                            type="number"
+                            min={0}
+                            step={discountMode === "percent" ? 1 : 0.01}
+                            max={discountMode === "percent" ? 100 : undefined}
+                            value={line.discount || ""}
+                            onChange={(e) => updateLineDiscount(idx, Number(e.target.value) || 0)}
+                            placeholder="0"
+                            className={`w-24 h-8 text-sm pr-6 ${line.belowCost ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                          />
+                          {line.belowCost && (
+                            <span
+                              title={`Below cost price! (Cost: Rs. ${line.costPrice})`}
+                              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-red-500 text-xs cursor-help"
+                            >⚠</span>
+                          )}
+                        </div>
+                        {discountMode === "percent" && line.discountAmt > 0 && (
+                          <div className="text-[10px] text-muted-foreground mt-0.5 w-24 text-center">
+                            -{formatCurrency(line.discountAmt)}
+                          </div>
+                        )}
+                        {discountMode === "pkr" && line.discount > 0 && line.unitPrice * line.quantity > 0 && (
+                          <div className="text-[10px] text-muted-foreground mt-0.5 w-24 text-center">
+                            {((line.discountAmt / (line.unitPrice * line.quantity)) * 100).toFixed(1)}%
+                          </div>
                         )}
                       </div>
                     </td>
@@ -820,16 +850,28 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 </div>
               )}
               <div className="flex justify-between text-sm items-center gap-2">
-                <span className="shrink-0">Discount</span>
-                <Input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={discountAmount || ""}
-                  onChange={(e) => setDiscountAmount(Math.max(0, Number(e.target.value) || 0))}
-                  placeholder="0"
-                  className="h-7 w-28 text-sm text-right"
-                />
+                <span className="shrink-0">Bill Discount (PKR)</span>
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={discountAmount || ""}
+                    onChange={(e) => setDiscountAmount(Math.max(0, Number(e.target.value) || 0))}
+                    onKeyDown={(e) => { if (e.key === "Enter" && discountAmount > 0) applyGlobalDiscount(discountAmount) }}
+                    placeholder="0"
+                    className="h-7 w-24 text-sm text-right"
+                  />
+                  {discountAmount > 0 && items.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => applyGlobalDiscount(discountAmount)}
+                      className="h-7 px-2 rounded bg-primary text-primary-foreground text-xs font-medium whitespace-nowrap"
+                    >
+                      Split →
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between font-semibold text-base pt-2 border-t">
                 <span>Total</span>
