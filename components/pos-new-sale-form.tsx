@@ -14,7 +14,8 @@ import { toast } from "sonner"
 import { useCurrency } from "@/contexts/currency-context"
 import type { PaymentMethod } from "@/lib/types/pos"
 type PartyOption = { id: string; name: string; address?: string | null }
-type InventoryOption = { id: string; name: string; stock: number; unitPrice: number; cashPrice?: number; creditPrice?: number; supplierPrice?: number }
+type InventoryOption = { id: string; name: string; stock: number; unitPrice: number; cashPrice?: number; creditPrice?: number; supplierPrice?: number; costPrice?: number }
+type CartItem = { itemId: string; quantity: number; unitPrice: number; priceType?: "cash" | "credit" | "supplier"; discount: number }
 
 interface POSNewSaleFormProps {
   parties: PartyOption[]
@@ -22,6 +23,7 @@ interface POSNewSaleFormProps {
   initialItemId?: string | null
   autoAdd?: boolean
   walkInPartyId?: string
+  isOwner?: boolean
   initialSale?: {
     invoiceId: string
     partyId: string
@@ -30,9 +32,11 @@ interface POSNewSaleFormProps {
   }
 }
 
-export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, initialSale, walkInPartyId }: POSNewSaleFormProps) {
+export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, initialSale, walkInPartyId, isOwner }: POSNewSaleFormProps) {
   const [partyId, setPartyId] = useState(initialSale?.partyId ?? "")
-  const [items, setItems] = useState<Array<{ itemId: string; quantity: number; unitPrice: number; priceType?: "cash" | "credit" | "supplier" }>>(initialSale?.items ?? [])
+  const [items, setItems] = useState<CartItem[]>(
+    initialSale?.items.map((i) => ({ ...i, discount: 0 })) ?? []
+  )
   const [taxRate, setTaxRate] = useState(initialSale?.taxRate ?? 0)
   const editInvoiceId = initialSale?.invoiceId ?? null
   const [selectedItem, setSelectedItem] = useState("")
@@ -42,6 +46,9 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const [saleMode, setSaleMode] = useState<"sale" | "credit" | "draft">("sale")
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash")
   const [priceType, setPriceType] = useState<"cash" | "credit" | "supplier">("cash")
+  const [discountMode, setDiscountMode] = useState<"percent" | "pkr">("percent")
+  const [showMargin, setShowMargin] = useState(false)
+  const isFirstRender = useRef(true)
   const [pending, startTransition] = useTransition()
   const [printPending, setPrintPending] = useState(false)
   const [lastInvoiceId, setLastInvoiceId] = useState<string | null>(null)
@@ -195,7 +202,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
             i === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
           )
         }
-        return [...prev, { itemId, quantity: 1, unitPrice: selectedPrice, priceType }]
+        return [...prev, { itemId, quantity: 1, unitPrice: selectedPrice, priceType, discount: 0 }]
       })
       toast.success(`Added 1x ${inv.name}`)
     },
@@ -227,6 +234,24 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
       router.replace("/pos", { scroll: false })
     }
   }, [initialItemId, inventory, router, autoAdd, addItemById])
+
+  // When price tier changes → update ALL items in cart to new tier price
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    if (items.length === 0) return
+    setItems((prev) =>
+      prev.map((item) => {
+        const inv = inventory.find((i) => i.id === item.itemId)
+        if (!inv) return item
+        const newPrice =
+          priceType === "credit" ? (inv.creditPrice || inv.unitPrice)
+          : priceType === "supplier" ? (inv.supplierPrice || inv.unitPrice)
+          : (inv.cashPrice || inv.unitPrice)
+        return { ...item, unitPrice: newPrice, priceType }
+      })
+    )
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priceType])
 
   // Handle F7 key to print invoice, F3 to focus item field, Shift+Arrows for navigation
   useEffect(() => {
@@ -287,20 +312,29 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const computed = useMemo(() => {
     const detailed = items.map((line) => {
       const inv = inventory.find((i) => i.id === line.itemId)
-      return {
-        ...line,
-        name: inv?.name ?? "",
-        stock: inv?.stock ?? 0,
-        amount: line.unitPrice * line.quantity,
-      }
+      const grossAmt = line.unitPrice * line.quantity
+      const discVal = line.discount ?? 0
+      const discountAmt = discountMode === "percent"
+        ? grossAmt * (discVal / 100)
+        : Math.min(discVal, grossAmt)
+      const amount = Math.max(0, grossAmt - discountAmt)
+      const costPrice = inv?.costPrice ?? 0
+      const discPerUnit = line.quantity > 0 ? discountAmt / line.quantity : 0
+      const belowCost = costPrice > 0 && (line.unitPrice - discPerUnit) < costPrice
+      const margin = costPrice > 0 && amount > 0
+        ? ((amount - costPrice * line.quantity) / amount) * 100
+        : null
+      return { ...line, name: inv?.name ?? "", stock: inv?.stock ?? 0, costPrice, discountAmt, amount, belowCost, margin }
     })
-    const subtotal = detailed.reduce((sum, line) => sum + line.amount, 0)
-    const tax = taxRate > 0 ? subtotal * (taxRate / 100) : 0
-    const discount = discountAmount > 0 ? Math.min(discountAmount, subtotal + tax) : 0
-    const total = subtotal + tax - discount
+    const subtotal = detailed.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0)
+    const totalItemDiscount = detailed.reduce((sum, l) => sum + l.discountAmt, 0)
+    const afterItemDiscount = subtotal - totalItemDiscount
+    const tax = taxRate > 0 ? afterItemDiscount * (taxRate / 100) : 0
+    const globalDisc = discountAmount > 0 ? Math.min(discountAmount, afterItemDiscount + tax) : 0
+    const total = afterItemDiscount + tax - globalDisc
     const balance = saleMode === "credit" ? Math.max(0, total - payingNow) : 0
-    return { detailed, subtotal, tax, discount, total, balance }
-  }, [inventory, items, taxRate, discountAmount, saleMode, payingNow])
+    return { detailed, subtotal, totalItemDiscount, tax, discount: globalDisc, total, balance }
+  }, [inventory, items, taxRate, discountAmount, saleMode, payingNow, discountMode])
 
   const addLine = () => {
     if (!selectedItem || quantity <= 0) {
@@ -334,7 +368,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         prev.map((item, i) => (i === existingIdx ? { ...item, quantity: newQty } : item)),
       )
     } else {
-      setItems((prev) => [...prev, { itemId: selectedItem, quantity, unitPrice: selectedPrice, priceType }])
+      setItems((prev) => [...prev, { itemId: selectedItem, quantity, unitPrice: selectedPrice, priceType, discount: 0 }])
     }
     setSelectedItem("")
     setQuantity(1)
@@ -361,6 +395,10 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
     )
   }
 
+  const updateLineDiscount = (index: number, value: number) => {
+    setItems((prev) => prev.map((item, i) => i === index ? { ...item, discount: Math.max(0, value) } : item))
+  }
+
   const removeLine = (index: number) => {
     setItems((prev) => prev.filter((_, i) => i !== index))
   }
@@ -371,10 +409,11 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
       return
     }
     startTransition(async () => {
+      // Use net unit price (after per-item discount) so DB totals are correct
       const lineItems = computed.detailed.map((line) => ({
         itemId: line.itemId,
         quantity: line.quantity,
-        unitPrice: line.unitPrice,
+        unitPrice: line.quantity > 0 ? line.amount / line.quantity : line.unitPrice,
       }))
 
       // Edit mode — update existing Draft (with optional status change)
@@ -468,7 +507,45 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   return (
     <Card className="mt-4">
       <CardHeader className="p-4 sm:p-6">
-        <CardTitle className="text-base sm:text-lg">Point of Sale</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="text-base sm:text-lg">Point of Sale</CardTitle>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            {/* Price tier selector */}
+            <Select value={priceType} onValueChange={(v: any) => setPriceType(v)}>
+              <SelectTrigger className="h-8 w-32 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cash">💵 Cash</SelectItem>
+                <SelectItem value="credit">📱 Credit</SelectItem>
+                <SelectItem value="supplier">🏢 Supplier</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* Discount mode toggle */}
+            <div className="flex items-center gap-1 border rounded-md overflow-hidden h-8">
+              <button
+                type="button"
+                onClick={() => setDiscountMode("percent")}
+                className={`px-3 h-full text-xs font-medium transition-colors ${discountMode === "percent" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              >%</button>
+              <button
+                type="button"
+                onClick={() => setDiscountMode("pkr")}
+                className={`px-3 h-full text-xs font-medium transition-colors ${discountMode === "pkr" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              >PKR</button>
+            </div>
+            {/* Show margin — owner only */}
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setShowMargin((v) => !v)}
+                className={`flex items-center gap-1.5 px-3 h-8 rounded-md border text-xs font-medium transition-colors ${showMargin ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+              >
+                📊 Margin
+              </button>
+            )}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 p-4 sm:p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -626,16 +703,6 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
               onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
               className="w-24"
             />
-            <Select value={priceType} onValueChange={(value: any) => setPriceType(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">💵 Cash</SelectItem>
-                <SelectItem value="credit">📱 Credit</SelectItem>
-                <SelectItem value="supplier">🏢 Supplier</SelectItem>
-              </SelectContent>
-            </Select>
             <Button ref={addButtonRef} type="button" onClick={addLine} disabled={!selectedItem}>
               <Plus className="w-4 h-4 mr-2" />
               Add
@@ -650,15 +717,22 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 <tr className="bg-muted border-b">
                   <th className="px-4 py-2 text-left">Item</th>
                   <th className="px-4 py-2 text-left w-24">Qty</th>
-                  <th className="px-4 py-2 text-left w-32">Selling Price</th>
+                  <th className="px-4 py-2 text-left w-32">Price</th>
+                  <th className="px-4 py-2 text-left w-28">Disc ({discountMode === "percent" ? "%" : "PKR"})</th>
                   <th className="px-4 py-2 text-left">Amount</th>
+                  {showMargin && <th className="px-4 py-2 text-left w-20">Margin</th>}
                   <th className="px-4 py-2 w-10" />
                 </tr>
               </thead>
               <tbody>
                 {computed.detailed.map((line, idx) => (
                   <tr key={`${line.itemId}-${idx}`} className="border-b">
-                    <td className="px-4 py-2">{line.name}</td>
+                    <td className="px-4 py-2">
+                      <div>{line.name}</div>
+                      {line.priceType && (
+                        <span className="text-[10px] text-muted-foreground capitalize">{line.priceType}</span>
+                      )}
+                    </td>
                     <td className="px-2 py-1">
                       <Input
                         type="number"
@@ -679,7 +753,41 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                         className="w-28 h-8 text-sm"
                       />
                     </td>
-                    <td className="px-4 py-2 font-medium">{formatCurrency(line.amount)}</td>
+                    <td className="px-2 py-1">
+                      <div className="relative w-24">
+                        <Input
+                          type="number"
+                          min={0}
+                          step={discountMode === "percent" ? 1 : 0.01}
+                          max={discountMode === "percent" ? 100 : undefined}
+                          value={line.discount || ""}
+                          onChange={(e) => updateLineDiscount(idx, Number(e.target.value) || 0)}
+                          placeholder="0"
+                          className={`w-24 h-8 text-sm pr-6 ${line.belowCost ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                        />
+                        {line.belowCost && (
+                          <span
+                            title={`Below cost price! (Cost: Rs. ${line.costPrice})`}
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-red-500 text-xs cursor-help"
+                          >⚠</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 font-medium">
+                      <div>{formatCurrency(line.amount)}</div>
+                      {line.discountAmt > 0 && (
+                        <div className="text-[10px] text-green-600">-{formatCurrency(line.discountAmt)}</div>
+                      )}
+                    </td>
+                    {showMargin && (
+                      <td className={`px-4 py-2 text-xs font-semibold ${
+                        line.margin === null ? "text-muted-foreground"
+                        : line.margin >= 0 ? "text-green-600"
+                        : "text-red-600"
+                      }`}>
+                        {line.margin === null ? "—" : `${line.margin > 0 ? "+" : ""}${line.margin.toFixed(0)}%`}
+                      </td>
+                    )}
                     <td className="px-4 py-2">
                       <Button variant="ghost" size="icon" onClick={() => removeLine(idx)}>
                         <Trash2 className="w-4 h-4 text-destructive" />
@@ -699,6 +807,12 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 <span>Subtotal</span>
                 <span className="font-medium">{formatCurrency(computed.subtotal)}</span>
               </div>
+              {computed.totalItemDiscount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Item Discounts</span>
+                  <span>-{formatCurrency(computed.totalItemDiscount)}</span>
+                </div>
+              )}
               {taxRate > 0 && (
                 <div className="flex justify-between text-sm">
                   <span>Tax ({taxRate}%)</span>

@@ -14,6 +14,7 @@
 | 2 | [Dashboard](./02-dashboard.md) | ✅ 60% | 3 | ❌ | 🔴 45% |
 | 3 | [Stock Management](./03-stock-management.md) | ✅ 75% | 4 | ❌ | 🟡 65% |
 | 4 | [POS / Sales](./04-pos-sales.md) | ✅ 70% | 5 | ❌ | 🟡 60% |
+| 4b | [POS Sale Form Improvements](./04b-pos-sale-form-improvements.md) | 📋 Planned | — | ❌ | — |
 | 5 | [Invoices (Manual)](./05-invoices.md) | ✅ 70% | 3 | ❌ | 🟡 60% |
 | 6 | [Purchase Management](./06-purchase-management.md) | ✅ 65% | 3 | ❌ | 🟡 55% |
 | 7 | [Returns & Refunds](./07-returns-refunds.md) | ✅ 60% | 5 | ❌ | 🔴 40% |

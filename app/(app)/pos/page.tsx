@@ -37,7 +37,7 @@ export default async function POSNewSalePage({
   const supabase = createClient()
   const [{ data: parties = [] }, { data: inventory = [] }, walkIn] = await Promise.all([
     supabase.from("parties").select("id, name, address").eq("type", "Customer").eq("user_id", currentUser.effectiveUserId).order("name"),
-    supabase.from("inventory_items").select("id, name, stock, selling_price, cash_price, credit_price, supplier_price").eq("user_id", currentUser.effectiveUserId).order("name"),
+    supabase.from("inventory_items").select("id, name, stock, selling_price, cash_price, credit_price, supplier_price, cost_price").eq("user_id", currentUser.effectiveUserId).order("name"),
     getOrCreateWalkInParty(),
   ])
 
@@ -45,10 +45,11 @@ export default async function POSNewSalePage({
     id: item.id,
     name: (item as { name?: string }).name || "",
     stock: Number((item as { stock?: number }).stock ?? 0),
-    unitPrice: Number((item as { cash_price?: number }).cash_price ?? (item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0),
-    cashPrice: Number((item as { cash_price?: number }).cash_price ?? (item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0),
-    creditPrice: Number((item as { credit_price?: number }).credit_price ?? (item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0),
-    supplierPrice: Number((item as { supplier_price?: number }).supplier_price ?? (item as { selling_price?: number }).selling_price ?? (item as { unit_price?: number }).unit_price ?? 0),
+    unitPrice: Number((item as { cash_price?: number }).cash_price ?? (item as { selling_price?: number }).selling_price ?? 0),
+    cashPrice: Number((item as { cash_price?: number }).cash_price ?? (item as { selling_price?: number }).selling_price ?? 0),
+    creditPrice: Number((item as { credit_price?: number }).credit_price ?? (item as { selling_price?: number }).selling_price ?? 0),
+    supplierPrice: Number((item as { supplier_price?: number }).supplier_price ?? (item as { selling_price?: number }).selling_price ?? 0),
+    costPrice: Number((item as { cost_price?: number }).cost_price ?? 0),
   }))
 
   // Load draft for editing if editDraft param is set
@@ -69,6 +70,7 @@ export default async function POSNewSalePage({
         autoAdd={autoAdd}
         initialSale={initialSale}
         walkInPartyId={walkIn.id}
+        isOwner={currentUser.role === "pos_user"}
       />
     </div>
   )
