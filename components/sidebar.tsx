@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo, useState, useEffect } from "react"
-import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp, HardDriveDownload } from "lucide-react"
+import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp, HardDriveDownload, BookCheck } from "lucide-react"
 import Image from "next/image"
 import { PosUser, ModulePrivilege } from "@/lib/types/user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -30,6 +30,7 @@ export function Sidebar({ user }: SidebarProps) {
   const [accountsManagementOpen, setAccountsManagementOpen] = useState(false)
   const [returnsOpen, setReturnsOpen] = useState(false)
   const [employeeManagementOpen, setEmployeeManagementOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const pathname = usePathname()
 
   // Check if any stock management sub-module is active
@@ -81,6 +82,13 @@ export function Sidebar({ user }: SidebarProps) {
     }
   }, [pathname])
 
+  // Check if on settings sub-modules
+  useEffect(() => {
+    if (pathname.startsWith("/users") || pathname.startsWith("/backup") || pathname.startsWith("/settings")) {
+      setSettingsOpen(true)
+    }
+  }, [pathname])
+
   // Define all possible navigation items with their required privileges
   const allNavItems = useMemo(
     (): NavItem[] => [
@@ -118,10 +126,10 @@ export function Sidebar({ user }: SidebarProps) {
           { href: "/pos", label: "New Sale", icon: ShoppingCart, privilege: "pos" as ModulePrivilege },
           { href: "/pos/sales", label: "Sales", icon: Receipt, privilege: "pos" as ModulePrivilege },
           { href: "/pos/payments", label: "Customer Payments", icon: CreditCard, privilege: "pos" as ModulePrivilege },
-          { href: "/pos/settings", label: "Settings", icon: Settings, privilege: "pos" as ModulePrivilege },
           { href: "/pos/reports", label: "Gross Profit", icon: TrendingUp, privilege: "pos" as ModulePrivilege },
         ],
       },
+      { href: "/cash-book", label: "Cash Book", icon: BookCheck, privilege: "accounts" as ModulePrivilege },
       {
         href: "/purchase-management",
         label: "Purchase Management",
@@ -171,8 +179,16 @@ export function Sidebar({ user }: SidebarProps) {
           { href: "/employee-management/reports", label: "Reports", icon: FileTextIcon, privilege: "employees_payroll" as ModulePrivilege },
         ],
       },
-      { href: "/users", label: "User Management", icon: UserCog, privilege: "user_management" as ModulePrivilege },
-      { href: "/backup", label: "Backup", icon: HardDriveDownload, privilege: "dashboard" as ModulePrivilege },
+      {
+        href: "/settings-group",
+        label: "Settings",
+        icon: Settings,
+        privilege: "dashboard" as ModulePrivilege,
+        children: [
+          { href: "/users", label: "User Management", icon: UserCog, privilege: "user_management" as ModulePrivilege },
+          { href: "/backup", label: "Backup", icon: HardDriveDownload, privilege: "dashboard" as ModulePrivilege },
+        ],
+      },
     ],
     [],
   )
@@ -193,6 +209,7 @@ export function Sidebar({ user }: SidebarProps) {
       // For items with children (like Stock Management), check if user has access to any child
       if (item.children) {
         const hasAccessToAnyChild = item.children.some((child) => {
+          if (child.privilege === "user_management") return user.role === "pos_user"
           return user.privileges[child.privilege] === true
         })
         return hasAccessToAnyChild
@@ -206,6 +223,7 @@ export function Sidebar({ user }: SidebarProps) {
         return {
           ...item,
           children: item.children.filter((child) => {
+            if (child.privilege === "user_management") return user.role === "pos_user"
             return user.privileges[child.privilege] === true
           }),
         }
@@ -220,13 +238,15 @@ export function Sidebar({ user }: SidebarProps) {
     if (href === "/purchase-management") return pathname.startsWith("/purchase-management")
     if (href === "/parties") return pathname.startsWith("/parties")
     if (href === "/accounts-management") return pathname.startsWith("/accounts-management")
+    if (href === "/cash-book") return pathname.startsWith("/cash-book")
     if (href === "/returns") return pathname.startsWith("/returns")
     if (href === "/employee-management") return pathname.startsWith("/employee-management")
+    if (href === "/settings-group") return pathname.startsWith("/users") || pathname.startsWith("/backup") || pathname.startsWith("/settings")
     // For POS parent: only active when exactly "/pos" or when no child route is active
     // This prevents parent from being highlighted when on /pos/sales or /pos/settings
     if (href === "/pos") {
       // If on a child route, don't highlight parent
-      if (pathname.startsWith("/pos/sales") || pathname.startsWith("/pos/payments") || pathname.startsWith("/pos/settings") || pathname.startsWith("/pos/reports")) {
+      if (pathname.startsWith("/pos/sales") || pathname.startsWith("/pos/payments") || pathname.startsWith("/pos/reports")) {
         return false
       }
       return pathname.startsWith("/pos")
@@ -273,6 +293,7 @@ export function Sidebar({ user }: SidebarProps) {
               const isAccountsManagement = href === "/accounts-management"
               const isReturns = href === "/returns"
               const isEmployeeManagement = href === "/employee-management"
+              const isSettingsGroup = href === "/settings-group"
               const isOpen = isPos
                 ? posOpen
                 : isPurchaseManagement
@@ -285,7 +306,9 @@ export function Sidebar({ user }: SidebarProps) {
                         ? returnsOpen
                         : isEmployeeManagement
                           ? employeeManagementOpen
-                          : stockManagementOpen
+                          : isSettingsGroup
+                            ? settingsOpen
+                            : stockManagementOpen
               const setOpenState = isPos
                 ? setPosOpen
                 : isPurchaseManagement
@@ -298,7 +321,9 @@ export function Sidebar({ user }: SidebarProps) {
                         ? setReturnsOpen
                         : isEmployeeManagement
                           ? setEmployeeManagementOpen
-                          : setStockManagementOpen
+                          : isSettingsGroup
+                            ? setSettingsOpen
+                            : setStockManagementOpen
               return (
                 <Collapsible
                   key={href}
