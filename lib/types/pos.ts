@@ -1,7 +1,7 @@
 // POS models mapping to DB (sales_invoices, sales_invoice_lines, payments)
 
 export type SaleSource = "manual" | "pos"
-export type PaymentMethod = "Cash" | "Card" | "Mixed" | "Other"
+export type PaymentMethod = "Cash" | "Card" | "JazzCash" | "EasyPaisa" | "Mixed" | "Other"
 
 export interface Sale {
   id: string

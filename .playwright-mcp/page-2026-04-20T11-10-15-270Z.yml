@@ -1,0 +1,216 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - generic [ref=e15]:
+          - button "Parties" [expanded] [ref=e16]:
+            - generic [ref=e17]:
+              - img [ref=e18]
+              - generic [ref=e23]: Parties
+            - img [ref=e24]
+          - generic [ref=e26]:
+            - link "Parties List" [ref=e27] [cursor=pointer]:
+              - /url: /parties
+              - img [ref=e28]
+              - generic [ref=e33]: Parties List
+            - link "Add Party" [ref=e34] [cursor=pointer]:
+              - /url: /parties/add
+              - img [ref=e35]
+              - generic [ref=e36]: Add Party
+            - link "Party Reports" [ref=e37] [cursor=pointer]:
+              - /url: /parties/reports
+              - img [ref=e38]
+              - generic [ref=e40]: Party Reports
+        - button "Stock Management" [ref=e42]:
+          - generic [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e47]: Stock Management
+          - img [ref=e48]
+        - button "POS" [ref=e51]:
+          - generic [ref=e52]:
+            - img [ref=e53]
+            - generic [ref=e57]: POS
+          - img [ref=e58]
+        - link "Cash Book" [ref=e60] [cursor=pointer]:
+          - /url: /cash-book
+          - img [ref=e61]
+          - generic [ref=e64]: Cash Book
+        - button "Purchase Management" [ref=e66]:
+          - generic [ref=e67]:
+            - img [ref=e68]
+            - generic [ref=e71]: Purchase Management
+          - img [ref=e72]
+        - button "Accounts Management" [ref=e75]:
+          - generic [ref=e76]:
+            - img [ref=e77]
+            - generic [ref=e79]: Accounts Management
+          - img [ref=e80]
+        - button "Returns & Refunds" [ref=e83]:
+          - generic [ref=e84]:
+            - img [ref=e85]
+            - generic [ref=e88]: Returns & Refunds
+          - img [ref=e89]
+        - button "Employees & Payroll" [ref=e92]:
+          - generic [ref=e93]:
+            - img [ref=e94]
+            - generic [ref=e97]: Employees & Payroll
+          - img [ref=e98]
+        - link "User Management" [ref=e100] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e101]
+          - generic [ref=e113]: User Management
+        - link "Backup" [ref=e114] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e115]
+          - generic [ref=e118]: Backup
+        - button "Keyboard Shortcuts" [ref=e120] [cursor=pointer]:
+          - img
+          - generic [ref=e121]: Keyboard Shortcuts
+    - generic [ref=e122]:
+      - banner [ref=e123]:
+        - generic [ref=e124]:
+          - img "Logo" [ref=e126]
+          - generic [ref=e127]:
+            - heading "Atif Ali" [level=1] [ref=e128]
+            - paragraph [ref=e129]: Invoice & Billing System
+        - generic [ref=e130]:
+          - button "Toggle theme" [ref=e131] [cursor=pointer]:
+            - img
+          - generic [ref=e132]: atif@pos.com
+          - button "Settings" [ref=e133] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e135] [cursor=pointer]:
+            - img
+      - main [ref=e136]:
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - link [ref=e140] [cursor=pointer]:
+              - /url: /parties
+              - button [ref=e141]:
+                - img
+            - generic [ref=e142]:
+              - heading "rajo store" [level=1] [ref=e143]
+              - paragraph [ref=e144]: Account Ledger
+          - generic [ref=e145]:
+            - generic [ref=e146]:
+              - generic [ref=e148]: Current Balance
+              - paragraph [ref=e151]: PKR 0.00
+            - generic [ref=e152]:
+              - generic [ref=e154]: Total Sales
+              - generic [ref=e155]:
+                - paragraph [ref=e156]: PKR 3,000.00
+                - paragraph [ref=e157]: 1 invoices
+            - generic [ref=e158]:
+              - generic [ref=e160]: Total Payments
+              - generic [ref=e161]:
+                - paragraph [ref=e162]: PKR 3,000.00
+                - paragraph [ref=e163]: 1 payments
+            - generic [ref=e164]:
+              - generic [ref=e166]: Total Transactions
+              - generic [ref=e167]:
+                - paragraph [ref=e168]: "6"
+                - paragraph [ref=e169]: 1 invoices · 1 payments · 2 returns
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - generic [ref=e172]: Transaction History
+              - generic [ref=e173]:
+                - button "Print" [ref=e174] [cursor=pointer]:
+                  - img
+                  - text: Print
+                - button "Excel" [ref=e175] [cursor=pointer]:
+                  - img
+                  - text: Excel
+            - table [ref=e178]:
+              - rowgroup [ref=e179]:
+                - row "Date Description Debit Credit Balance" [ref=e180]:
+                  - columnheader "Date" [ref=e181]
+                  - columnheader "Description" [ref=e182]
+                  - columnheader "Debit" [ref=e183]
+                  - columnheader "Credit" [ref=e184]
+                  - columnheader "Balance" [ref=e185]
+              - rowgroup [ref=e186]:
+                - 'row "15/04/2026 01:25 pm Invoice #E864B5FD PKR 1,160.00 — PKR 1,160.00" [ref=e187]':
+                  - cell "15/04/2026 01:25 pm" [ref=e188]:
+                    - generic [ref=e189]:
+                      - generic [ref=e190]: 15/04/2026
+                      - generic [ref=e191]: 01:25 pm
+                  - 'cell "Invoice #E864B5FD" [ref=e192]':
+                    - generic [ref=e193]:
+                      - img [ref=e194]
+                      - generic [ref=e197]: "Invoice #E864B5FD"
+                  - cell "PKR 1,160.00" [ref=e198]
+                  - cell "—" [ref=e199]
+                  - cell "PKR 1,160.00" [ref=e200]
+                - row "15/04/2026 01:25 pm Payment (Cash) — PKR 1,160.00 PKR 0.00" [ref=e201]:
+                  - cell "15/04/2026 01:25 pm" [ref=e202]:
+                    - generic [ref=e203]:
+                      - generic [ref=e204]: 15/04/2026
+                      - generic [ref=e205]: 01:25 pm
+                  - cell "Payment (Cash)" [ref=e206]:
+                    - generic [ref=e207]:
+                      - img [ref=e208]
+                      - generic [ref=e210]: Payment (Cash)
+                  - cell "—" [ref=e211]
+                  - cell "PKR 1,160.00" [ref=e212]
+                  - cell "PKR 0.00" [ref=e213]
+                - 'row "15/04/2026 01:55 pm Sale Return #D4C41AAA — PKR 680.00 PKR -680.00" [ref=e214]':
+                  - cell "15/04/2026 01:55 pm" [ref=e215]:
+                    - generic [ref=e216]:
+                      - generic [ref=e217]: 15/04/2026
+                      - generic [ref=e218]: 01:55 pm
+                  - 'cell "Sale Return #D4C41AAA" [ref=e219]':
+                    - generic [ref=e220]:
+                      - img [ref=e221]
+                      - generic [ref=e224]: "Sale Return #D4C41AAA"
+                  - cell "—" [ref=e225]
+                  - cell "PKR 680.00" [ref=e226]
+                  - cell "PKR -680.00" [ref=e227]
+                - row "15/04/2026 01:55 pm Refund (Cash) PKR 680.00 — PKR 0.00" [ref=e228]:
+                  - cell "15/04/2026 01:55 pm" [ref=e229]:
+                    - generic [ref=e230]:
+                      - generic [ref=e231]: 15/04/2026
+                      - generic [ref=e232]: 01:55 pm
+                  - cell "Refund (Cash)" [ref=e233]:
+                    - generic [ref=e234]:
+                      - img [ref=e235]
+                      - generic [ref=e237]: Refund (Cash)
+                  - cell "PKR 680.00" [ref=e238]
+                  - cell "—" [ref=e239]
+                  - cell "PKR 0.00" [ref=e240]
+                - 'row "19/04/2026 01:21 am Sale Return #1A0320F0 — PKR 1,160.00 PKR -1,160.00" [ref=e241]':
+                  - cell "19/04/2026 01:21 am" [ref=e242]:
+                    - generic [ref=e243]:
+                      - generic [ref=e244]: 19/04/2026
+                      - generic [ref=e245]: 01:21 am
+                  - 'cell "Sale Return #1A0320F0" [ref=e246]':
+                    - generic [ref=e247]:
+                      - img [ref=e248]
+                      - generic [ref=e251]: "Sale Return #1A0320F0"
+                  - cell "—" [ref=e252]
+                  - cell "PKR 1,160.00" [ref=e253]
+                  - cell "PKR -1,160.00" [ref=e254]
+                - row "19/04/2026 01:22 am Refund (Cash) PKR 1,160.00 — PKR 0.00" [ref=e255]:
+                  - cell "19/04/2026 01:22 am" [ref=e256]:
+                    - generic [ref=e257]:
+                      - generic [ref=e258]: 19/04/2026
+                      - generic [ref=e259]: 01:22 am
+                  - cell "Refund (Cash)" [ref=e260]:
+                    - generic [ref=e261]:
+                      - img [ref=e262]
+                      - generic [ref=e264]: Refund (Cash)
+                  - cell "PKR 1,160.00" [ref=e265]
+                  - cell "—" [ref=e266]
+                  - cell "PKR 0.00" [ref=e267]
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e273] [cursor=pointer]:
+    - img [ref=e274]
+  - alert [ref=e277]

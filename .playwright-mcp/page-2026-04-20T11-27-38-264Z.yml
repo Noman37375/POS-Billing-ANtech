@@ -1,0 +1,223 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - button "Parties" [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - generic [ref=e23]: Parties
+          - img [ref=e24]
+        - button "Stock Management" [ref=e27]:
+          - generic [ref=e28]:
+            - img [ref=e29]
+            - generic [ref=e32]: Stock Management
+          - img [ref=e33]
+        - generic [ref=e35]:
+          - button "POS" [expanded] [ref=e36]:
+            - generic [ref=e37]:
+              - img [ref=e38]
+              - generic [ref=e42]: POS
+            - img [ref=e160]
+          - generic [ref=e162]:
+            - link "New Sale" [ref=e163] [cursor=pointer]:
+              - /url: /pos
+              - img [ref=e164]
+              - generic [ref=e168]: New Sale
+            - link "Sales" [ref=e169] [cursor=pointer]:
+              - /url: /pos/sales
+              - img [ref=e170]
+              - generic [ref=e173]: Sales
+            - link "Customer Payments" [ref=e174] [cursor=pointer]:
+              - /url: /pos/payments
+              - img [ref=e175]
+              - generic [ref=e177]: Customer Payments
+            - link "Settings" [ref=e178] [cursor=pointer]:
+              - /url: /pos/settings
+              - img [ref=e179]
+              - generic [ref=e182]: Settings
+            - link "Gross Profit" [ref=e183] [cursor=pointer]:
+              - /url: /pos/reports
+              - img [ref=e184]
+              - generic [ref=e187]: Gross Profit
+        - link "Cash Book" [ref=e45] [cursor=pointer]:
+          - /url: /cash-book
+          - img [ref=e46]
+          - generic [ref=e49]: Cash Book
+        - button "Purchase Management" [ref=e51]:
+          - generic [ref=e52]:
+            - img [ref=e53]
+            - generic [ref=e56]: Purchase Management
+          - img [ref=e57]
+        - button "Accounts Management" [ref=e60]:
+          - generic [ref=e61]:
+            - img [ref=e62]
+            - generic [ref=e64]: Accounts Management
+          - img [ref=e65]
+        - button "Returns & Refunds" [ref=e68]:
+          - generic [ref=e69]:
+            - img [ref=e70]
+            - generic [ref=e73]: Returns & Refunds
+          - img [ref=e74]
+        - button "Employees & Payroll" [ref=e77]:
+          - generic [ref=e78]:
+            - img [ref=e79]
+            - generic [ref=e82]: Employees & Payroll
+          - img [ref=e83]
+        - link "User Management" [ref=e85] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e86]
+          - generic [ref=e98]: User Management
+        - link "Backup" [ref=e99] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e100]
+          - generic [ref=e103]: Backup
+        - button "Keyboard Shortcuts" [ref=e105] [cursor=pointer]:
+          - img
+          - generic [ref=e106]: Keyboard Shortcuts
+    - generic [ref=e107]:
+      - banner [ref=e108]:
+        - generic [ref=e109]:
+          - img "Logo" [ref=e111]
+          - generic [ref=e112]:
+            - heading "Atif Ali" [level=1] [ref=e113]
+            - paragraph [ref=e114]: Invoice & Billing System
+        - generic [ref=e115]:
+          - button "Toggle theme" [ref=e116] [cursor=pointer]:
+            - img
+          - generic [ref=e117]: atif@pos.com
+          - button "Settings" [ref=e118] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e120] [cursor=pointer]:
+            - img
+      - main [ref=e121]:
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - link "New Sale" [ref=e125] [cursor=pointer]:
+              - /url: /pos
+              - img [ref=e126]
+              - text: New Sale
+            - link "Sales" [ref=e130] [cursor=pointer]:
+              - /url: /pos/sales
+              - img [ref=e131]
+              - text: Sales
+            - link "Settings" [ref=e134] [cursor=pointer]:
+              - /url: /pos/settings
+              - img [ref=e135]
+              - text: Settings
+            - link "Gross Profit" [ref=e138] [cursor=pointer]:
+              - /url: /pos/reports
+              - img [ref=e139]
+              - text: Gross Profit
+          - generic [ref=e188]:
+            - heading "New Sale" [level=1] [ref=e189]
+            - paragraph [ref=e190]: Add items, select customer, and complete payment.
+            - generic [ref=e191]:
+              - generic [ref=e193]:
+                - generic [ref=e194]: Point of Sale
+                - generic [ref=e195]:
+                  - combobox [ref=e196]:
+                    - generic: 💵 Cash
+                    - img
+                  - generic [ref=e197]:
+                    - button "%" [ref=e198]
+                    - button "PKR" [ref=e199]
+                  - button "📊 Margin" [ref=e200]
+              - generic [ref=e201]:
+                - generic [ref=e202]:
+                  - generic [ref=e203]:
+                    - generic [ref=e204]:
+                      - generic [ref=e205]: Customer
+                      - generic [ref=e206]:
+                        - button "+ Walk-in" [ref=e207]
+                        - button "New Customer" [ref=e208]:
+                          - img [ref=e209]
+                          - text: New Customer
+                    - textbox "Search customer..." [ref=e213]
+                  - generic [ref=e214]:
+                    - generic [ref=e215]: Address
+                    - textbox "Customer address..." [ref=e216]
+                  - generic [ref=e217]:
+                    - generic [ref=e218]: Tax rate (%)
+                    - spinbutton [ref=e219]: "0"
+                - generic [ref=e220]:
+                  - generic [ref=e221]: Add item
+                  - generic [ref=e222]:
+                    - textbox "Search item..." [ref=e224]
+                    - spinbutton [ref=e225]: "1"
+                    - button "Add" [disabled]:
+                      - img
+                      - text: Add
+                - table [ref=e261]:
+                  - rowgroup [ref=e262]:
+                    - row "Item Qty Price Disc (%) Amount" [ref=e263]:
+                      - columnheader "Item" [ref=e264]
+                      - columnheader "Qty" [ref=e265]
+                      - columnheader "Price" [ref=e266]
+                      - columnheader "Disc (%)" [ref=e267]
+                      - columnheader "Amount" [ref=e268]
+                      - columnheader [ref=e269]
+                  - rowgroup [ref=e270]:
+                    - row "Fizzy Gold 1000ml cash 1 810 PKR 810.00" [ref=e271]:
+                      - cell "Fizzy Gold 1000ml cash" [ref=e272]:
+                        - generic [ref=e273]: Fizzy Gold 1000ml
+                        - text: cash
+                      - cell "1" [ref=e274]:
+                        - spinbutton [ref=e275]: "1"
+                      - cell "810" [ref=e276]:
+                        - spinbutton [ref=e277]: "810"
+                      - cell [ref=e278]:
+                        - spinbutton [ref=e281]
+                      - cell "PKR 810.00" [ref=e282]:
+                        - generic [ref=e283]: PKR 810.00
+                      - cell [ref=e284]:
+                        - button [ref=e285] [cursor=pointer]:
+                          - img
+                - generic [ref=e286]:
+                  - generic [ref=e287]:
+                    - generic [ref=e288]:
+                      - generic [ref=e289]: Subtotal
+                      - generic [ref=e290]: PKR 810.00
+                    - generic [ref=e291]:
+                      - generic [ref=e292]: Bill Discount (PKR)
+                      - spinbutton [ref=e294]
+                    - generic [ref=e295]:
+                      - generic [ref=e296]: Total
+                      - generic [ref=e297]: PKR 810.00
+                  - generic [ref=e298]:
+                    - generic [ref=e299]:
+                      - generic [ref=e300]: Mode
+                      - combobox [ref=e301]:
+                        - generic: Sale
+                        - img
+                    - generic [ref=e303]:
+                      - generic [ref=e304]: Payment
+                      - combobox [ref=e305]:
+                        - generic: Cash
+                        - img
+                    - button "Complete Sale" [disabled]
+    - region "Notifications alt+T":
+      - list:
+        - listitem [ref=e306]:
+          - img [ref=e308]
+          - generic [ref=e311]: Item added (cash)
+  - generic [ref=e155] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e156]:
+      - img [ref=e157]
+    - generic [ref=e226]:
+      - button "Open issues overlay" [ref=e227]:
+        - generic [ref=e228]:
+          - generic [ref=e229]: "0"
+          - generic [ref=e230]: "1"
+        - generic [ref=e231]: Issue
+      - button "Collapse issues badge" [ref=e232]:
+        - img [ref=e233]
+  - alert [ref=e235]

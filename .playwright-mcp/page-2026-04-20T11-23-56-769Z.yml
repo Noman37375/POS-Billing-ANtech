@@ -1,0 +1,197 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Parties
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Stock Management
+            - img
+        - generic:
+          - button [expanded]:
+            - generic:
+              - img
+              - generic: POS
+            - img
+          - generic:
+            - link:
+              - /url: /pos
+              - img
+              - generic: New Sale
+            - link:
+              - /url: /pos/sales
+              - img
+              - generic: Sales
+            - link:
+              - /url: /pos/payments
+              - img
+              - generic: Customer Payments
+            - link:
+              - /url: /pos/settings
+              - img
+              - generic: Settings
+            - link:
+              - /url: /pos/reports
+              - img
+              - generic: Gross Profit
+        - link:
+          - /url: /cash-book
+          - img
+          - generic: Cash Book
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Purchase Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Accounts Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Returns & Refunds
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Employees & Payroll
+            - img
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button:
+            - img
+            - generic: Keyboard Shortcuts
+    - generic:
+      - banner:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading [level=1]: Atif Ali
+            - paragraph: Invoice & Billing System
+        - generic:
+          - button:
+            - img
+          - generic: atif@pos.com
+          - button:
+            - img
+          - generic:
+            - button:
+              - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /pos
+                - img
+                - text: New Sale
+              - link:
+                - /url: /pos/sales
+                - img
+                - text: Sales
+              - link:
+                - /url: /pos/settings
+                - img
+                - text: Settings
+              - link:
+                - /url: /pos/reports
+                - img
+                - text: Gross Profit
+            - generic:
+              - heading [level=1]: New Sale
+              - paragraph: Add items, select customer, and complete payment.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: Point of Sale
+                    - generic:
+                      - combobox [expanded]:
+                        - generic: 💵 Cash
+                        - img
+                      - generic:
+                        - button: "%"
+                        - button: PKR
+                      - button: 📊 Margin
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: Customer
+                        - generic:
+                          - button: + Walk-in
+                          - button:
+                            - img
+                            - text: New Customer
+                      - generic:
+                        - textbox:
+                          - /placeholder: Search customer...
+                    - generic:
+                      - generic: Address
+                      - textbox:
+                        - /placeholder: Customer address...
+                    - generic:
+                      - generic: Tax rate (%)
+                      - spinbutton: "0"
+                  - generic:
+                    - generic: Add item
+                    - generic:
+                      - generic:
+                        - textbox:
+                          - /placeholder: Search item...
+                      - spinbutton: "1"
+                      - button [disabled]:
+                        - img
+                        - text: Add
+    - region "Notifications alt+T"
+  - generic [ref=e155] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e156]:
+      - img [ref=e157]
+    - generic [ref=e226]:
+      - button "Open issues overlay" [ref=e227]:
+        - generic [ref=e228]:
+          - generic [ref=e229]: "0"
+          - generic [ref=e230]: "1"
+        - generic [ref=e231]: Issue
+      - button "Collapse issues badge" [ref=e232]:
+        - img [ref=e233]
+  - alert
+  - listbox [ref=e236]:
+    - option "💵 Cash" [active] [selected] [ref=e237]:
+      - generic [ref=e239]:
+        - img
+      - generic [ref=e240]: 💵 Cash
+    - option "📱 Credit" [ref=e241]:
+      - generic [ref=e243]: 📱 Credit
+    - option "🏢 Supplier" [ref=e244]:
+      - generic [ref=e246]: 🏢 Supplier

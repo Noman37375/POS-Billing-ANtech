@@ -22,6 +22,8 @@ interface ExportButtonsProps {
   printUserName?: string
   /** Location for report params (e.g. "Sadaf Store") */
   printLocation?: string
+  /** Fully custom HTML for print — when provided, skips auto-generation */
+  printHtml?: string
 }
 
 function escapeHtml(s: string): string {
@@ -47,31 +49,37 @@ export function ExportButtons({
   printReportParams,
   printUserName = "ADMIN",
   printLocation,
+  printHtml,
 }: ExportButtonsProps) {
   const handlePrint = () => {
     try {
-      const reportTitle = title || "Report"
-      const fullTitle = printStoreName ? `${printStoreName} ${reportTitle}` : reportTitle
-      const paramsText =
-        printReportParams ||
-        `From Date: ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" })} AND To Date: ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" })} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${printLocation || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`
+      let printContent: string
 
-      const headerRow = columns.map((col) => `<th style="border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:11px;background:#f5f5f5;">${escapeHtml(col.header)}</th>`).join("")
-      const bodyRows = data
-        .map(
-          (row) =>
-            `<tr>${columns
-              .map((col) => {
-                const val = row[col.key]
-                const text = formatCell(val)
-                const isNum = typeof val === "number"
-                return `<td style="border:1px solid #ddd;padding:5px 8px;font-size:10px;${isNum ? "text-align:right;" : ""}">${escapeHtml(text)}</td>`
-              })
-              .join("")}</tr>`
-        )
-        .join("")
+      if (printHtml) {
+        printContent = printHtml
+      } else {
+        const reportTitle = title || "Report"
+        const fullTitle = printStoreName ? `${printStoreName} ${reportTitle}` : reportTitle
+        const paramsText =
+          printReportParams ||
+          `From Date: ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" })} AND To Date: ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" })} AND From Barcode: ALL AND To Barcode: ALL AND Vendor: ALL AND Location: ${printLocation || "ALL"} AND Brand: ALL AND Department: ALL AND Order By: G.P. Value AND Type: Descending AND All Record(s): No AND Party`
 
-      const printContent = `
+        const headerRow = columns.map((col) => `<th style="border:1px solid #ddd;padding:6px 8px;text-align:left;font-size:11px;background:#f5f5f5;">${escapeHtml(col.header)}</th>`).join("")
+        const bodyRows = data
+          .map(
+            (row) =>
+              `<tr>${columns
+                .map((col) => {
+                  const val = row[col.key]
+                  const text = formatCell(val)
+                  const isNum = typeof val === "number"
+                  return `<td style="border:1px solid #ddd;padding:5px 8px;font-size:10px;${isNum ? "text-align:right;" : ""}">${escapeHtml(text)}</td>`
+                })
+                .join("")}</tr>`
+          )
+          .join("")
+
+        printContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -91,17 +99,19 @@ export function ExportButtons({
 </head>
 <body>
   <div class="report-title">${escapeHtml(fullTitle)}</div>
-  <div class="report-params">${escapeHtml(paramsText).replace(/\n/g, "<br>")}</div>
+  <div class="report-params"><strong>Report Parameters</strong><br>${escapeHtml(paramsText).replace(/\n/g, "<br>")}</div>
   <table>
     <thead><tr>${headerRow}</tr></thead>
     <tbody>${bodyRows}</tbody>
   </table>
   <div class="footer">
     <span class="footer-left">User Name: ${escapeHtml(printUserName)}</span>
-AN-Tech Solutions    <span class="footer-right">Page 1</span>
+    <span class="footer-center">${new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}<br>Design By: AN-Tech Solutions</span>
+    <span class="footer-right">Page 1</span>
   </div>
 </body>
 </html>`
+      }
 
       // Use a hidden iframe for printing to avoid popup blockers
       const iframe = document.createElement("iframe")

@@ -1,0 +1,787 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Parties
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Stock Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: POS
+            - img
+        - link:
+          - /url: /cash-book
+          - img
+          - generic: Cash Book
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Purchase Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Accounts Management
+            - img
+        - generic:
+          - button [expanded]:
+            - generic:
+              - img
+              - generic: Returns & Refunds
+            - img
+          - generic:
+            - link:
+              - /url: /returns/sales
+              - img
+              - generic: Sales Returns
+            - link:
+              - /url: /returns/purchases
+              - img
+              - generic: Purchase Returns
+            - link:
+              - /url: /returns/refunds
+              - img
+              - generic: Refund Processing
+            - link:
+              - /url: /returns/reports
+              - img
+              - generic: Returns List/Reports
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Employees & Payroll
+            - img
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button:
+            - img
+            - generic: Keyboard Shortcuts
+    - generic:
+      - banner:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading [level=1]: Atif Ali
+            - paragraph: Invoice & Billing System
+        - generic:
+          - button:
+            - img
+          - generic: atif@pos.com
+          - button:
+            - img
+          - generic:
+            - button:
+              - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /returns/sales
+                - img
+                - text: Sales Returns
+              - link:
+                - /url: /returns/purchases
+                - img
+                - text: Purchase Returns
+              - link:
+                - /url: /returns/refunds
+                - img
+                - text: Refund Processing
+              - link:
+                - /url: /returns/reports
+                - img
+                - text: Returns List/Reports
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=1]: Sales Returns
+                  - paragraph: Manage customer return requests and process refunds.
+                - button [expanded]:
+                  - img
+                  - text: New Sale Return
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - text: Sales Returns
+                      - generic: (11)
+                    - generic:
+                      - generic:
+                        - button: All (11)
+                        - button: Completed (11)
+                        - button: Pending (0)
+                        - button: Cancelled (0)
+                        - button: Draft (0)
+                      - generic:
+                        - img
+                        - textbox:
+                          - /placeholder: "Return # or customer..."
+                - generic:
+                  - generic:
+                    - table:
+                      - rowgroup:
+                        - row:
+                          - columnheader: "Return #"
+                          - columnheader: Customer
+                          - columnheader: Date
+                          - columnheader: Status
+                          - columnheader: Total
+                          - columnheader: Actions
+                      - rowgroup:
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-30051897
+                          - cell:
+                            - generic: Afzal smart school
+                          - cell:
+                            - generic: 4/20/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 1,500.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=591f8701-14a3-4f1b-b24e-9ae5d25d3c28
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-20139543
+                          - cell:
+                            - generic: rajo store
+                          - cell:
+                            - generic: 4/19/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 1,160.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=1a0320f0-09f1-47fe-b5af-06c469ad2857
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-24243705
+                          - cell:
+                            - generic: rajo store
+                          - cell:
+                            - generic: 4/15/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 680.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=d4c41aaa-8352-4c14-bb27-425bb0ef64a1
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-53853507
+                          - cell:
+                            - generic: Farhan Supplier
+                          - cell:
+                            - generic: 4/13/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 25,240.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=3a1826cc-2a5f-41b7-901a-55824e16ccb2
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-54344745
+                          - cell:
+                            - generic: Farhan Supplier
+                          - cell:
+                            - generic: 4/13/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 29,783.20
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=e6facc32-5076-4989-b575-a12e5c8898ba
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-40801147
+                          - cell:
+                            - generic: aptech learning
+                          - cell:
+                            - generic: 4/11/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 23,350.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=6957895a-2740-499e-8b36-5e477496178d
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-29918598
+                          - cell:
+                            - generic: aptech learning
+                          - cell:
+                            - generic: 4/11/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 27,553.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=aee8c37d-54cc-4361-8287-ec4bfd261423
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-22095520
+                          - cell:
+                            - generic: Rizwan Supplier
+                          - cell:
+                            - generic: 3/9/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 8,160.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=8fd7681e-3ccc-4965-a1d7-11cc65ca857d
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-28744220
+                          - cell:
+                            - generic: Abbasi GS
+                          - cell:
+                            - generic: 3/7/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 4,080.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=c0c05dc7-0813-43b5-945f-72ad47211512
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-8170404
+                          - cell:
+                            - generic: owais lahori general store
+                          - cell:
+                            - generic: 3/4/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 2,808.40
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=fcda33c8-08e8-48e0-b7ce-4a927272def9
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-5534088
+                          - cell:
+                            - generic: Zohra Medical Jawaid (OD = Ikrama Bhai) Lines Area
+                          - cell:
+                            - generic: 3/3/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 1,888.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=0a46c183-5109-4f1d-9407-a65cd7a486a3
+                              - button: View
+    - region "Notifications alt+T"
+  - generic [ref=e350] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e351]:
+      - img [ref=e352]
+    - generic [ref=e355]:
+      - button "Open issues overlay" [ref=e356]:
+        - generic [ref=e551]:
+          - generic [ref=e552]: "1"
+          - generic [ref=e553]: "2"
+        - generic [ref=e360]:
+          - text: Issue
+          - generic [ref=e554]: s
+      - button "Collapse issues badge" [ref=e361]:
+        - img [ref=e362]
+  - alert
+  - dialog:
+    - generic:
+      - heading [level=2]: Create Sale Return
+      - paragraph: Process a return for a sales invoice.
+    - generic:
+      - generic:
+        - generic: Sales Invoice
+        - combobox [expanded]:
+          - generic: Select sales invoice
+          - img
+      - generic:
+        - generic: Return Items
+        - paragraph: Select a sales invoice to load items automatically
+      - generic:
+        - generic: Tax Rate (%)
+        - spinbutton: "18"
+      - generic:
+        - generic:
+          - generic: "Subtotal:"
+          - generic: PKR 0.00
+        - generic:
+          - generic: "Tax:"
+          - generic: PKR 0.00
+        - generic:
+          - generic: "Total:"
+          - generic: PKR 0.00
+      - generic:
+        - generic: Refunds (Optional)
+        - generic:
+          - spinbutton
+          - combobox:
+            - generic: Cash
+            - img
+          - textbox:
+            - /placeholder: Reference
+          - button: Add Refund
+    - generic:
+      - button: Cancel
+      - button [disabled]: Create Return
+    - button:
+      - img
+      - generic: Close
+  - listbox [ref=e591]:
+    - option "2AAC6E63 - Walk-in Customer - PKR 1,500.00" [active] [ref=e592]:
+      - generic [ref=e594]:
+        - text: 2AAC6E63 - Walk-in Customer -
+        - generic [ref=e595]: PKR 1,500.00
+    - option "95D98634 - Afzal smart school - PKR 1,500.00" [ref=e596]:
+      - generic [ref=e598]:
+        - text: 95D98634 - Afzal smart school -
+        - generic [ref=e599]: PKR 1,500.00
+    - option "793197FE - Afzal smart school - PKR 1,500.00" [ref=e600]:
+      - generic [ref=e602]:
+        - text: 793197FE - Afzal smart school -
+        - generic [ref=e603]: PKR 1,500.00
+    - option "88E17094 - Afzal smart school - PKR 1,500.00" [ref=e604]:
+      - generic [ref=e606]:
+        - text: 88E17094 - Afzal smart school -
+        - generic [ref=e607]: PKR 1,500.00
+    - option "998E95FC - Afzal smart school - PKR 1,500.00" [ref=e608]:
+      - generic [ref=e610]:
+        - text: 998E95FC - Afzal smart school -
+        - generic [ref=e611]: PKR 1,500.00
+    - option "80AB0746 - Afzal smart school - PKR 10,020.00" [ref=e612]:
+      - generic [ref=e614]:
+        - text: 80AB0746 - Afzal smart school -
+        - generic [ref=e615]: PKR 10,020.00
+    - option "8FD64823 - imran easy shop - PKR 5,700.00" [ref=e616]:
+      - generic [ref=e618]:
+        - text: 8FD64823 - imran easy shop -
+        - generic [ref=e619]: PKR 5,700.00
+    - option "3BD98F6B - mash-a- - PKR 1,520.00" [ref=e620]:
+      - generic [ref=e622]:
+        - text: 3BD98F6B - mash-a- -
+        - generic [ref=e623]: PKR 1,520.00
+    - option "0A9C889D - N-S packty - PKR 1,360.00" [ref=e624]:
+      - generic [ref=e626]:
+        - text: 0A9C889D - N-S packty -
+        - generic [ref=e627]: PKR 1,360.00
+    - option "3C0D949D - ashraf shop - PKR 1,200.00" [ref=e628]:
+      - generic [ref=e630]:
+        - text: 3C0D949D - ashraf shop -
+        - generic [ref=e631]: PKR 1,200.00
+    - option "0E7C592A - kirisan bread - PKR 680.00" [ref=e632]:
+      - generic [ref=e634]:
+        - text: 0E7C592A - kirisan bread -
+        - generic [ref=e635]: PKR 680.00
+    - option "5769EC88 - m-a sarazai water shop - PKR 4,800.00" [ref=e636]:
+      - generic [ref=e638]:
+        - text: 5769EC88 - m-a sarazai water shop -
+        - generic [ref=e639]: PKR 4,800.00
+    - option "D011CD34 - karachi ki burger - PKR 840.00" [ref=e640]:
+      - generic [ref=e642]:
+        - text: D011CD34 - karachi ki burger -
+        - generic [ref=e643]: PKR 840.00
+    - option "92DD22EA - nagori milk shop - PKR 480.00" [ref=e644]:
+      - generic [ref=e646]:
+        - text: 92DD22EA - nagori milk shop -
+        - generic [ref=e647]: PKR 480.00
+    - option "E27FB83C - super khan - PKR 720.00" [ref=e648]:
+      - generic [ref=e650]:
+        - text: E27FB83C - super khan -
+        - generic [ref=e651]: PKR 720.00
+    - option "3959D980 - khalid al madina - PKR 1,640.00" [ref=e652]:
+      - generic [ref=e654]:
+        - text: 3959D980 - khalid al madina -
+        - generic [ref=e655]: PKR 1,640.00
+    - option "EA82D3C7 - muzamil store - PKR 1,160.00" [ref=e656]:
+      - generic [ref=e658]:
+        - text: EA82D3C7 - muzamil store -
+        - generic [ref=e659]: PKR 1,160.00
+    - option "2214D729 - Easy pan shop - PKR 2,800.00" [ref=e660]:
+      - generic [ref=e662]:
+        - text: 2214D729 - Easy pan shop -
+        - generic [ref=e663]: PKR 2,800.00
+    - option "84C85F44 - Ghosiya Bakery (OB=Khurram) - PKR 3,200.00" [ref=e664]:
+      - generic [ref=e666]:
+        - text: 84C85F44 - Ghosiya Bakery (OB=Khurram) -
+        - generic [ref=e667]: PKR 3,200.00
+    - option "DEC5E2C2 - A-Mart (Nazimabad)-(OB=Khurram) - PKR 7,740.00" [ref=e668]:
+      - generic [ref=e670]:
+        - text: DEC5E2C2 - A-Mart (Nazimabad)-(OB=Khurram) -
+        - generic [ref=e671]: PKR 7,740.00
+    - option "14F79609 - Family GS - PKR 27,460.00" [ref=e672]:
+      - generic [ref=e674]:
+        - text: 14F79609 - Family GS -
+        - generic [ref=e675]: PKR 27,460.00
+    - option "5F26FFE6 - imran pan store - PKR 920.00" [ref=e676]:
+      - generic [ref=e678]:
+        - text: 5F26FFE6 - imran pan store -
+        - generic [ref=e679]: PKR 920.00
+    - option "4ED70FC4 - saim store - PKR 960.00" [ref=e680]:
+      - generic [ref=e682]:
+        - text: 4ED70FC4 - saim store -
+        - generic [ref=e683]: PKR 960.00
+    - option "13577DFD - alsar store - PKR 480.00" [ref=e684]:
+      - generic [ref=e686]:
+        - text: 13577DFD - alsar store -
+        - generic [ref=e687]: PKR 480.00
+    - option "17C09037 - amir store - PKR 960.00" [ref=e688]:
+      - generic [ref=e690]:
+        - text: 17C09037 - amir store -
+        - generic [ref=e691]: PKR 960.00
+    - option "2ACCE9DF - mavia pan store - PKR 1,160.00" [ref=e692]:
+      - generic [ref=e694]:
+        - text: 2ACCE9DF - mavia pan store -
+        - generic [ref=e695]: PKR 1,160.00
+    - option "E864B5FD - rajo store - PKR 1,160.00" [ref=e696]:
+      - generic [ref=e698]:
+        - text: E864B5FD - rajo store -
+        - generic [ref=e699]: PKR 1,160.00
+    - option "4723E247 - asee store - PKR 480.00" [ref=e700]:
+      - generic [ref=e702]:
+        - text: 4723E247 - asee store -
+        - generic [ref=e703]: PKR 480.00
+    - option "CCE7E6A9 - marhaba store - PKR 480.00" [ref=e704]:
+      - generic [ref=e706]:
+        - text: CCE7E6A9 - marhaba store -
+        - generic [ref=e707]: PKR 480.00
+    - option "7A2F77EF - Al-Khair Store - PKR 1,700.00" [ref=e708]:
+      - generic [ref=e710]:
+        - text: 7A2F77EF - Al-Khair Store -
+        - generic [ref=e711]: PKR 1,700.00
+    - option "075C2B7C - Family GS - PKR 30,020.00" [ref=e712]:
+      - generic [ref=e714]:
+        - text: 075C2B7C - Family GS -
+        - generic [ref=e715]: PKR 30,020.00
+    - option "5C76C417 - Ghosiya Bakery (OB=Khurram) - PKR 2,830.00" [ref=e716]:
+      - generic [ref=e718]:
+        - text: 5C76C417 - Ghosiya Bakery (OB=Khurram) -
+        - generic [ref=e719]: PKR 2,830.00
+    - option "C21231AA - jawed pan shop - PKR 920.00" [ref=e720]:
+      - generic [ref=e722]:
+        - text: C21231AA - jawed pan shop -
+        - generic [ref=e723]: PKR 920.00
+    - option "D678A344 - Farhan Supplier - PKR 700.00" [ref=e724]:
+      - generic [ref=e726]:
+        - text: D678A344 - Farhan Supplier -
+        - generic [ref=e727]: PKR 700.00
+    - option "9212A6C9 - Farhan Supplier - PKR 26,120.00" [ref=e728]:
+      - generic [ref=e730]:
+        - text: 9212A6C9 - Farhan Supplier -
+        - generic [ref=e731]: PKR 26,120.00
+    - option "1B24B136 - zahid -OB- - PKR 1,080.00" [ref=e732]:
+      - generic [ref=e734]:
+        - text: 1B24B136 - zahid -OB- -
+        - generic [ref=e735]: PKR 1,080.00
+    - option "266602C8 - Faisal Traders - PKR 810.00" [ref=e736]:
+      - generic [ref=e738]:
+        - text: 266602C8 - Faisal Traders -
+        - generic [ref=e739]: PKR 810.00
+    - option "6EE224F4 - bay view high school -OB-DANISH - PKR 13,950.00" [ref=e740]:
+      - generic [ref=e742]:
+        - text: 6EE224F4 - bay view high school -OB-DANISH -
+        - generic [ref=e743]: PKR 13,950.00
+    - option "1621B662 - Faisal Traders - PKR 810.00" [ref=e744]:
+      - generic [ref=e746]:
+        - text: 1621B662 - Faisal Traders -
+        - generic [ref=e747]: PKR 810.00
+    - option "5D77A4A3 - super store - PKR 1,980.00" [ref=e748]:
+      - generic [ref=e750]:
+        - text: 5D77A4A3 - super store -
+        - generic [ref=e751]: PKR 1,980.00
+    - option "0E70FA3E - aptech learning - PKR 31,500.00" [ref=e752]:
+      - generic [ref=e754]:
+        - text: 0E70FA3E - aptech learning -
+        - generic [ref=e755]: PKR 31,500.00
+    - option "FEE70F6A - Farhan Supplier - PKR 1,580.00" [ref=e756]:
+      - generic [ref=e758]:
+        - text: FEE70F6A - Farhan Supplier -
+        - generic [ref=e759]: PKR 1,580.00
+    - option "ED53C853 - Al - Jannat GS Buffer zone - PKR 60.00" [ref=e760]:
+      - generic [ref=e762]:
+        - text: ED53C853 - Al - Jannat GS Buffer zone -
+        - generic [ref=e763]: PKR 60.00
+    - option "CDE1FCBB - Afzal Milk Shop - PKR 680.00" [ref=e764]:
+      - generic [ref=e766]:
+        - text: CDE1FCBB - Afzal Milk Shop -
+        - generic [ref=e767]: PKR 680.00
+    - option "7FCEE99B - Afzal Milk Shop - PKR 520.00" [ref=e768]:
+      - generic [ref=e770]:
+        - text: 7FCEE99B - Afzal Milk Shop -
+        - generic [ref=e771]: PKR 520.00
+    - option "9771EA07 - Al-Khair Store - PKR 47.00" [ref=e772]:
+      - generic [ref=e774]:
+        - text: 9771EA07 - Al-Khair Store -
+        - generic [ref=e775]: PKR 47.00
+    - option "8CAABFD9 - Shafiq bhai (Suppier) - PKR 980.00" [ref=e776]:
+      - generic [ref=e778]:
+        - text: 8CAABFD9 - Shafiq bhai (Suppier) -
+        - generic [ref=e779]: PKR 980.00
+    - option "1953954F - Shafiq bhai (Suppier) - PKR 210.00" [ref=e780]:
+      - generic [ref=e782]:
+        - text: 1953954F - Shafiq bhai (Suppier) -
+        - generic [ref=e783]: PKR 210.00
+    - option "1AF4A785 - Shafiq bhai (Suppier) - PKR 1,400.00" [ref=e784]:
+      - generic [ref=e786]:
+        - text: 1AF4A785 - Shafiq bhai (Suppier) -
+        - generic [ref=e787]: PKR 1,400.00
+    - option "86A94C2E - Afzal Milk Shop - PKR 6,320.00" [ref=e788]:
+      - generic [ref=e790]:
+        - text: 86A94C2E - Afzal Milk Shop -
+        - generic [ref=e791]: PKR 6,320.00
+    - option "070FA98D - Al-Khair Store - PKR 8,300.00" [ref=e792]:
+      - generic [ref=e794]:
+        - text: 070FA98D - Al-Khair Store -
+        - generic [ref=e795]: PKR 8,300.00
+    - option "0EC1E1CE - Faisal Traders - PKR 6,800.00" [ref=e796]:
+      - generic [ref=e798]:
+        - text: 0EC1E1CE - Faisal Traders -
+        - generic [ref=e799]: PKR 6,800.00
+    - option "6A66F706 - Al Afzal Milk Shop Imran (Gulberg PS) - PKR 5,100.00" [ref=e800]:
+      - generic [ref=e802]:
+        - text: 6A66F706 - Al Afzal Milk Shop Imran (Gulberg PS) -
+        - generic [ref=e803]: PKR 5,100.00
+    - option "F0D57ED7 - Farhan Supplier - PKR 12,140.00" [ref=e804]:
+      - generic [ref=e806]:
+        - text: F0D57ED7 - Farhan Supplier -
+        - generic [ref=e807]: PKR 12,140.00
+    - option "588DC9E3 - Marhaba Cold Naseer (Gulberg PS) - PKR 2,800.00" [ref=e808]:
+      - generic [ref=e810]:
+        - text: 588DC9E3 - Marhaba Cold Naseer (Gulberg PS) -
+        - generic [ref=e811]: PKR 2,800.00
+    - option "964DABB3 - bissmill -a- store - PKR 11,570.00" [ref=e812]:
+      - generic [ref=e814]:
+        - text: 964DABB3 - bissmill -a- store -
+        - generic [ref=e815]: PKR 11,570.00
+    - option "010FF63C - Rehmat Cold Agency - PKR 26,680.00" [ref=e816]:
+      - generic [ref=e818]:
+        - text: 010FF63C - Rehmat Cold Agency -
+        - generic [ref=e819]: PKR 26,680.00
+    - option "53327A95 - Al-Khair Store - PKR 6,420.00" [ref=e820]:
+      - generic [ref=e822]:
+        - text: 53327A95 - Al-Khair Store -
+        - generic [ref=e823]: PKR 6,420.00
+    - option "C041626F - Rizwan Supplier - PKR 5,160.00" [ref=e824]:
+      - generic [ref=e826]:
+        - text: C041626F - Rizwan Supplier -
+        - generic [ref=e827]: PKR 5,160.00
+    - option "FD571279 - Faisal Traders - PKR 15,500.00" [ref=e828]:
+      - generic [ref=e830]:
+        - text: FD571279 - Faisal Traders -
+        - generic [ref=e831]: PKR 15,500.00
+    - option "915234CE - nisar mini mart - PKR 3,240.00" [ref=e832]:
+      - generic [ref=e834]:
+        - text: 915234CE - nisar mini mart -
+        - generic [ref=e835]: PKR 3,240.00
+    - option "E1EF307C - super store - PKR 2,040.00" [ref=e836]:
+      - generic [ref=e838]:
+        - text: E1EF307C - super store -
+        - generic [ref=e839]: PKR 2,040.00
+    - option "5318CF6D - Al - Jannat GS Buffer zone - PKR 2,350.00" [ref=e840]:
+      - generic [ref=e842]:
+        - text: 5318CF6D - Al - Jannat GS Buffer zone -
+        - generic [ref=e843]: PKR 2,350.00
+    - option "E99C259D - Al Hamra Bekers (OB=Khurram) - PKR 680.00" [ref=e844]:
+      - generic [ref=e846]:
+        - text: E99C259D - Al Hamra Bekers (OB=Khurram) -
+        - generic [ref=e847]: PKR 680.00
+    - option "D8D98DA8 - United school - PKR 4,920.00" [ref=e848]:
+      - generic [ref=e850]:
+        - text: D8D98DA8 - United school -
+        - generic [ref=e851]: PKR 4,920.00
+    - option "9C475821 - Ghosiya Bakery (OB=Khurram) - PKR 1,880.00" [ref=e852]:
+      - generic [ref=e854]:
+        - text: 9C475821 - Ghosiya Bakery (OB=Khurram) -
+        - generic [ref=e855]: PKR 1,880.00
+    - option "443F6B93 - Saadi SStore - PKR 3,020.00" [ref=e856]:
+      - generic [ref=e858]:
+        - text: 443F6B93 - Saadi SStore -
+        - generic [ref=e859]: PKR 3,020.00
+    - option "B80D1507 - Pan Shop - PKR 1,360.00" [ref=e860]:
+      - generic [ref=e862]:
+        - text: B80D1507 - Pan Shop -
+        - generic [ref=e863]: PKR 1,360.00
+    - option "D6C9B41B - NK Bakers - PKR 2,160.00" [ref=e864]:
+      - generic [ref=e866]:
+        - text: D6C9B41B - NK Bakers -
+        - generic [ref=e867]: PKR 2,160.00
+    - option "4BE9E637 - New Madina Bekrs - PKR 9,300.00" [ref=e868]:
+      - generic [ref=e870]:
+        - text: 4BE9E637 - New Madina Bekrs -
+        - generic [ref=e871]: PKR 9,300.00
+    - option "DB62AE90 - Dummi Party - PKR 810.00" [ref=e872]:
+      - generic [ref=e874]:
+        - text: DB62AE90 - Dummi Party -
+        - generic [ref=e875]: PKR 810.00
+    - option "7C7BBE9B - Dummi Party - PKR 810.00" [ref=e876]:
+      - generic [ref=e878]:
+        - text: 7C7BBE9B - Dummi Party -
+        - generic [ref=e879]: PKR 810.00
+    - option "0E58EA31 - Dummi Party - PKR 810.00" [ref=e880]:
+      - generic [ref=e882]:
+        - text: 0E58EA31 - Dummi Party -
+        - generic [ref=e883]: PKR 810.00
+    - option "85A03CDF - Faisal Traders - PKR 4,320.00" [ref=e884]:
+      - generic [ref=e886]:
+        - text: 85A03CDF - Faisal Traders -
+        - generic [ref=e887]: PKR 4,320.00
+    - option "794FFD8B - Farhan Supplier - PKR 18,680.00" [ref=e888]:
+      - generic [ref=e890]:
+        - text: 794FFD8B - Farhan Supplier -
+        - generic [ref=e891]: PKR 18,680.00
+    - option "4F5C4141 - Faisal Traders - PKR 810.00" [ref=e892]:
+      - generic [ref=e894]:
+        - text: 4F5C4141 - Faisal Traders -
+        - generic [ref=e895]: PKR 810.00
+    - option "D0B1358C - Al Hamra Bekers (OB=Khurram) - PKR 680.00" [ref=e896]:
+      - generic [ref=e898]:
+        - text: D0B1358C - Al Hamra Bekers (OB=Khurram) -
+        - generic [ref=e899]: PKR 680.00
+    - option "4015FC8A - Al Hamra Bekers (OB=Khurram) - PKR 680.00" [ref=e900]:
+      - generic [ref=e902]:
+        - text: 4015FC8A - Al Hamra Bekers (OB=Khurram) -
+        - generic [ref=e903]: PKR 680.00
+    - option "B67252E8 - A-Mart (Nazimabad)-(OB=Khurram) - PKR 8,580.00" [ref=e904]:
+      - generic [ref=e906]:
+        - text: B67252E8 - A-Mart (Nazimabad)-(OB=Khurram) -
+        - generic [ref=e907]: PKR 8,580.00
+    - option "766B54CD - Rizwan Supplier - PKR 9,750.00" [ref=e908]:
+      - generic [ref=e910]:
+        - text: 766B54CD - Rizwan Supplier -
+        - generic [ref=e911]: PKR 9,750.00
+    - option "4A964C70 - Rizwan Supplier - PKR 8,160.00" [ref=e912]:
+      - generic [ref=e914]:
+        - text: 4A964C70 - Rizwan Supplier -
+        - generic [ref=e915]: PKR 8,160.00
+    - option "EB2CE60B - Al - Jannat GS Buffer zone - PKR 9,000.00" [ref=e916]:
+      - generic [ref=e918]:
+        - text: EB2CE60B - Al - Jannat GS Buffer zone -
+        - generic [ref=e919]: PKR 9,000.00
+    - option "B526BD47 - Dove Mart (Block#12 Gulberg) - PKR 3,420.00" [ref=e920]:
+      - generic [ref=e922]:
+        - text: B526BD47 - Dove Mart (Block#12 Gulberg) -
+        - generic [ref=e923]: PKR 3,420.00
+    - option "FC04EA02 - Ghosiya Bakery (OB=Khurram) - PKR 1,880.00" [ref=e924]:
+      - generic [ref=e926]:
+        - text: FC04EA02 - Ghosiya Bakery (OB=Khurram) -
+        - generic [ref=e927]: PKR 1,880.00
+    - option "17EFC11B - jawed pan shop - PKR 680.00" [ref=e928]:
+      - generic [ref=e930]:
+        - text: 17EFC11B - jawed pan shop -
+        - generic [ref=e931]: PKR 680.00
+    - option "EB4F3A45 - Al Hamra Bekers (OB=Khurram) - PKR 4,160.00" [ref=e932]:
+      - generic [ref=e934]:
+        - text: EB4F3A45 - Al Hamra Bekers (OB=Khurram) -
+        - generic [ref=e935]: PKR 4,160.00
+    - option "E573F22C - New Kareem Bekers (OB=Khurram) - PKR 1,440.00" [ref=e936]:
+      - generic [ref=e938]:
+        - text: E573F22C - New Kareem Bekers (OB=Khurram) -
+        - generic [ref=e939]: PKR 1,440.00
+    - option "B81F9E99 - Ahmed Communication (OB=Khurram) - PKR 1,660.00" [ref=e940]:
+      - generic [ref=e942]:
+        - text: B81F9E99 - Ahmed Communication (OB=Khurram) -
+        - generic [ref=e943]: PKR 1,660.00
+    - option "9BBC64BF - BS General Strore - PKR 1,880.00" [ref=e944]:
+      - generic [ref=e946]:
+        - text: 9BBC64BF - BS General Strore -
+        - generic [ref=e947]: PKR 1,880.00
+    - option "0D0D9BE1 - Rahat Medical (OB=Khurram) - PKR 2,040.00" [ref=e948]:
+      - generic [ref=e950]:
+        - text: 0D0D9BE1 - Rahat Medical (OB=Khurram) -
+        - generic [ref=e951]: PKR 2,040.00
+    - option "4EE5489C - Al Haq Biryani (OB=Khurram) - PKR 2,340.00" [ref=e952]:
+      - generic [ref=e954]:
+        - text: 4EE5489C - Al Haq Biryani (OB=Khurram) -
+        - generic [ref=e955]: PKR 2,340.00
+    - option "46D83CE5 - Jhole Lal Pan Shop (OB=Khurram) - PKR 2,070.00" [ref=e956]:
+      - generic [ref=e958]:
+        - text: 46D83CE5 - Jhole Lal Pan Shop (OB=Khurram) -
+        - generic [ref=e959]: PKR 2,070.00
+    - option "7197E3A6 - Abbasi GS - PKR 11,440.00" [ref=e960]:
+      - generic [ref=e962]:
+        - text: 7197E3A6 - Abbasi GS -
+        - generic [ref=e963]: PKR 11,440.00
+    - option "B1734E0F - Abbasi GS - PKR 4,080.00" [ref=e964]:
+      - generic [ref=e966]:
+        - text: B1734E0F - Abbasi GS -
+        - generic [ref=e967]: PKR 4,080.00
+    - option "53E579B7 - Zam Zam Bekers - PKR 4,580.00" [ref=e968]:
+      - generic [ref=e970]:
+        - text: 53E579B7 - Zam Zam Bekers -
+        - generic [ref=e971]: PKR 4,580.00
+    - option "16EA6977 - Saleem Pani (OB=Khurram) - PKR 2,800.00" [ref=e972]:
+      - generic [ref=e974]:
+        - text: 16EA6977 - Saleem Pani (OB=Khurram) -
+        - generic [ref=e975]: PKR 2,800.00
+    - option "28ABE10A - Al - Jannat GS Buffer zone - PKR 2,590.00" [ref=e976]:
+      - generic [ref=e978]:
+        - text: 28ABE10A - Al - Jannat GS Buffer zone -
+        - generic [ref=e979]: PKR 2,590.00
+    - option "40C92F6D - Al Afzal Milk Shop Imran (Gulberg PS) - PKR 600.00" [ref=e980]:
+      - generic [ref=e982]:
+        - text: 40C92F6D - Al Afzal Milk Shop Imran (Gulberg PS) -
+        - generic [ref=e983]: PKR 600.00
+    - option "E0741998 - asmat hotel - PKR 3,430.00" [ref=e984]:
+      - generic [ref=e986]:
+        - text: E0741998 - asmat hotel -
+        - generic [ref=e987]: PKR 3,430.00
+    - option "53DBDB92 - obad pharmacy store - PKR 2,880.00" [ref=e988]:
+      - generic [ref=e990]:
+        - text: 53DBDB92 - obad pharmacy store -
+        - generic [ref=e991]: PKR 2,880.00
+    - img [ref=e993]

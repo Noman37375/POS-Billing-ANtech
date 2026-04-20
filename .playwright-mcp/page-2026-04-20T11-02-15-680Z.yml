@@ -1,0 +1,141 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - generic [ref=e15]:
+          - button "Parties" [expanded] [ref=e16]:
+            - generic [ref=e17]:
+              - img [ref=e18]
+              - generic [ref=e23]: Parties
+            - img [ref=e24]
+          - generic [ref=e26]:
+            - link "Parties List" [ref=e27] [cursor=pointer]:
+              - /url: /parties
+              - img [ref=e28]
+              - generic [ref=e33]: Parties List
+            - link "Add Party" [ref=e34] [cursor=pointer]:
+              - /url: /parties/add
+              - img [ref=e35]
+              - generic [ref=e36]: Add Party
+            - link "Party Reports" [ref=e37] [cursor=pointer]:
+              - /url: /parties/reports
+              - img [ref=e38]
+              - generic [ref=e40]: Party Reports
+        - button "Stock Management" [ref=e42]:
+          - generic [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e47]: Stock Management
+          - img [ref=e48]
+        - button "POS" [ref=e51]:
+          - generic [ref=e52]:
+            - img [ref=e53]
+            - generic [ref=e57]: POS
+          - img [ref=e58]
+        - link "Cash Book" [ref=e60] [cursor=pointer]:
+          - /url: /cash-book
+          - img [ref=e61]
+          - generic [ref=e64]: Cash Book
+        - button "Purchase Management" [ref=e66]:
+          - generic [ref=e67]:
+            - img [ref=e68]
+            - generic [ref=e71]: Purchase Management
+          - img [ref=e72]
+        - button "Accounts Management" [ref=e75]:
+          - generic [ref=e76]:
+            - img [ref=e77]
+            - generic [ref=e79]: Accounts Management
+          - img [ref=e80]
+        - button "Returns & Refunds" [ref=e83]:
+          - generic [ref=e84]:
+            - img [ref=e85]
+            - generic [ref=e88]: Returns & Refunds
+          - img [ref=e89]
+        - button "Employees & Payroll" [ref=e92]:
+          - generic [ref=e93]:
+            - img [ref=e94]
+            - generic [ref=e97]: Employees & Payroll
+          - img [ref=e98]
+        - link "User Management" [ref=e100] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e101]
+          - generic [ref=e113]: User Management
+        - link "Backup" [ref=e114] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e115]
+          - generic [ref=e118]: Backup
+        - button "Keyboard Shortcuts" [ref=e120] [cursor=pointer]:
+          - img
+          - generic [ref=e121]: Keyboard Shortcuts
+    - generic [ref=e122]:
+      - banner [ref=e123]:
+        - generic [ref=e124]:
+          - img "Logo" [ref=e126]
+          - generic [ref=e127]:
+            - heading "Atif Ali" [level=1] [ref=e128]
+            - paragraph [ref=e129]: Invoice & Billing System
+        - generic [ref=e130]:
+          - button "Toggle theme" [ref=e131] [cursor=pointer]:
+            - img
+          - generic [ref=e132]: atif@pos.com
+          - button "Settings" [ref=e133] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e135] [cursor=pointer]:
+            - img
+      - main [ref=e136]:
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - heading "Parties" [level=1] [ref=e141]
+              - paragraph [ref=e142]: Manage customers and vendors.
+            - button "New Party" [ref=e143] [cursor=pointer]:
+              - img
+              - text: New Party
+          - generic [ref=e144]:
+            - generic [ref=e145]:
+              - generic [ref=e147]: Total Parties
+              - generic [ref=e149]:
+                - img [ref=e150]
+                - paragraph [ref=e155]: "106"
+            - generic [ref=e156]:
+              - generic [ref=e158]: Customers
+              - generic [ref=e160]:
+                - img [ref=e161]
+                - paragraph [ref=e165]: "104"
+            - generic [ref=e166]:
+              - generic [ref=e168]: Vendors
+              - generic [ref=e170]:
+                - img [ref=e171]
+                - paragraph [ref=e175]: "2"
+            - generic [ref=e176]:
+              - generic [ref=e178]: Total Receivable
+              - generic [ref=e180]:
+                - img
+                - paragraph [ref=e182]: PKR 242,521.40
+            - generic [ref=e183]:
+              - generic [ref=e185]: Total Payable
+              - generic [ref=e187]:
+                - img [ref=e188]
+                - paragraph [ref=e190]: PKR 0.00
+          - generic [ref=e191]: Loading...
+    - region "Notifications alt+T"
+  - generic [ref=e196] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e197]:
+      - img [ref=e198]
+    - generic [ref=e201]:
+      - button "Open issues overlay" [ref=e202]:
+        - generic [ref=e203]:
+          - generic [ref=e204]: "0"
+          - generic [ref=e205]: "1"
+        - generic [ref=e206]: Issue
+      - button "Collapse issues badge" [ref=e207]:
+        - img [ref=e208]
+  - alert [ref=e210]

@@ -1,0 +1,78 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button
+        - generic:
+          - button
+        - generic:
+          - button [expanded]
+          - generic
+        - link:
+          - /url: /cash-book
+          - img
+          - generic: Cash Book
+        - generic:
+          - button
+        - generic:
+          - button
+        - generic:
+          - button
+        - generic:
+          - button
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button
+    - generic:
+      - banner:
+        - generic:
+          - generic
+          - generic
+        - generic:
+          - button
+          - generic: atif@pos.com
+          - button
+          - generic
+      - main:
+        - generic:
+          - generic
+    - region "Notifications alt+T"
+  - generic [ref=e155] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e156]:
+      - img [ref=e157]
+    - generic [ref=e226]:
+      - button "Open issues overlay" [ref=e227]:
+        - generic [ref=e228]:
+          - generic [ref=e229]: "0"
+          - generic [ref=e230]: "1"
+        - generic [ref=e231]: Issue
+      - button "Collapse issues badge" [ref=e232]:
+        - img [ref=e233]
+  - alert
+  - listbox [ref=e236]:
+    - option "💵 Cash" [active] [selected] [ref=e237]:
+      - generic [ref=e239]:
+        - img
+      - generic [ref=e240]: 💵 Cash
+    - option "📱 Credit" [ref=e241]:
+      - generic [ref=e243]: 📱 Credit
+    - option "🏢 Supplier" [ref=e244]:
+      - generic [ref=e246]: 🏢 Supplier

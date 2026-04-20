@@ -176,6 +176,81 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
     { key: "gp_pct_sale", header: "GP% Sale" },
   ]
 
+  function buildPrintHtml(paramsText: string): string {
+    const fullTitle = storeName ? `${storeName} Gross Profit Report` : "Gross Profit Report"
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const n = (v: number) => v.toLocaleString("en-PK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    const gpColor = (v: number) => (v >= 0 ? "color:#059669;font-weight:600;" : "color:#dc2626;font-weight:600;")
+
+    const headCols = ["Bar Code","Item","T.Sale Qty","Avg Price","Sale Amt","Purchase Price","Purchase Amt","G.P.Value","GP% Purchase","GP% Sale"]
+    const thStyle = "border:1px solid #ddd;padding:6px 8px;font-size:10px;font-weight:600;background:#f5f5f5;white-space:nowrap;"
+    const tdBase = "border:1px solid #ddd;padding:5px 8px;font-size:10px;"
+    const tdR = tdBase + "text-align:right;"
+
+    const headerRow = headCols.map((h, i) => `<th style="${thStyle}${i > 1 ? "text-align:right;" : ""}">${esc(h)}</th>`).join("")
+
+    const bodyRows = data.map((row) => `
+      <tr>
+        <td style="${tdBase}color:#666;">${esc(row.barcode ?? "—")}</td>
+        <td style="${tdBase}font-weight:500;">${esc(row.item_name)}</td>
+        <td style="${tdR}">${row.total_sale_qty}</td>
+        <td style="${tdR}">${n(row.avg_price)}</td>
+        <td style="${tdR}">${n(row.sale_amount)}</td>
+        <td style="${tdR}">${n(row.purchase_price)}</td>
+        <td style="${tdR}">${n(row.purchase_amount)}</td>
+        <td style="${tdR}${gpColor(row.gp_value)}">${n(row.gp_value)}</td>
+        <td style="${tdR}">${n(row.gp_pct_purchase)}%</td>
+        <td style="${tdR}">${n(row.gp_pct_sale)}%</td>
+      </tr>`).join("")
+
+    const grandTotalRow = `
+      <tr style="background:#f0f0f0;border-top:2px solid #aaa;">
+        <td colspan="2" style="${tdBase}font-weight:700;">Grand Total</td>
+        <td style="${tdR}font-weight:700;">${totals.total_sale_qty}</td>
+        <td style="${tdR}color:#999;">—</td>
+        <td style="${tdR}font-weight:700;">${n(totals.sale_amount)}</td>
+        <td style="${tdR}color:#999;">—</td>
+        <td style="${tdR}font-weight:700;">${n(totals.purchase_amount)}</td>
+        <td style="${tdR}${gpColor(totals.gp_value)}font-weight:700;">${n(totals.gp_value)}</td>
+        <td style="${tdR}font-weight:700;">${n(grandGpPctPurchase)}%</td>
+        <td style="${tdR}font-weight:700;">${n(grandGpPctSale)}%</td>
+      </tr>`
+
+    const today = new Date().toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${esc(fullTitle)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 16px; }
+    .report-title { font-size: 16px; font-weight: bold; text-align: center; margin-bottom: 6px; }
+    .report-params { font-size: 9px; color: #333; margin-bottom: 12px; line-height: 1.6; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    .note { font-size: 9px; color: #666; font-style: italic; margin-bottom: 16px; }
+    .footer { margin-top: 16px; font-size: 9px; color: #555; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .footer-center { text-align: center; }
+    @media print { body { margin: 10px; } }
+  </style>
+</head>
+<body>
+  <div class="report-title">${esc(fullTitle)}</div>
+  <div class="report-params"><strong>Report Parameters</strong><br>${esc(paramsText).replace(/\n/g, "<br>")}</div>
+  <table>
+    <thead><tr>${headerRow}</tr></thead>
+    <tbody>${bodyRows}${grandTotalRow}</tbody>
+  </table>
+  <p class="note">Note: All Column values calculate on Last cost rate.</p>
+  <div class="footer">
+    <span>User Name: ADMIN</span>
+    <span class="footer-center">${today}<br>Design By: AN-Tech Solutions</span>
+    <span>Page 1</span>
+  </div>
+</body>
+</html>`
+  }
+
   return (
     <Card>
       <CardHeader className="p-4 sm:p-6">
@@ -213,7 +288,8 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
                 const timeRange = showTime
                   ? `\nTime: ${fmtTimePrint(fromTime)}  to  ${fmtTimePrint(toTime)}`
                   : ""
-                const params = `${label}\n${dateRange}${timeRange}`
+                const locationLine = storeName ? `\nLocation: ${storeName}` : ""
+                const params = `${label}\n${dateRange}${timeRange}${locationLine}`
                 return (
                   <ExportButtons
                     data={exportData}
@@ -222,6 +298,8 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
                     title="Gross Profit Report"
                     printStoreName={storeName}
                     printReportParams={params}
+                    printLocation={storeName}
+                    printHtml={data.length > 0 ? buildPrintHtml(params) : undefined}
                   />
                 )
               })()}

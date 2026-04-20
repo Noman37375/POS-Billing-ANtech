@@ -19,7 +19,8 @@
 
 | Date | Change | File |
 |------|--------|------|
-| (No major fixes yet) | — | — |
+| 2026-04 | **Silent refund failure fix** — `createSaleReturn` and `createPurchaseReturn` now return a user-visible error instead of swallowing refund failures with `console.error` | `app/(app)/returns/actions.ts` |
+| 2026-04 | **Party ledger balance fix** — return transactions now correctly visualized in party ledger (debit/credit signs corrected for sale returns and purchase returns) | `app/(app)/returns/actions.ts`, `app/(app)/accounts-management/ledgers/` |
 
 ---
 
@@ -30,13 +31,16 @@
 | B1 | Returns do NOT update original invoice status — invoice shows "Paid" even after return | 🔴 CRITICAL | ❌ Pending |
 | B2 | Returned items not marked on invoice line items — can return same item twice | 🔴 CRITICAL | ❌ Pending |
 | B3 | Refund amount not validated — can refund more than original payment | 🔴 CRITICAL | ❌ Pending |
-| B4 | Customer ledger not updated after return | 🔴 CRITICAL | ❌ Pending |
+| B4 | Customer ledger not updated after return | 🔴 CRITICAL | ✅ Fixed (party ledger balance corrected for return entries) |
 | B5 | Stock movement not always recorded for returns | 🟠 HIGH | ❌ Pending |
 
 ---
 
 ## Missing Features (for Market)
 
+- [ ] **Search on Sale Returns list** — by customer, date, amount
+- [ ] **Search on Purchase Returns list** — by vendor, date, amount
+- [ ] **Filter returns by date range** — standard date picker filter
 - [ ] **Partial return** — return only some items from invoice, not all
 - [ ] **Return reason** — why was it returned (defective, wrong item, etc.)
 - [ ] **Return receipt/PDF** — give customer a return receipt

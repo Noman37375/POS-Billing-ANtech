@@ -384,6 +384,49 @@ export async function updatePosUserByAdmin(
   return { success: true, user: data as PosUser }
 }
 
+// Change password for the currently logged-in user
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  const { getUserSession } = await import("@/lib/auth/session")
+  const session = await getUserSession()
+
+  if (!session) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from("pos_users")
+    .select("password_hash")
+    .eq("id", session.id)
+    .single()
+
+  if (error || !data) {
+    return { success: false, error: "User not found" }
+  }
+
+  const isValid = await verifyPassword(currentPassword, data.password_hash)
+  if (!isValid) {
+    return { success: false, error: "Current password is incorrect" }
+  }
+
+  const newHash = await hashPassword(newPassword)
+
+  const { error: updateError } = await supabase
+    .from("pos_users")
+    .update({ password_hash: newHash })
+    .eq("id", session.id)
+
+  if (updateError) {
+    return { success: false, error: updateError.message }
+  }
+
+  return { success: true }
+}
+
 // Delete a POS user (admin only - called from admin panel)
 export async function deletePosUserByAdmin(
   userId: string

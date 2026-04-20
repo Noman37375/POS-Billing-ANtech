@@ -12,6 +12,7 @@
 - [x] Vendor ledgers (A/P — Accounts Payable)
 - [x] General ledger page
 - [x] Accounts reports page
+- [x] **Cash Book** — moved to main nav as standalone module (not sub-module of Accounts)
 
 ---
 
@@ -19,7 +20,9 @@
 
 | Date | Change | File |
 |------|--------|------|
-| (No major fixes yet) | — | — |
+| 2026-04 | **Cash Book implemented** — running balance, date range filter (Today/Yesterday/This Week/This Month/Custom), all cash in/out entries; promoted to main nav module | `app/(app)/accounts-management/cash-book/` |
+| 2026-04 | **Cash Book date filter** — dropdown with Today, Yesterday, This Week (Mon–Sun), This Month, Custom date range | `app/(app)/accounts-management/cash-book/` |
+| 2026-04 | **Account Ledger search** — search by party name on ledger list page | `app/(app)/accounts-management/ledgers/` |
 
 ---
 
@@ -28,7 +31,7 @@
 | # | Bug | Severity | Status |
 |---|-----|----------|--------|
 | B1 | Profit calculation doesn't subtract returns — inflated profit | 🔴 CRITICAL | ❌ Pending |
-| B2 | No daily cash book — can't reconcile cash on hand | 🟠 HIGH | ❌ Pending |
+| B2 | No daily cash book — can't reconcile cash on hand | 🟠 HIGH | ✅ Fixed (Cash Book implemented as main nav module) |
 
 ---
 

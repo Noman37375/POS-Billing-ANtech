@@ -1,0 +1,33 @@
+- generic [active]:
+  - generic:
+    - complementary:
+      - generic
+      - navigation
+    - generic:
+      - banner
+      - main
+    - region "Notifications alt+T"
+  - generic [ref=e350] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e351]:
+      - img [ref=e352]
+    - generic [ref=e355]:
+      - button "Open issues overlay" [ref=e356]
+      - button "Collapse issues badge" [ref=e361]
+  - alert
+  - dialog "Create Sale Return" [ref=e556]:
+    - generic [ref=e557]:
+      - heading "Create Sale Return" [level=2] [ref=e558]
+      - paragraph [ref=e559]: Process a return for a sales invoice.
+    - generic [ref=e560]:
+      - generic [ref=e561]
+      - generic [ref=e995]
+      - generic [ref=e564]
+      - generic [ref=e567]
+      - generic [ref=e570]
+      - generic [ref=e580]
+    - generic [ref=e587]:
+      - button "Cancel" [ref=e588] [cursor=pointer]
+      - button "Create Return" [ref=e1023] [cursor=pointer]
+    - button "Close" [ref=e589]:
+      - img
+      - generic [ref=e590]: Close

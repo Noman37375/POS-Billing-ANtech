@@ -25,6 +25,11 @@
 
 | Date | Change | File |
 |------|--------|------|
+| 2026-04 | **Inline category creation** — "New" button next to Category in inventory dialog; creates and auto-selects without leaving form | `app/(app)/stock-management/inventory/inventory-dialog.tsx`, `app/(app)/stock-management/categories/actions.ts` |
+| 2026-04 | **Inline unit creation** — "New" button next to Unit in inventory dialog; creates and auto-selects including symbol | `app/(app)/stock-management/inventory/inventory-dialog.tsx`, `app/(app)/stock-management/units/actions.ts` |
+| 2026-04 | **Inventory dialog scrollbar + UI improvements** — form is now scrollable; labels fit properly on smaller screens | `app/(app)/stock-management/inventory/inventory-dialog.tsx` |
+| 2026-04 | **Stock atomicity fix** — `decrement_inventory_stock` and `increment_inventory_stock` Supabase RPCs rewritten with atomic UPDATE pattern; no more silent floor-to-zero | `lib/db/migration-atomicity-fixes.sql` |
+| 2026-04 | **quickCreateInventoryItem** — accepts category, unit, barcode, selling price from purchase form | `app/(app)/stock-management/inventory/actions.ts` |
 | Recent (8 phases) | Complete multi-tier pricing system implemented | `lib/db/inventory-pricing.ts` |
 | Previous | Barcode duplicate race condition fixed (UNIQUE constraint) | DB + `actions.ts` |
 | Previous | Added pagination helper to prevent timeout on large lists | `lib/db/pagination-helper.ts` |
@@ -35,7 +40,7 @@
 
 | # | Bug | Severity | Status |
 |---|-----|----------|--------|
-| B1 | Stock silent failure — deduction can fail without user knowing | 🔴 CRITICAL | ❌ Pending |
+| B1 | Stock silent failure — deduction can fail without user knowing | 🔴 CRITICAL | ✅ Fixed (atomic DB RPC raises exception; caller receives error) |
 | B2 | Stock count in `inventory_items` can drift from `stock_movements` sum | 🟡 MEDIUM | ❌ Pending |
 | B3 | No search/filter on inventory list | 🟠 HIGH | ❌ Pending |
 | B4 | No confirmation dialog before delete | 🟠 HIGH | ❌ Pending |

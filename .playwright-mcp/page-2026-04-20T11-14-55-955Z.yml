@@ -1,0 +1,415 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Parties
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Stock Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: POS
+            - img
+        - link:
+          - /url: /cash-book
+          - img
+          - generic: Cash Book
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Purchase Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Accounts Management
+            - img
+        - generic:
+          - button [expanded]:
+            - generic:
+              - img
+              - generic: Returns & Refunds
+            - img
+          - generic:
+            - link:
+              - /url: /returns/sales
+              - img
+              - generic: Sales Returns
+            - link:
+              - /url: /returns/purchases
+              - img
+              - generic: Purchase Returns
+            - link:
+              - /url: /returns/refunds
+              - img
+              - generic: Refund Processing
+            - link:
+              - /url: /returns/reports
+              - img
+              - generic: Returns List/Reports
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Employees & Payroll
+            - img
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button:
+            - img
+            - generic: Keyboard Shortcuts
+    - generic:
+      - banner:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading [level=1]: Atif Ali
+            - paragraph: Invoice & Billing System
+        - generic:
+          - button:
+            - img
+          - generic: atif@pos.com
+          - button:
+            - img
+          - generic:
+            - button:
+              - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /returns/sales
+                - img
+                - text: Sales Returns
+              - link:
+                - /url: /returns/purchases
+                - img
+                - text: Purchase Returns
+              - link:
+                - /url: /returns/refunds
+                - img
+                - text: Refund Processing
+              - link:
+                - /url: /returns/reports
+                - img
+                - text: Returns List/Reports
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=1]: Sales Returns
+                  - paragraph: Manage customer return requests and process refunds.
+                - button [expanded]:
+                  - img
+                  - text: New Sale Return
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - text: Sales Returns
+                      - generic: (11)
+                    - generic:
+                      - generic:
+                        - button: All (11)
+                        - button: Completed (11)
+                        - button: Pending (0)
+                        - button: Cancelled (0)
+                        - button: Draft (0)
+                      - generic:
+                        - img
+                        - textbox:
+                          - /placeholder: "Return # or customer..."
+                - generic:
+                  - generic:
+                    - table:
+                      - rowgroup:
+                        - row:
+                          - columnheader: "Return #"
+                          - columnheader: Customer
+                          - columnheader: Date
+                          - columnheader: Status
+                          - columnheader: Total
+                          - columnheader: Actions
+                      - rowgroup:
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-30051897
+                          - cell:
+                            - generic: Afzal smart school
+                          - cell:
+                            - generic: 4/20/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 1,500.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=591f8701-14a3-4f1b-b24e-9ae5d25d3c28
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-20139543
+                          - cell:
+                            - generic: rajo store
+                          - cell:
+                            - generic: 4/19/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 1,160.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=1a0320f0-09f1-47fe-b5af-06c469ad2857
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-24243705
+                          - cell:
+                            - generic: rajo store
+                          - cell:
+                            - generic: 4/15/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 680.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=d4c41aaa-8352-4c14-bb27-425bb0ef64a1
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-53853507
+                          - cell:
+                            - generic: Farhan Supplier
+                          - cell:
+                            - generic: 4/13/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 25,240.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=3a1826cc-2a5f-41b7-901a-55824e16ccb2
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-54344745
+                          - cell:
+                            - generic: Farhan Supplier
+                          - cell:
+                            - generic: 4/13/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 29,783.20
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=e6facc32-5076-4989-b575-a12e5c8898ba
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-40801147
+                          - cell:
+                            - generic: aptech learning
+                          - cell:
+                            - generic: 4/11/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 23,350.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=6957895a-2740-499e-8b36-5e477496178d
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-29918598
+                          - cell:
+                            - generic: aptech learning
+                          - cell:
+                            - generic: 4/11/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 27,553.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=aee8c37d-54cc-4361-8287-ec4bfd261423
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-22095520
+                          - cell:
+                            - generic: Rizwan Supplier
+                          - cell:
+                            - generic: 3/9/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 8,160.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=8fd7681e-3ccc-4965-a1d7-11cc65ca857d
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-28744220
+                          - cell:
+                            - generic: Abbasi GS
+                          - cell:
+                            - generic: 3/7/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 4,080.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=c0c05dc7-0813-43b5-945f-72ad47211512
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-8170404
+                          - cell:
+                            - generic: owais lahori general store
+                          - cell:
+                            - generic: 3/4/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 2,808.40
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=fcda33c8-08e8-48e0-b7ce-4a927272def9
+                              - button: View
+                        - row:
+                          - cell:
+                            - generic:
+                              - generic: RET-2026-000001-5534088
+                          - cell:
+                            - generic: Zohra Medical Jawaid (OD = Ikrama Bhai) Lines Area
+                          - cell:
+                            - generic: 3/3/2026
+                          - cell:
+                            - generic: Completed
+                          - cell: PKR 1,888.00
+                          - cell:
+                            - link:
+                              - /url: /returns/reports?returnId=0a46c183-5109-4f1d-9407-a65cd7a486a3
+                              - button: View
+    - region "Notifications alt+T"
+  - generic [ref=e350] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e351]:
+      - img [ref=e352]
+    - generic [ref=e355]:
+      - button "Open issues overlay" [ref=e356]:
+        - generic [ref=e551]:
+          - generic [ref=e552]: "1"
+          - generic [ref=e553]: "2"
+        - generic [ref=e360]:
+          - text: Issue
+          - generic [ref=e554]: s
+      - button "Collapse issues badge" [ref=e361]:
+        - img [ref=e362]
+  - alert
+  - dialog "Create Sale Return" [ref=e556]:
+    - generic [ref=e557]:
+      - heading "Create Sale Return" [level=2] [ref=e558]
+      - paragraph [ref=e559]: Process a return for a sales invoice.
+    - generic [ref=e560]:
+      - generic [ref=e561]:
+        - generic [ref=e562]: Sales Invoice
+        - combobox "Sales Invoice" [active] [ref=e563]:
+          - generic:
+            - text: E864B5FD - rajo store -
+            - generic: PKR 1,160.00
+          - img
+      - generic [ref=e995]:
+        - generic [ref=e996]: Customer
+        - combobox "Customer" [ref=e997]:
+          - generic: rajo store - 03323767832
+          - img
+      - generic [ref=e564]:
+        - generic [ref=e565]: Return Items
+        - generic [ref=e998]:
+          - generic [ref=e999]:
+            - generic [ref=e1000]:
+              - generic [ref=e1001]: Fizzy ON 250ml
+              - generic [ref=e1002]: "Original: 1 @ PKR 480.00"
+            - generic [ref=e1003]:
+              - generic [ref=e1004]:
+                - generic [ref=e1005]: Return Qty
+                - spinbutton [ref=e1006]: "1"
+              - generic [ref=e1007]:
+                - generic [ref=e1008]: Selling Price
+                - spinbutton [ref=e1009]: "480"
+              - button "Remove" [ref=e1010] [cursor=pointer]
+          - generic [ref=e1011]:
+            - generic [ref=e1012]:
+              - generic [ref=e1013]: Fruit Tree
+              - generic [ref=e1014]: "Original: 1 @ PKR 680.00"
+            - generic [ref=e1015]:
+              - generic [ref=e1016]:
+                - generic [ref=e1017]: Return Qty
+                - spinbutton [ref=e1018]: "1"
+              - generic [ref=e1019]:
+                - generic [ref=e1020]: Selling Price
+                - spinbutton [ref=e1021]: "680"
+              - button "Remove" [ref=e1022] [cursor=pointer]
+      - generic [ref=e567]:
+        - generic [ref=e568]: Tax Rate (%)
+        - spinbutton "Tax Rate (%)" [ref=e569]: "18"
+      - generic [ref=e570]:
+        - generic [ref=e571]:
+          - generic [ref=e572]: "Subtotal:"
+          - generic [ref=e573]: PKR 1,160.00
+        - generic [ref=e574]:
+          - generic [ref=e575]: "Tax:"
+          - generic [ref=e576]: PKR 208.80
+        - generic [ref=e577]:
+          - generic [ref=e578]: "Total:"
+          - generic [ref=e579]: PKR 1,368.80
+      - generic [ref=e580]:
+        - generic [ref=e581]: Refunds (Optional)
+        - generic [ref=e582]:
+          - spinbutton [ref=e583]
+          - combobox [ref=e584]:
+            - generic: Cash
+            - img
+          - textbox "Reference" [ref=e585]
+          - button "Add Refund" [ref=e586] [cursor=pointer]
+    - generic [ref=e587]:
+      - button "Cancel" [ref=e588] [cursor=pointer]
+      - button "Create Return" [ref=e1023] [cursor=pointer]
+    - button "Close" [ref=e589]:
+      - img
+      - generic [ref=e590]: Close

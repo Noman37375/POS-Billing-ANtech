@@ -19,6 +19,7 @@
 
 | Date | Change | File |
 |------|--------|------|
+| 2026-04 | **Global business name update** — "AN-Tech Solutions" replaced with user's business name ("AN-Tech Solutions" → custom) throughout app header and print footer | `components/settings-dialog.tsx`, layout files |
 | Recent | `comprehensive-pos-settings.tsx` created | `components/comprehensive-pos-settings.tsx` |
 | Recent | `app/(app)/pos/settings/page.tsx` modified | `app/(app)/pos/settings/page.tsx` |
 

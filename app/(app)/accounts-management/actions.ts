@@ -41,6 +41,30 @@ export interface AccountsReport {
   totalPayables: number
 }
 
+export type CashBookCategory = "SALE" | "RECV" | "PAID" | "REFUND" | "PUR-RET"
+
+export interface CashBookEntry {
+  id: string
+  time: string
+  description: string
+  party_name: string
+  category: CashBookCategory
+  amount: number
+  direction: "in" | "out"
+  running_balance: number
+}
+
+export interface CashBookData {
+  opening_balance: number
+  opening_balance_is_override: boolean
+  cash_in: number
+  cash_out: number
+  closing_balance: number
+  entries: CashBookEntry[]
+  date_from: string
+  date_to: string
+}
+
 export async function getAccountsOverview(): Promise<{ error: string | null; data: AccountsOverview | null }> {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
@@ -398,4 +422,177 @@ export async function getAccountsReports(): Promise<{ error: string | null; data
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Failed to fetch reports", data: null }
   }
+}
+
+export async function getCashBook(
+  dateFrom: string,
+  dateTo: string
+): Promise<{ error: string | null; data: CashBookData | null }> {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+  const userId = currentUser.effectiveUserId
+
+  try {
+    // 1. Opening balance
+    const { data: settingsRow } = await supabase
+      .from("cash_book_settings")
+      .select("opening_balance_override")
+      .eq("user_id", userId)
+      .eq("date", dateFrom)
+      .maybeSingle()
+
+    let opening_balance = 0
+    let opening_balance_is_override = false
+
+    if (settingsRow?.opening_balance_override != null) {
+      opening_balance = Number(settingsRow.opening_balance_override)
+      opening_balance_is_override = true
+    } else {
+      const { data: prevPayments } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("user_id", userId)
+        .lt("created_at", `${dateFrom}T00:00:00`)
+
+      const { data: prevPurchasePayments } = await supabase
+        .from("purchase_payments")
+        .select("amount")
+        .eq("user_id", userId)
+        .lt("created_at", `${dateFrom}T00:00:00`)
+
+      const { data: prevRefunds } = await supabase
+        .from("refunds")
+        .select("amount, returns!inner(type)")
+        .eq("user_id", userId)
+        .lt("created_at", `${dateFrom}T00:00:00`)
+
+      const prevIn = (prevPayments || []).reduce((s, r) => s + Number(r.amount || 0), 0)
+      const prevOut = (prevPurchasePayments || []).reduce((s, r) => s + Number(r.amount || 0), 0)
+      let prevRefundIn = 0
+      let prevRefundOut = 0
+      ;(prevRefunds || []).forEach((r: any) => {
+        if (r.returns?.type === "purchase") prevRefundIn += Number(r.amount || 0)
+        else prevRefundOut += Number(r.amount || 0)
+      })
+      opening_balance = prevIn + prevRefundIn - prevOut - prevRefundOut
+    }
+
+    // 2. Fetch period transactions
+    const startTs = `${dateFrom}T00:00:00`
+    const endTs = `${dateTo}T23:59:59`
+
+    const { data: payments } = await supabase
+      .from("payments")
+      .select("id, amount, created_at, sales_invoices!inner(source, parties(name))")
+      .eq("user_id", userId)
+      .gte("created_at", startTs)
+      .lte("created_at", endTs)
+      .order("created_at", { ascending: true })
+
+    const { data: purchasePayments } = await supabase
+      .from("purchase_payments")
+      .select("id, amount, created_at, purchase_invoices!inner(parties(name))")
+      .eq("user_id", userId)
+      .gte("created_at", startTs)
+      .lte("created_at", endTs)
+      .order("created_at", { ascending: true })
+
+    const { data: refunds } = await supabase
+      .from("refunds")
+      .select("id, amount, created_at, returns!inner(type, parties(name))")
+      .eq("user_id", userId)
+      .gte("created_at", startTs)
+      .lte("created_at", endTs)
+      .order("created_at", { ascending: true })
+
+    // 3. Build entries
+    const rawEntries: Array<Omit<CashBookEntry, "running_balance">> = []
+
+    ;(payments || []).forEach((p: any) => {
+      const source = p.sales_invoices?.source
+      const partyName = p.sales_invoices?.parties?.name || "Walk-in"
+      rawEntries.push({
+        id: p.id,
+        time: new Date(p.created_at).toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: false }),
+        description: source === "pos" ? `POS Sale — ${partyName}` : `Payment Received — ${partyName}`,
+        party_name: partyName,
+        category: source === "pos" ? "SALE" : "RECV",
+        amount: Number(p.amount || 0),
+        direction: "in",
+      })
+    })
+
+    ;(purchasePayments || []).forEach((p: any) => {
+      const partyName = p.purchase_invoices?.parties?.name || "Vendor"
+      rawEntries.push({
+        id: p.id,
+        time: new Date(p.created_at).toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: false }),
+        description: `Vendor Payment — ${partyName}`,
+        party_name: partyName,
+        category: "PAID",
+        amount: Number(p.amount || 0),
+        direction: "out",
+      })
+    })
+
+    ;(refunds || []).forEach((r: any) => {
+      const isPurchaseReturn = r.returns?.type === "purchase"
+      const partyName = r.returns?.parties?.name || "Customer"
+      rawEntries.push({
+        id: r.id,
+        time: new Date(r.created_at).toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", hour12: false }),
+        description: isPurchaseReturn ? `Purchase Return — ${partyName}` : `Refund Given — ${partyName}`,
+        party_name: partyName,
+        category: isPurchaseReturn ? "PUR-RET" : "REFUND",
+        amount: Number(r.amount || 0),
+        direction: isPurchaseReturn ? "in" : "out",
+      })
+    })
+
+    rawEntries.sort((a, b) => a.time.localeCompare(b.time))
+
+    // 4. Running balance
+    let running = opening_balance
+    const entries: CashBookEntry[] = rawEntries.map((e) => {
+      running = e.direction === "in" ? running + e.amount : running - e.amount
+      return { ...e, running_balance: running }
+    })
+
+    const cash_in = entries.filter((e) => e.direction === "in").reduce((s, e) => s + e.amount, 0)
+    const cash_out = entries.filter((e) => e.direction === "out").reduce((s, e) => s + e.amount, 0)
+
+    return {
+      error: null,
+      data: {
+        opening_balance,
+        opening_balance_is_override,
+        cash_in,
+        cash_out,
+        closing_balance: opening_balance + cash_in - cash_out,
+        entries,
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+    }
+  } catch (err: any) {
+    return { error: err.message || "Failed to load cash book", data: null }
+  }
+}
+
+export async function upsertOpeningOverride(
+  date: string,
+  amount: number,
+  notes?: string
+): Promise<{ error: string | null }> {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from("cash_book_settings")
+    .upsert(
+      { user_id: currentUser.effectiveUserId, date, opening_balance_override: amount, notes: notes || null },
+      { onConflict: "user_id,date" }
+    )
+
+  return { error: error?.message || null }
 }

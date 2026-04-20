@@ -2,14 +2,14 @@
 
 import { useMemo, useState, useTransition, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, Loader2, Printer, X, FileText, CheckCircle2 } from "lucide-react"
-import { createPOSSale, updatePOSSale, getUserPrintFormat, getInvoiceForPrint } from "@/app/(app)/pos/actions"
+import { Plus, Trash2, Loader2, Printer, X, FileText, CheckCircle2, UserPlus } from "lucide-react"
+import { createPOSSale, updatePOSSale, getUserPrintFormat, getInvoiceForPrint, quickCreateCustomer } from "@/app/(app)/pos/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { useCurrency } from "@/contexts/currency-context"
 import type { PaymentMethod } from "@/lib/types/pos"
@@ -33,6 +33,12 @@ interface POSNewSaleFormProps {
 }
 
 export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, initialSale, walkInPartyId, isOwner }: POSNewSaleFormProps) {
+  const [localParties, setLocalParties] = useState<PartyOption[]>(parties)
+  const [newCustomerOpen, setNewCustomerOpen] = useState(false)
+  const [newCustName, setNewCustName] = useState("")
+  const [newCustPhone, setNewCustPhone] = useState("")
+  const [newCustAddress, setNewCustAddress] = useState("")
+  const [creatingCust, setCreatingCust] = useState(false)
   const [partyId, setPartyId] = useState(initialSale?.partyId ?? "")
   const [items, setItems] = useState<CartItem[]>(
     initialSale?.items.map((i) => ({ ...i, discount: 0 })) ?? []
@@ -45,6 +51,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const [payingNow, setPayingNow] = useState(0)
   const [saleMode, setSaleMode] = useState<"sale" | "credit" | "draft">("sale")
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash")
+  const [transactionRef, setTransactionRef] = useState("")
   const [priceType, setPriceType] = useState<"cash" | "credit" | "supplier">("cash")
   const [discountMode, setDiscountMode] = useState<"percent" | "pkr">("percent")
   const [showMargin, setShowMargin] = useState(false)
@@ -73,7 +80,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const router = useRouter()
   const { formatCurrency } = useCurrency()
 
-  const selectedPartyName = partyId ? parties.find((p) => p.id === partyId)?.name ?? "" : ""
+  const selectedPartyName = partyId ? localParties.find((p) => p.id === partyId)?.name ?? "" : ""
   const selectedItemName = selectedItem
     ? (() => {
         const inv = inventory.find((i) => i.id === selectedItem)
@@ -82,8 +89,8 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
     : ""
 
   const filteredCustomers = useMemo(
-    () => parties.filter((p) => p.name.toLowerCase().includes(customerQuery.toLowerCase())),
-    [parties, customerQuery]
+    () => localParties.filter((p) => p.name.toLowerCase().includes(customerQuery.toLowerCase())),
+    [localParties, customerQuery]
   )
 
   const filteredItems = useMemo(
@@ -443,8 +450,23 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   }
 
   const handleCompleteSale = () => {
-    if (!partyId || computed.detailed.length === 0) {
-      toast.error("Select customer and add at least one item")
+    if (computed.detailed.length === 0) {
+      toast.error("Add at least one item")
+      return
+    }
+    // Auto-assign walk-in customer if none selected
+    const effectivePartyId = partyId || walkInPartyId || ""
+    if (!effectivePartyId) {
+      toast.error("Select a customer to continue")
+      return
+    }
+    if (!partyId && walkInPartyId) {
+      setPartyId(walkInPartyId)
+      setCustomerQuery("")
+    }
+    const needsRef = paymentMethod === "JazzCash" || paymentMethod === "EasyPaisa"
+    if (saleMode === "sale" && needsRef && !transactionRef.trim()) {
+      toast.error(`Transaction ID is required for ${paymentMethod}`)
       return
     }
     startTransition(async () => {
@@ -459,10 +481,10 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
       if (editInvoiceId) {
         const updatePayload =
           saleMode === "sale"
-            ? { partyId, items: lineItems, taxRate, status: "Paid" as const, payment: { amount: computed.total, method: paymentMethod } }
+            ? { partyId: effectivePartyId, items: lineItems, taxRate, status: "Paid" as const, payment: { amount: computed.total, method: paymentMethod, reference: transactionRef || undefined } }
             : saleMode === "credit"
-            ? { partyId, items: lineItems, taxRate, status: "Credit" as const }
-            : { partyId, items: lineItems, taxRate, status: "Draft" as const }
+            ? { partyId: effectivePartyId, items: lineItems, taxRate, status: "Credit" as const }
+            : { partyId: effectivePartyId, items: lineItems, taxRate, status: "Draft" as const }
 
         const result = await updatePOSSale(editInvoiceId, updatePayload)
         if (result.error) {
@@ -471,7 +493,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         }
 
         if (saleMode === "sale") {
-          const customerName = parties.find((p) => p.id === partyId)?.name ?? ""
+          const customerName = localParties.find((p) => p.id === partyId)?.name ?? ""
           setLastInvoiceId(editInvoiceId)
           setLastSaleMode("sale")
           setCompletedTotal(computed.total)
@@ -489,19 +511,19 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
 
       const payload =
         saleMode === "sale"
-          ? { payments: [{ amount: computed.total, method: paymentMethod }] }
+          ? { payments: [{ amount: computed.total, method: paymentMethod, reference: transactionRef || undefined }] }
           : saleMode === "credit"
-          ? { status: "Credit" as const, ...(payingNow > 0 ? { payments: [{ amount: payingNow, method: paymentMethod }] } : {}) }
+          ? { status: "Credit" as const, ...(payingNow > 0 ? { payments: [{ amount: payingNow, method: paymentMethod, reference: transactionRef || undefined }] } : {}) }
           : { status: "Draft" as const }
 
-      const result = await createPOSSale({ partyId, items: lineItems, taxRate, discount: computed.discount, ...payload })
+      const result = await createPOSSale({ partyId: effectivePartyId, items: lineItems, taxRate, discount: computed.discount, ...payload })
       if (result.error) {
         toast.error(result.error)
         return
       }
       setLastInvoiceId(result.data?.invoiceId ?? null)
       setLastSaleMode(saleMode)
-      const customerName = parties.find((p) => p.id === partyId)?.name ?? ""
+      const customerName = localParties.find((p) => p.id === partyId)?.name ?? ""
       setItems([])
       setPartyId("")
       setCustomerQuery("")
@@ -515,6 +537,23 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         toast.success("Draft saved")
       }
     })
+  }
+
+  const handleCreateCustomer = async () => {
+    if (!newCustName.trim() || !newCustPhone.trim()) { toast.error("Name and phone are required"); return }
+    setCreatingCust(true)
+    const result = await quickCreateCustomer(newCustName.trim(), newCustPhone.trim(), newCustAddress || undefined)
+    setCreatingCust(false)
+    if (result.error || !result.data) { toast.error(result.error || "Failed to create customer"); return }
+    setLocalParties((prev) => [...prev, result.data!])
+    setPartyId(result.data.id)
+    setCustomerQuery("")
+    setShowCustomerResults(false)
+    setNewCustomerOpen(false)
+    setNewCustName("")
+    setNewCustPhone("")
+    setNewCustAddress("")
+    toast.success(`"${result.data.name}" added as customer`)
   }
 
   const handlePrint = async () => {
@@ -591,15 +630,27 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Customer</Label>
-              {walkInPartyId && !partyId && (
-                <button
-                  type="button"
-                  onClick={() => { setPartyId(walkInPartyId); setCustomerQuery(""); setShowCustomerResults(false) }}
-                  className="text-xs text-primary hover:underline font-medium"
-                >
-                  + Walk-in
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {walkInPartyId && !partyId && (
+                  <button
+                    type="button"
+                    onClick={() => { setPartyId(walkInPartyId); setCustomerQuery(""); setShowCustomerResults(false) }}
+                    className="text-xs text-primary hover:underline font-medium"
+                  >
+                    + Walk-in
+                  </button>
+                )}
+                {!partyId && (
+                  <button
+                    type="button"
+                    onClick={() => setNewCustomerOpen(true)}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <UserPlus className="w-3 h-3" />
+                    New Customer
+                  </button>
+                )}
+              </div>
             </div>
             <div className="relative">
               <Input
@@ -609,7 +660,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 onChange={(e) => {
                   setCustomerQuery(e.target.value)
                   setShowCustomerResults(e.target.value.length > 0)
-                  if (!e.target.value) setPartyId("")
+                  setPartyId("")
                 }}
                 onFocus={() => customerQuery && setShowCustomerResults(true)}
                 onKeyDown={handleCustomerKeyDown}
@@ -634,7 +685,21 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                   className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-50 max-h-[200px] overflow-y-auto"
                 >
                   {filteredCustomers.length === 0 ? (
-                    <div className="p-2 text-sm text-muted-foreground">No customer found</div>
+                    <div>
+                      <div className="p-2 text-sm text-muted-foreground">No customer found</div>
+                      {walkInPartyId && (
+                        <button
+                          className="w-full px-3 py-2 text-left text-sm text-primary font-medium hover:bg-primary/10 border-t"
+                          onClick={() => {
+                            setPartyId(walkInPartyId)
+                            setCustomerQuery("")
+                            setShowCustomerResults(false)
+                          }}
+                        >
+                          + Use Walk-in Customer
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     filteredCustomers.map((p, index) => (
                       <button
@@ -660,14 +725,14 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
           </div>
           <div className="space-y-2">
             <Label>Address</Label>
-            {partyId === walkInPartyId ? (
+            {walkInPartyId && partyId === walkInPartyId ? (
               <div className="h-10 px-3 flex items-center rounded-md border bg-muted/50 text-sm text-muted-foreground">
                 Walk-in Customer — no address
               </div>
             ) : (
               <Input
                 placeholder="Customer address..."
-                value={partyId ? parties.find((p) => p.id === partyId)?.address || "" : ""}
+                value={partyId ? localParties.find((p) => p.id === partyId)?.address || "" : ""}
                 readOnly
                 className="bg-muted/50"
               />
@@ -935,19 +1000,35 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 </Select>
               </div>
               {(saleMode === "sale" || (saleMode === "credit" && payingNow > 0)) && (
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">Payment</Label>
-                  <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                      <SelectItem value="Card">Card</SelectItem>
-                      <SelectItem value="Mixed">Mixed</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm">Payment</Label>
+                    <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v as PaymentMethod); setTransactionRef("") }}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Card">Card</SelectItem>
+                        <SelectItem value="JazzCash">JazzCash</SelectItem>
+                        <SelectItem value="EasyPaisa">EasyPaisa</SelectItem>
+                        <SelectItem value="Mixed">Mixed</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {(paymentMethod === "JazzCash" || paymentMethod === "EasyPaisa") && (
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm text-orange-600">Txn ID *</Label>
+                      <Input
+                        type="text"
+                        placeholder={`${paymentMethod} Transaction ID`}
+                        value={transactionRef}
+                        onChange={(e) => setTransactionRef(e.target.value)}
+                        className="w-48 h-8 text-sm border-orange-300 focus:border-orange-500"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
               <Button
@@ -1020,6 +1101,35 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
               New Sale
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Customer Dialog */}
+      <Dialog open={newCustomerOpen} onOpenChange={setNewCustomerOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Add New Customer</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="cName">Name <span className="text-destructive">*</span></Label>
+              <Input id="cName" placeholder="e.g. Ahmed Ali" value={newCustName} onChange={(e) => setNewCustName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cPhone">Phone <span className="text-destructive">*</span></Label>
+              <Input id="cPhone" placeholder="e.g. 03001234567" value={newCustPhone} onChange={(e) => setNewCustPhone(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cAddress">Address</Label>
+              <Input id="cAddress" placeholder="Optional" value={newCustAddress} onChange={(e) => setNewCustAddress(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewCustomerOpen(false)} disabled={creatingCust}>Cancel</Button>
+            <Button onClick={handleCreateCustomer} disabled={creatingCust}>
+              {creatingCust ? "Creating..." : "Create & Select"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>

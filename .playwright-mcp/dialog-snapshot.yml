@@ -1,0 +1,189 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Parties
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Stock Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: POS
+            - img
+        - link:
+          - /url: /cash-book
+          - img
+          - generic: Cash Book
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Purchase Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Accounts Management
+            - img
+        - generic:
+          - button [expanded]:
+            - generic:
+              - img
+              - generic: Returns & Refunds
+            - img
+          - generic:
+            - link:
+              - /url: /returns/sales
+              - img
+              - generic: Sales Returns
+            - link:
+              - /url: /returns/purchases
+              - img
+              - generic: Purchase Returns
+            - link:
+              - /url: /returns/refunds
+              - img
+              - generic: Refund Processing
+            - link:
+              - /url: /returns/reports
+              - img
+              - generic: Returns List/Reports
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Employees & Payroll
+            - img
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button:
+            - img
+            - generic: Keyboard Shortcuts
+    - generic:
+      - banner:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading [level=1]: Atif Ali
+            - paragraph: Invoice & Billing System
+        - generic:
+          - button:
+            - img
+          - generic: atif@pos.com
+          - button:
+            - img
+          - generic:
+            - button:
+              - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /returns/sales
+                - img
+                - text: Sales Returns
+              - link:
+                - /url: /returns/purchases
+                - img
+                - text: Purchase Returns
+              - link:
+                - /url: /returns/refunds
+                - img
+                - text: Refund Processing
+              - link:
+                - /url: /returns/reports
+                - img
+                - text: Returns List/Reports
+            - generic:
+              - generic:
+                - generic
+                - button [expanded]
+              - generic:
+                - generic
+                - generic
+    - region "Notifications alt+T"
+  - generic [ref=e350] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e351]:
+      - img [ref=e352]
+    - generic [ref=e355]:
+      - button "Open issues overlay" [ref=e356]:
+        - generic [ref=e551]:
+          - generic [ref=e552]: "1"
+          - generic [ref=e553]: "2"
+        - generic [ref=e360]:
+          - text: Issue
+          - generic [ref=e554]: s
+      - button "Collapse issues badge" [ref=e361]:
+        - img [ref=e362]
+  - alert
+  - dialog "Create Sale Return" [ref=e556]:
+    - generic [ref=e557]:
+      - heading "Create Sale Return" [level=2] [ref=e558]
+      - paragraph [ref=e559]: Process a return for a sales invoice.
+    - generic [ref=e560]:
+      - generic [ref=e561]:
+        - generic [ref=e562]: Sales Invoice
+        - combobox "Sales Invoice" [active] [ref=e563]:
+          - generic: Select sales invoice
+          - img
+      - generic [ref=e564]:
+        - generic [ref=e565]: Return Items
+        - paragraph [ref=e566]: Select a sales invoice to load items automatically
+      - generic [ref=e567]:
+        - generic [ref=e568]: Tax Rate (%)
+        - spinbutton "Tax Rate (%)" [ref=e569]: "18"
+      - generic [ref=e570]:
+        - generic [ref=e571]:
+          - generic [ref=e572]: "Subtotal:"
+          - generic [ref=e573]: PKR 0.00
+        - generic [ref=e574]:
+          - generic [ref=e575]: "Tax:"
+          - generic [ref=e576]: PKR 0.00
+        - generic [ref=e577]:
+          - generic [ref=e578]: "Total:"
+          - generic [ref=e579]: PKR 0.00
+      - generic [ref=e580]:
+        - generic [ref=e581]: Refunds (Optional)
+        - generic [ref=e582]:
+          - spinbutton [ref=e583]
+          - combobox [ref=e584]:
+            - generic: Cash
+            - img
+          - textbox "Reference" [ref=e585]
+          - button "Add Refund" [ref=e586] [cursor=pointer]
+    - generic [ref=e587]:
+      - button "Cancel" [ref=e588] [cursor=pointer]
+      - button "Create Return" [disabled]
+    - button "Close" [ref=e589]:
+      - img
+      - generic [ref=e590]: Close

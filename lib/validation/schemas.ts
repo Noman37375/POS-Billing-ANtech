@@ -178,7 +178,7 @@ export const updateInvoiceSchema = createInvoiceSchema
 
 // ==================== POS SCHEMAS ====================
 
-export const paymentMethodSchema = z.enum(["Cash", "Card", "Mixed", "Other"])
+export const paymentMethodSchema = z.enum(["Cash", "Card", "JazzCash", "EasyPaisa", "Mixed", "Other"])
 
 export const posPaymentSchema = z.object({
   amount: z.number().positive("Payment amount must be greater than 0"),

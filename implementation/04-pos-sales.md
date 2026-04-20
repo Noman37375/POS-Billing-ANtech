@@ -25,6 +25,13 @@
 
 | Date | Change | File |
 |------|--------|------|
+| 2026-04 | **Inline customer creation** — "New Customer" button in POS form; creates party and auto-selects without leaving POS | `components/pos-new-sale-form.tsx`, `app/(app)/pos/actions.ts` |
+| 2026-04 | **Walk-in customer full fix** — phone field added to DB insert so creation no longer fails silently; empty-string guard prevents false "Walk-in" address display | `app/(app)/pos/actions.ts`, `components/pos-new-sale-form.tsx` |
+| 2026-04 | **"Use Walk-in Customer" in dropdown** — appears in "no results" list when searching; click to auto-assign walk-in | `components/pos-new-sale-form.tsx` |
+| 2026-04 | **Auto-assign Walk-in on Complete Sale** — if no customer selected and Walk-in party exists, it is automatically used instead of blocking | `components/pos-new-sale-form.tsx` |
+| 2026-04 | **effectivePartyId pattern** — local variable used in all createPOSSale calls so setPartyId async-state race condition can't cause empty party | `components/pos-new-sale-form.tsx` |
+| 2026-04 | **Orphaned record cleanup** — if line items or payment insert fails during createPOSSale, the invoice header is deleted (compensating transaction) | `app/(app)/pos/actions.ts` |
+| 2026-04 | **Stock atomicity fix** — `decrement_inventory_stock` RPC uses atomic UPDATE + RAISE EXCEPTION; no silent floor-to-zero | `lib/db/migration-atomicity-fixes.sql` |
 | Recent | Walk-in customer support added | `pos/actions.ts`, `pos-new-sale-form.tsx` |
 | Recent | Discount + credit partial payment fixed | `pos-new-sale-form.tsx` |
 | Recent | "Invalid Date" bug fixed | `pos/sales/page.tsx` |
@@ -36,7 +43,7 @@
 
 | # | Bug | Severity | Status |
 |---|-----|----------|--------|
-| B1 | Transaction atomicity — if receipt save fails, stock is already deducted | 🔴 CRITICAL | ❌ Pending |
+| B1 | Transaction atomicity — if receipt save fails, stock is already deducted | 🔴 CRITICAL | 🟡 Partial (compensating transaction + atomic RPC; full DB-level RPC for updatePOSSale still pending) |
 | B2 | POS settings not fully connected — some settings don't apply | 🟠 HIGH | ❌ Pending |
 | B3 | No confirmation before voiding/cancelling a sale | 🟠 HIGH | ❌ Pending |
 | B4 | Receipt PDF missing GST breakdown | 🟠 HIGH | ❌ Pending |
@@ -46,6 +53,10 @@
 
 ## Missing Features (for Market — Pakistani POS)
 
+- [ ] **Bill Type field** — replace Tax field with Bill Type: Supplier Bill / Cash Bill / Credit Bill
+- [ ] **Invoice print columns** — add Unit, Discount, Rate After Discount columns to printed invoice
+- [ ] **Eye icon on POS sales list** — view, download, and print sale from list
+- [ ] **Outstanding balance on customer payment page** — show current customer receivable before entering payment
 - [ ] **GST on receipt** — 17% standard sales tax, show on printed receipt
 - [ ] **JazzCash / EasyPaisa payment method** — very common in Pakistan
 - [ ] **WhatsApp share receipt** — customer wants soft copy on WhatsApp

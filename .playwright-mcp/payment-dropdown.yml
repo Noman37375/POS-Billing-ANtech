@@ -1,0 +1,118 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button:
+            - generic
+            - img
+        - generic:
+          - button:
+            - generic
+            - img
+        - generic:
+          - button [expanded]:
+            - generic
+            - img
+          - generic:
+            - link:
+              - /url: /pos
+            - link:
+              - /url: /pos/sales
+            - link:
+              - /url: /pos/payments
+            - link:
+              - /url: /pos/settings
+            - link:
+              - /url: /pos/reports
+        - link:
+          - /url: /cash-book
+          - img
+          - generic: Cash Book
+        - generic:
+          - button:
+            - generic
+            - img
+        - generic:
+          - button:
+            - generic
+            - img
+        - generic:
+          - button:
+            - generic
+            - img
+        - generic:
+          - button:
+            - generic
+            - img
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button:
+            - img
+            - generic: Keyboard Shortcuts
+    - generic:
+      - banner:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading [level=1]: Atif Ali
+            - paragraph: Invoice & Billing System
+        - generic:
+          - button:
+            - img
+          - generic: atif@pos.com
+          - button:
+            - img
+          - generic:
+            - button
+      - main:
+        - generic:
+          - generic:
+            - generic
+            - generic
+    - region "Notifications alt+T"
+  - generic [ref=e155] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e156]:
+      - img [ref=e157]
+    - generic [ref=e226]:
+      - button "Open issues overlay" [ref=e227]:
+        - generic [ref=e228]:
+          - generic [ref=e229]: "0"
+          - generic [ref=e230]: "1"
+        - generic [ref=e231]: Issue
+      - button "Collapse issues badge" [ref=e232]:
+        - img [ref=e233]
+  - alert
+  - listbox [ref=e312]:
+    - option "Cash" [active] [selected] [ref=e313]:
+      - generic [ref=e315]:
+        - img
+      - generic [ref=e316]: Cash
+    - option "Card" [ref=e317]:
+      - generic [ref=e319]: Card
+    - option "JazzCash" [ref=e320]:
+      - generic [ref=e322]: JazzCash
+    - option "EasyPaisa" [ref=e323]:
+      - generic [ref=e325]: EasyPaisa
+    - option "Mixed" [ref=e326]:
+      - generic [ref=e328]: Mixed
+    - option "Other" [ref=e329]:
+      - generic [ref=e331]: Other

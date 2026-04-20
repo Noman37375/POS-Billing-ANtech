@@ -1,0 +1,115 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - button "Parties" [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - generic [ref=e23]: Parties
+          - img [ref=e24]
+        - button "Stock Management" [ref=e27]:
+          - generic [ref=e28]:
+            - img [ref=e29]
+            - generic [ref=e32]: Stock Management
+          - img [ref=e33]
+        - button "POS" [ref=e36]:
+          - generic [ref=e37]:
+            - img [ref=e38]
+            - generic [ref=e42]: POS
+          - img [ref=e43]
+        - link "Cash Book" [ref=e45] [cursor=pointer]:
+          - /url: /cash-book
+          - img [ref=e46]
+          - generic [ref=e49]: Cash Book
+        - button "Purchase Management" [ref=e51]:
+          - generic [ref=e52]:
+            - img [ref=e53]
+            - generic [ref=e56]: Purchase Management
+          - img [ref=e57]
+        - button "Accounts Management" [ref=e60]:
+          - generic [ref=e61]:
+            - img [ref=e62]
+            - generic [ref=e64]: Accounts Management
+          - img [ref=e65]
+        - generic [ref=e67]:
+          - button "Returns & Refunds" [expanded] [ref=e68]:
+            - generic [ref=e69]
+            - img [ref=e74]
+          - generic [ref=e76]:
+            - link "Sales Returns" [ref=e77] [cursor=pointer]:
+              - /url: /returns/sales
+            - link "Purchase Returns" [ref=e82] [cursor=pointer]:
+              - /url: /returns/purchases
+            - link "Refund Processing" [ref=e87] [cursor=pointer]:
+              - /url: /returns/refunds
+            - link "Returns List/Reports" [ref=e91] [cursor=pointer]:
+              - /url: /returns/reports
+        - button "Employees & Payroll" [ref=e97]:
+          - generic [ref=e98]:
+            - img [ref=e99]
+            - generic [ref=e102]: Employees & Payroll
+          - img [ref=e103]
+        - link "User Management" [ref=e105] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e106]
+          - generic [ref=e118]: User Management
+        - link "Backup" [ref=e119] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e120]
+          - generic [ref=e123]: Backup
+        - button "Keyboard Shortcuts" [ref=e125] [cursor=pointer]:
+          - img
+          - generic [ref=e126]: Keyboard Shortcuts
+    - generic [ref=e127]:
+      - banner [ref=e128]:
+        - generic [ref=e129]:
+          - img "Logo" [ref=e131]
+          - generic [ref=e132]:
+            - heading "Atif Ali" [level=1] [ref=e133]
+            - paragraph [ref=e134]: Invoice & Billing System
+        - generic [ref=e135]:
+          - button "Toggle theme" [ref=e136] [cursor=pointer]:
+            - img
+          - generic [ref=e137]: atif@pos.com
+          - button "Settings" [ref=e138] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e140] [cursor=pointer]:
+            - img
+      - main [ref=e141]:
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - link "Sales Returns" [ref=e145] [cursor=pointer]:
+              - /url: /returns/sales
+            - link "Purchase Returns" [ref=e149] [cursor=pointer]:
+              - /url: /returns/purchases
+            - link "Refund Processing" [ref=e153] [cursor=pointer]:
+              - /url: /returns/refunds
+            - link "Returns List/Reports" [ref=e156] [cursor=pointer]:
+              - /url: /returns/reports
+          - generic [ref=e365]:
+            - generic [ref=e366]
+            - generic [ref=e371]
+    - region "Notifications alt+T"
+  - generic [ref=e350] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e351]:
+      - img [ref=e352]
+    - generic [ref=e355]:
+      - button "Open issues overlay" [ref=e356]:
+        - generic [ref=e551]:
+          - generic [ref=e552]: "1"
+          - generic [ref=e553]: "2"
+        - generic [ref=e360]:
+          - text: Issue
+          - generic [ref=e554]: s
+      - button "Collapse issues badge" [ref=e361]:
+        - img [ref=e362]
+  - alert [ref=e364]

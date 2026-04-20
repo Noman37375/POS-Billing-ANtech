@@ -1,0 +1,288 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - button "Parties" [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - generic [ref=e23]: Parties
+          - img [ref=e24]
+        - button "Stock Management" [ref=e27]:
+          - generic [ref=e28]:
+            - img [ref=e29]
+            - generic [ref=e32]: Stock Management
+          - img [ref=e33]
+        - button "POS" [ref=e36]:
+          - generic [ref=e37]:
+            - img [ref=e38]
+            - generic [ref=e42]: POS
+          - img [ref=e43]
+        - button "Purchase Management" [ref=e46]:
+          - generic [ref=e47]:
+            - img [ref=e48]
+            - generic [ref=e51]: Purchase Management
+          - img [ref=e52]
+        - button "Accounts Management" [ref=e55]:
+          - generic [ref=e56]:
+            - img [ref=e57]
+            - generic [ref=e59]: Accounts Management
+          - img [ref=e60]
+        - generic [ref=e62]:
+          - button "Returns & Refunds" [expanded] [ref=e63]:
+            - generic [ref=e64]:
+              - img [ref=e65]
+              - generic [ref=e68]: Returns & Refunds
+            - img [ref=e69]
+          - generic [ref=e71]:
+            - link "Sales Returns" [ref=e72] [cursor=pointer]:
+              - /url: /returns/sales
+              - img [ref=e73]
+              - generic [ref=e76]: Sales Returns
+            - link "Purchase Returns" [ref=e77] [cursor=pointer]:
+              - /url: /returns/purchases
+              - img [ref=e78]
+              - generic [ref=e81]: Purchase Returns
+            - link "Refund Processing" [ref=e82] [cursor=pointer]:
+              - /url: /returns/refunds
+              - img [ref=e83]
+              - generic [ref=e85]: Refund Processing
+            - link "Returns List/Reports" [ref=e86] [cursor=pointer]:
+              - /url: /returns/reports
+              - img [ref=e87]
+              - generic [ref=e90]: Returns List/Reports
+        - button "Employees & Payroll" [ref=e92]:
+          - generic [ref=e93]:
+            - img [ref=e94]
+            - generic [ref=e97]: Employees & Payroll
+          - img [ref=e98]
+        - link "User Management" [ref=e100] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e101]
+          - generic [ref=e113]: User Management
+        - link "Backup" [ref=e114] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e115]
+          - generic [ref=e118]: Backup
+        - button "Keyboard Shortcuts" [ref=e120] [cursor=pointer]:
+          - img
+          - generic [ref=e121]: Keyboard Shortcuts
+    - generic [ref=e122]:
+      - banner [ref=e123]:
+        - generic [ref=e124]:
+          - img "Logo" [ref=e126]
+          - generic [ref=e127]:
+            - heading "Atif Ali" [level=1] [ref=e128]
+            - paragraph [ref=e129]: Invoice & Billing System
+        - generic [ref=e130]:
+          - button "Toggle theme" [ref=e131] [cursor=pointer]:
+            - img
+          - generic [ref=e132]: atif@pos.com
+          - button "Settings" [ref=e133] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e135] [cursor=pointer]:
+            - img
+      - main [ref=e136]:
+        - generic [ref=e138]:
+          - generic [ref=e139]:
+            - link "Sales Returns" [ref=e140] [cursor=pointer]:
+              - /url: /returns/sales
+              - img [ref=e141]
+              - text: Sales Returns
+            - link "Purchase Returns" [ref=e144] [cursor=pointer]:
+              - /url: /returns/purchases
+              - img [ref=e145]
+              - text: Purchase Returns
+            - link "Refund Processing" [ref=e148] [cursor=pointer]:
+              - /url: /returns/refunds
+              - img [ref=e149]
+              - text: Refund Processing
+            - link "Returns List/Reports" [ref=e151] [cursor=pointer]:
+              - /url: /returns/reports
+              - img [ref=e152]
+              - text: Returns List/Reports
+          - generic [ref=e155]:
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - heading "Sales Returns" [level=1] [ref=e158]
+                - paragraph [ref=e159]: Manage customer return requests and process refunds.
+              - button "New Sale Return" [ref=e160] [cursor=pointer]:
+                - img
+                - text: New Sale Return
+            - generic [ref=e161]:
+              - generic [ref=e163]:
+                - generic [ref=e164]:
+                  - text: Sales Returns
+                  - generic [ref=e165]: (10)
+                - generic [ref=e166]:
+                  - generic [ref=e167]:
+                    - button "All (10)" [ref=e168]
+                    - button "Completed (10)" [ref=e169]
+                    - button "Pending (0)" [ref=e170]
+                    - button "Cancelled (0)" [ref=e171]
+                    - button "Draft (0)" [ref=e172]
+                  - generic [ref=e173]:
+                    - img
+                    - 'textbox "Return # or customer..." [ref=e174]'
+              - table [ref=e177]:
+                - rowgroup [ref=e178]:
+                  - 'row "Return # Customer Date Status Total Actions" [ref=e179]':
+                    - 'columnheader "Return #" [ref=e180]'
+                    - columnheader "Customer" [ref=e181]
+                    - columnheader "Date" [ref=e182]
+                    - columnheader "Status" [ref=e183]
+                    - columnheader "Total" [ref=e184]
+                    - columnheader "Actions" [ref=e185]
+                - rowgroup [ref=e186]:
+                  - row "RET-2026-000001-20139543 rajo store 19/04/2026 Completed PKR 1,160.00 View" [ref=e187]:
+                    - cell "RET-2026-000001-20139543" [ref=e188]:
+                      - generic [ref=e190]: RET-2026-000001-20139543
+                    - cell "rajo store" [ref=e191]:
+                      - generic [ref=e192]: rajo store
+                    - cell "19/04/2026" [ref=e193]:
+                      - generic [ref=e194]: 19/04/2026
+                    - cell "Completed" [ref=e195]:
+                      - generic [ref=e196]: Completed
+                    - cell "PKR 1,160.00" [ref=e197]
+                    - cell "View" [ref=e198]:
+                      - link "View" [ref=e199] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=1a0320f0-09f1-47fe-b5af-06c469ad2857
+                        - button "View" [ref=e200]
+                  - row "RET-2026-000001-24243705 rajo store 15/04/2026 Completed PKR 680.00 View" [ref=e201]:
+                    - cell "RET-2026-000001-24243705" [ref=e202]:
+                      - generic [ref=e204]: RET-2026-000001-24243705
+                    - cell "rajo store" [ref=e205]:
+                      - generic [ref=e206]: rajo store
+                    - cell "15/04/2026" [ref=e207]:
+                      - generic [ref=e208]: 15/04/2026
+                    - cell "Completed" [ref=e209]:
+                      - generic [ref=e210]: Completed
+                    - cell "PKR 680.00" [ref=e211]
+                    - cell "View" [ref=e212]:
+                      - link "View" [ref=e213] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=d4c41aaa-8352-4c14-bb27-425bb0ef64a1
+                        - button "View" [ref=e214]
+                  - row "RET-2026-000001-53853507 Farhan Supplier 13/04/2026 Completed PKR 25,240.00 View" [ref=e215]:
+                    - cell "RET-2026-000001-53853507" [ref=e216]:
+                      - generic [ref=e218]: RET-2026-000001-53853507
+                    - cell "Farhan Supplier" [ref=e219]:
+                      - generic [ref=e220]: Farhan Supplier
+                    - cell "13/04/2026" [ref=e221]:
+                      - generic [ref=e222]: 13/04/2026
+                    - cell "Completed" [ref=e223]:
+                      - generic [ref=e224]: Completed
+                    - cell "PKR 25,240.00" [ref=e225]
+                    - cell "View" [ref=e226]:
+                      - link "View" [ref=e227] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=3a1826cc-2a5f-41b7-901a-55824e16ccb2
+                        - button "View" [ref=e228]
+                  - row "RET-2026-000001-54344745 Farhan Supplier 13/04/2026 Completed PKR 29,783.20 View" [ref=e229]:
+                    - cell "RET-2026-000001-54344745" [ref=e230]:
+                      - generic [ref=e232]: RET-2026-000001-54344745
+                    - cell "Farhan Supplier" [ref=e233]:
+                      - generic [ref=e234]: Farhan Supplier
+                    - cell "13/04/2026" [ref=e235]:
+                      - generic [ref=e236]: 13/04/2026
+                    - cell "Completed" [ref=e237]:
+                      - generic [ref=e238]: Completed
+                    - cell "PKR 29,783.20" [ref=e239]
+                    - cell "View" [ref=e240]:
+                      - link "View" [ref=e241] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=e6facc32-5076-4989-b575-a12e5c8898ba
+                        - button "View" [ref=e242]
+                  - row "RET-2026-000001-40801147 aptech learning 11/04/2026 Completed PKR 23,350.00 View" [ref=e243]:
+                    - cell "RET-2026-000001-40801147" [ref=e244]:
+                      - generic [ref=e246]: RET-2026-000001-40801147
+                    - cell "aptech learning" [ref=e247]:
+                      - generic [ref=e248]: aptech learning
+                    - cell "11/04/2026" [ref=e249]:
+                      - generic [ref=e250]: 11/04/2026
+                    - cell "Completed" [ref=e251]:
+                      - generic [ref=e252]: Completed
+                    - cell "PKR 23,350.00" [ref=e253]
+                    - cell "View" [ref=e254]:
+                      - link "View" [ref=e255] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=6957895a-2740-499e-8b36-5e477496178d
+                        - button "View" [ref=e256]
+                  - row "RET-2026-000001-29918598 aptech learning 11/04/2026 Completed PKR 27,553.00 View" [ref=e257]:
+                    - cell "RET-2026-000001-29918598" [ref=e258]:
+                      - generic [ref=e260]: RET-2026-000001-29918598
+                    - cell "aptech learning" [ref=e261]:
+                      - generic [ref=e262]: aptech learning
+                    - cell "11/04/2026" [ref=e263]:
+                      - generic [ref=e264]: 11/04/2026
+                    - cell "Completed" [ref=e265]:
+                      - generic [ref=e266]: Completed
+                    - cell "PKR 27,553.00" [ref=e267]
+                    - cell "View" [ref=e268]:
+                      - link "View" [ref=e269] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=aee8c37d-54cc-4361-8287-ec4bfd261423
+                        - button "View" [ref=e270]
+                  - row "RET-2026-000001-22095520 Rizwan Supplier 09/03/2026 Completed PKR 8,160.00 View" [ref=e271]:
+                    - cell "RET-2026-000001-22095520" [ref=e272]:
+                      - generic [ref=e274]: RET-2026-000001-22095520
+                    - cell "Rizwan Supplier" [ref=e275]:
+                      - generic [ref=e276]: Rizwan Supplier
+                    - cell "09/03/2026" [ref=e277]:
+                      - generic [ref=e278]: 09/03/2026
+                    - cell "Completed" [ref=e279]:
+                      - generic [ref=e280]: Completed
+                    - cell "PKR 8,160.00" [ref=e281]
+                    - cell "View" [ref=e282]:
+                      - link "View" [ref=e283] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=8fd7681e-3ccc-4965-a1d7-11cc65ca857d
+                        - button "View" [ref=e284]
+                  - row "RET-2026-000001-28744220 Abbasi GS 07/03/2026 Completed PKR 4,080.00 View" [ref=e285]:
+                    - cell "RET-2026-000001-28744220" [ref=e286]:
+                      - generic [ref=e288]: RET-2026-000001-28744220
+                    - cell "Abbasi GS" [ref=e289]:
+                      - generic [ref=e290]: Abbasi GS
+                    - cell "07/03/2026" [ref=e291]:
+                      - generic [ref=e292]: 07/03/2026
+                    - cell "Completed" [ref=e293]:
+                      - generic [ref=e294]: Completed
+                    - cell "PKR 4,080.00" [ref=e295]
+                    - cell "View" [ref=e296]:
+                      - link "View" [ref=e297] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=c0c05dc7-0813-43b5-945f-72ad47211512
+                        - button "View" [ref=e298]
+                  - row "RET-2026-000001-8170404 owais lahori general store 04/03/2026 Completed PKR 2,808.40 View" [ref=e299]:
+                    - cell "RET-2026-000001-8170404" [ref=e300]:
+                      - generic [ref=e302]: RET-2026-000001-8170404
+                    - cell "owais lahori general store" [ref=e303]:
+                      - generic [ref=e304]: owais lahori general store
+                    - cell "04/03/2026" [ref=e305]:
+                      - generic [ref=e306]: 04/03/2026
+                    - cell "Completed" [ref=e307]:
+                      - generic [ref=e308]: Completed
+                    - cell "PKR 2,808.40" [ref=e309]
+                    - cell "View" [ref=e310]:
+                      - link "View" [ref=e311] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=fcda33c8-08e8-48e0-b7ce-4a927272def9
+                        - button "View" [ref=e312]
+                  - row "RET-2026-000001-5534088 Zohra Medical Jawaid (OD = Ikrama Bhai) Lines Area 03/03/2026 Completed PKR 1,888.00 View" [ref=e313]:
+                    - cell "RET-2026-000001-5534088" [ref=e314]:
+                      - generic [ref=e316]: RET-2026-000001-5534088
+                    - cell "Zohra Medical Jawaid (OD = Ikrama Bhai) Lines Area" [ref=e317]:
+                      - generic [ref=e318]: Zohra Medical Jawaid (OD = Ikrama Bhai) Lines Area
+                    - cell "03/03/2026" [ref=e319]:
+                      - generic [ref=e320]: 03/03/2026
+                    - cell "Completed" [ref=e321]:
+                      - generic [ref=e322]: Completed
+                    - cell "PKR 1,888.00" [ref=e323]
+                    - cell "View" [ref=e324]:
+                      - link "View" [ref=e325] [cursor=pointer]:
+                        - /url: /returns/reports?returnId=0a46c183-5109-4f1d-9407-a65cd7a486a3
+                        - button "View" [ref=e326]
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e332] [cursor=pointer]:
+    - img [ref=e333]
+  - alert [ref=e336]

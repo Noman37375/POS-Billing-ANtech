@@ -5,7 +5,7 @@ import { requirePrivilege } from "@/lib/auth/privileges"
 import { getPartyLedger } from "../../actions"
 import { CurrencyDisplay } from "@/components/currency-display"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, FileText, CreditCard } from "lucide-react"
+import { ArrowLeft, FileText, CreditCard, RotateCcw } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ExportButtons } from "@/components/export-buttons"
@@ -31,42 +31,10 @@ export default async function PartyLedgerPage({ params }: { params: Promise<{ id
   const transactionCount = ledgerRows.length
   const invoiceCount = ledgerRows.filter((r) => r.type === "invoice" || r.type === "purchase").length
   const paymentCount = ledgerRows.filter((r) => r.type === "payment").length
+  const returnCount = ledgerRows.filter((r) => r.type === "return").length
 
-  // Group payments under their related invoices/purchases
-  type GroupedRow = {
-    type: "group" | "payment"
-    parentId?: string
-    row: (typeof ledgerRows)[0]
-    childPayments?: (typeof ledgerRows)[]
-  }
-
-  const groupedRows: GroupedRow[] = []
-  const paymentsByRef: Record<string, (typeof ledgerRows)[]> = {}
-
-  // First pass: collect all payments by their purchase/invoice reference
-  ledgerRows.forEach((row) => {
-    if (row.type === "payment") {
-      // Extract invoice/purchase ID from reference or description
-      const invoiceRef = row.reference_id?.replace("payment-", "") || row.reference_id || ""
-      if (!paymentsByRef[invoiceRef]) {
-        paymentsByRef[invoiceRef] = []
-      }
-      paymentsByRef[invoiceRef].push(row)
-    }
-  })
-
-  // Second pass: build grouped structure
-  ledgerRows.forEach((row) => {
-    if (row.type === "invoice" || row.type === "purchase") {
-      groupedRows.push({ type: "group", row, parentId: row.reference_id })
-      const childPayments = paymentsByRef[row.reference_id] || []
-      childPayments.forEach((payment) => {
-        groupedRows.push({ type: "payment", parentId: row.reference_id, row: payment })
-      })
-    } else if (row.type !== "payment") {
-      groupedRows.push({ type: "group", row })
-    }
-  })
+  // Flat display — no grouping needed
+  const groupedRows = ledgerRows.map((row) => ({ row }))
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -168,7 +136,9 @@ export default async function PartyLedgerPage({ params }: { params: Promise<{ id
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold text-foreground">{transactionCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">All entries</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {invoiceCount} invoices · {paymentCount} payments{returnCount > 0 ? ` · ${returnCount} returns` : ""}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -216,46 +186,32 @@ export default async function PartyLedgerPage({ params }: { params: Promise<{ id
                     </td>
                   </tr>
                 ) : (
-                  groupedRows.map((item, index) => {
-                    const row = item.row
-                    const isPayment = item.type === "payment"
+                  groupedRows.map(({ row }, index) => {
+                    const icon =
+                      row.type === "invoice" || row.type === "purchase" ? (
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                      ) : row.type === "return" ? (
+                        <RotateCcw className="w-4 h-4 text-orange-500" />
+                      ) : (
+                        <CreditCard className="w-4 h-4 text-muted-foreground" />
+                      )
                     return (
                       <tr
                         key={`${row.type}-${row.reference_id}-${index}`}
-                        className={`${
-                          isPayment ? "bg-muted/30" : "hover:bg-muted/50"
-                        }`}
+                        className="hover:bg-muted/50"
                       >
                         <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[20%]">
                           <div className="flex flex-col">
                             <span>{new Date(row.date).toLocaleDateString()}</span>
                             <span className="text-[10px] text-muted-foreground">
-                              {new Date(row.date).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {new Date(row.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           </div>
                         </td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4 text-foreground text-xs sm:text-sm w-[30%]">
                           <div className="flex items-center gap-2">
-                            {isPayment && (
-                              <div className="w-4 flex justify-center">
-                                <span className="text-muted-foreground">└</span>
-                              </div>
-                            )}
-                            {!isPayment &&
-                              (row.type === "invoice" || row.type === "purchase" ? (
-                                <FileText className="w-4 h-4 text-muted-foreground" />
-                              ) : (
-                                <CreditCard className="w-4 h-4 text-muted-foreground" />
-                              ))}
-                            {isPayment && (
-                              <CreditCard className="w-4 h-4 text-muted-foreground" />
-                            )}
-                            <span className={isPayment ? "text-muted-foreground" : ""}>
-                              {row.description}
-                            </span>
+                            {icon}
+                            <span className={row.type === "return" ? "text-orange-600" : ""}>{row.description}</span>
                           </div>
                         </td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm w-[15%]">
@@ -267,16 +223,8 @@ export default async function PartyLedgerPage({ params }: { params: Promise<{ id
                         <td
                           className={`py-2 sm:py-3 px-2 sm:px-4 text-right text-xs sm:text-sm font-medium w-[20%] ${
                             isVendor
-                              ? row.balance > 0
-                                ? "text-red-600"
-                                : row.balance < 0
-                                  ? "text-emerald-600"
-                                  : "text-foreground"
-                              : row.balance > 0
-                                ? "text-amber-600"
-                                : row.balance < 0
-                                  ? "text-red-600"
-                                  : "text-foreground"
+                              ? row.balance > 0 ? "text-red-600" : row.balance < 0 ? "text-emerald-600" : "text-foreground"
+                              : row.balance > 0 ? "text-amber-600" : row.balance < 0 ? "text-red-600" : "text-foreground"
                           }`}
                         >
                           <CurrencyDisplay amount={row.balance} />

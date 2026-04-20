@@ -82,6 +82,7 @@ export async function createInvoice(payload: { partyId: string; items: InvoiceIt
 
   const { error: lineError } = await supabase.from("sales_invoice_lines").insert(lineItems)
   if (lineError) {
+    await supabase.from("sales_invoices").delete().eq("id", invoice.id)
     return { error: lineError.message }
   }
 

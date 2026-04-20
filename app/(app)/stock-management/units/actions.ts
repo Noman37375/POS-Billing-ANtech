@@ -82,6 +82,28 @@ export async function deleteUnit(unitId: string) {
   return { error: null }
 }
 
+export async function quickCreateUnit(name: string, symbol?: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!name.trim()) {
+    return { error: "Unit name is required", data: null }
+  }
+
+  const { data, error } = await supabase
+    .from("units")
+    .insert({ name: name.trim(), symbol: symbol?.trim() || null, user_id: currentUser.effectiveUserId })
+    .select("id, name, symbol")
+    .single()
+
+  if (error || !data) {
+    return { error: error?.message ?? "Failed to create unit", data: null }
+  }
+
+  revalidatePath("/stock-management/units")
+  return { error: null, data: { id: data.id, name: data.name, symbol: data.symbol as string | null } }
+}
+
 export async function fetchUnits() {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()

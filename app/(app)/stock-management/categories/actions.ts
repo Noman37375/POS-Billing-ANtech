@@ -82,6 +82,28 @@ export async function deleteCategory(categoryId: string) {
   return { error: null }
 }
 
+export async function quickCreateCategory(name: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!name.trim()) {
+    return { error: "Category name is required", data: null }
+  }
+
+  const { data, error } = await supabase
+    .from("categories")
+    .insert({ name: name.trim(), user_id: currentUser.effectiveUserId })
+    .select("id, name")
+    .single()
+
+  if (error || !data) {
+    return { error: error?.message ?? "Failed to create category", data: null }
+  }
+
+  revalidatePath("/stock-management/categories")
+  return { error: null, data: { id: data.id, name: data.name } }
+}
+
 export async function fetchCategories() {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()

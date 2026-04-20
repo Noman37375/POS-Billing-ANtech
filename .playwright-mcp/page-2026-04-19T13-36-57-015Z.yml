@@ -1,0 +1,166 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - button "Parties" [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - generic [ref=e23]: Parties
+          - img [ref=e24]
+        - button "Stock Management" [ref=e27]:
+          - generic [ref=e28]:
+            - img [ref=e29]
+            - generic [ref=e32]: Stock Management
+          - img [ref=e33]
+        - button "POS" [ref=e36]:
+          - generic [ref=e37]:
+            - img [ref=e38]
+            - generic [ref=e42]: POS
+          - img [ref=e43]
+        - button "Purchase Management" [ref=e46]:
+          - generic [ref=e47]:
+            - img [ref=e48]
+            - generic [ref=e51]: Purchase Management
+          - img [ref=e52]
+        - button "Accounts Management" [ref=e55]:
+          - generic [ref=e56]:
+            - img [ref=e57]
+            - generic [ref=e59]: Accounts Management
+          - img [ref=e60]
+        - button "Returns & Refunds" [ref=e63]:
+          - generic [ref=e64]:
+            - img [ref=e65]
+            - generic [ref=e68]: Returns & Refunds
+          - img [ref=e69]
+        - button "Employees & Payroll" [ref=e72]:
+          - generic [ref=e73]:
+            - img [ref=e74]
+            - generic [ref=e77]: Employees & Payroll
+          - img [ref=e78]
+        - link "User Management" [ref=e80] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e81]
+          - generic [ref=e93]: User Management
+        - link "Backup" [ref=e94] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e95]
+          - generic [ref=e98]: Backup
+        - button "Keyboard Shortcuts" [ref=e100] [cursor=pointer]:
+          - img
+          - generic [ref=e101]: Keyboard Shortcuts
+    - generic [ref=e102]:
+      - banner [ref=e103]:
+        - generic [ref=e104]:
+          - img "Logo" [ref=e106]
+          - generic [ref=e107]:
+            - heading "Atif Ali" [level=1] [ref=e108]
+            - paragraph [ref=e109]: Invoice & Billing System
+        - generic [ref=e110]:
+          - button "Toggle theme" [ref=e111] [cursor=pointer]:
+            - img
+          - generic [ref=e112]: atif@pos.com
+          - button "Settings" [ref=e113] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e115] [cursor=pointer]:
+            - img
+      - main [ref=e116]:
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - link "Employees" [ref=e120] [cursor=pointer]:
+              - /url: /employee-management/employees
+              - img [ref=e121]
+              - text: Employees
+            - link "Salary Setup" [ref=e126] [cursor=pointer]:
+              - /url: /employee-management/salary
+              - img [ref=e127]
+              - text: Salary Setup
+            - link "Payroll" [ref=e129] [cursor=pointer]:
+              - /url: /employee-management/payroll
+              - img [ref=e130]
+              - text: Payroll
+            - link "Reports" [ref=e132] [cursor=pointer]:
+              - /url: /employee-management/reports
+              - img [ref=e133]
+              - text: Reports
+          - generic [ref=e136]:
+            - generic [ref=e137]:
+              - heading "Employees" [level=1] [ref=e138]
+              - paragraph [ref=e139]: Manage employees and their details.
+            - generic [ref=e140]:
+              - generic [ref=e141]:
+                - generic [ref=e143]: Total Employees
+                - generic [ref=e145]:
+                  - img [ref=e146]
+                  - paragraph [ref=e151]: "1"
+              - generic [ref=e152]:
+                - generic [ref=e154]: Active
+                - generic [ref=e156]:
+                  - img [ref=e157]
+                  - paragraph [ref=e161]: "1"
+              - generic [ref=e162]:
+                - generic [ref=e164]: Inactive
+                - generic [ref=e166]:
+                  - img [ref=e167]
+                  - paragraph [ref=e172]: "0"
+              - generic [ref=e173]:
+                - generic [ref=e175]: Terminated
+                - generic [ref=e177]:
+                  - img [ref=e178]
+                  - paragraph [ref=e181]: "0"
+            - generic [ref=e182]:
+              - generic [ref=e184]:
+                - generic [ref=e185]:
+                  - text: Employee List
+                  - generic [ref=e186]: (1)
+                - generic [ref=e187]:
+                  - generic [ref=e188]:
+                    - button "All (1)" [ref=e189]
+                    - button "active" [ref=e190]
+                    - button "inactive" [ref=e191]
+                    - button "terminated" [ref=e192]
+                  - generic [ref=e193]:
+                    - img
+                    - textbox "Name, designation..." [ref=e194]
+                  - button "Add Employee" [ref=e195] [cursor=pointer]:
+                    - img
+                    - text: Add Employee
+              - table [ref=e199]:
+                - rowgroup [ref=e200]:
+                  - row "Name Phone Email Designation Status Linked User Join Date Actions" [ref=e201]:
+                    - columnheader "Name" [ref=e202]
+                    - columnheader "Phone" [ref=e203]
+                    - columnheader "Email" [ref=e204]
+                    - columnheader "Designation" [ref=e205]
+                    - columnheader "Status" [ref=e206]
+                    - columnheader "Linked User" [ref=e207]
+                    - columnheader "Join Date" [ref=e208]
+                    - columnheader "Actions" [ref=e209]
+                - rowgroup [ref=e210]:
+                  - row "TRY BJH BJP@GMAIL.COM N N Active atif@pos.com 15/04/2026" [ref=e211]:
+                    - cell "TRY" [ref=e212]
+                    - cell "BJH" [ref=e213]
+                    - cell "BJP@GMAIL.COM" [ref=e214]
+                    - cell "N N" [ref=e215]
+                    - cell "Active" [ref=e216]:
+                      - generic [ref=e217]: Active
+                    - cell "atif@pos.com" [ref=e218]:
+                      - generic [ref=e219]: atif@pos.com
+                    - cell "15/04/2026" [ref=e220]
+                    - cell [ref=e221]:
+                      - generic [ref=e222]:
+                        - button [ref=e223] [cursor=pointer]:
+                          - img
+                        - button [ref=e224] [cursor=pointer]:
+                          - img
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e230] [cursor=pointer]:
+    - img [ref=e231]

@@ -19,7 +19,7 @@ import { createRefund, getRefunds } from "@/app/(app)/returns/actions"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { CurrencyDisplay } from "@/components/currency-display"
-import type { Return } from "@/lib/types/return"
+import type { Return, RefundMethod } from "@/lib/types/return"
 
 interface RefundDialogProps {
   returns: Return[]
@@ -29,7 +29,7 @@ export function RefundDialog({ returns }: RefundDialogProps) {
   const [open, setOpen] = useState(false)
   const [returnId, setReturnId] = useState("")
   const [amount, setAmount] = useState("")
-  const [method, setMethod] = useState("Cash")
+  const [method, setMethod] = useState<RefundMethod>("Cash")
   const [reference, setReference] = useState("")
   const [pending, startTransition] = useTransition()
   const [existingRefunds, setExistingRefunds] = useState<Array<{ amount: number }>>([])
@@ -73,6 +73,11 @@ export function RefundDialog({ returns }: RefundDialogProps) {
 
     if (!method) {
       toast.error("Please select a payment method")
+      return
+    }
+
+    if ((method === "JazzCash" || method === "EasyPaisa") && !reference.trim()) {
+      toast.error(`Transaction ID is required for ${method}`)
       return
     }
 
@@ -177,13 +182,15 @@ export function RefundDialog({ returns }: RefundDialogProps) {
 
           <div className="space-y-2">
             <Label htmlFor="method">Payment Method</Label>
-            <Select value={method} onValueChange={setMethod}>
+            <Select value={method} onValueChange={(v) => { setMethod(v as RefundMethod); setReference("") }}>
               <SelectTrigger id="method">
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Cash">Cash</SelectItem>
                 <SelectItem value="Card">Card</SelectItem>
+                <SelectItem value="JazzCash">JazzCash</SelectItem>
+                <SelectItem value="EasyPaisa">EasyPaisa</SelectItem>
                 <SelectItem value="Mixed">Mixed</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
@@ -191,14 +198,20 @@ export function RefundDialog({ returns }: RefundDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reference">Reference (Optional)</Label>
+            <Label htmlFor="reference">
+              {method === "JazzCash" || method === "EasyPaisa" ? "Transaction ID *" : "Reference (Optional)"}
+            </Label>
             <Input
               id="reference"
               type="text"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              placeholder="Refund reference number"
+              placeholder={method === "JazzCash" || method === "EasyPaisa" ? `${method} Transaction ID` : "Refund reference number"}
+              className={method === "JazzCash" || method === "EasyPaisa" ? "border-orange-300 focus:border-orange-500" : ""}
             />
+            {(method === "JazzCash" || method === "EasyPaisa") && (
+              <p className="text-xs text-orange-600">Enter the Transaction ID from the {method} transfer receipt</p>
+            )}
           </div>
         </div>
         <DialogFooter>
@@ -207,7 +220,7 @@ export function RefundDialog({ returns }: RefundDialogProps) {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={pending || !returnId || !amount || !method || returns.length === 0}
+            disabled={pending || !returnId || !amount || !method || returns.length === 0 || ((method === "JazzCash" || method === "EasyPaisa") && !reference.trim())}
           >
             {pending ? "Processing..." : "Process Refund"}
           </Button>

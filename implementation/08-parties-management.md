@@ -20,6 +20,7 @@
 
 | Date | Change | File |
 |------|--------|------|
+| 2026-04 | **Party ledger return entries** — sale return and purchase return transactions now display correctly in party ledger with proper debit/credit signs | `app/(app)/returns/actions.ts`, `app/(app)/accounts-management/ledgers/` |
 | Previous | `parties-validation.ts` created — shared party verification | `lib/db/parties-validation.ts` |
 | Previous | Fixed data isolation bug — some queries missed `user_id` filter | `parties/actions.ts` |
 
@@ -38,6 +39,8 @@
 
 - [ ] **Search parties** — by name, phone number
 - [ ] **Filter by type** — Customer / Vendor / All
+- [ ] **Filter ledger by receivable/payable** — show only customers with outstanding balance, or only vendors with payable
+- [ ] **Party Balance Report search** — search/filter on party balance report page
 - [ ] **Credit limit** — set maximum credit allowed for customer
 - [ ] **Credit limit enforcement** — warn/block if customer exceeds limit
 - [ ] **WhatsApp number** — separate field for WhatsApp (common in Pakistan)

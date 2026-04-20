@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id UUID NOT NULL REFERENCES sales_invoices(id) ON DELETE CASCADE,
   amount NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
-  method TEXT NOT NULL CHECK (method IN ('Cash', 'Card', 'Mixed', 'Other')),
+  method TEXT NOT NULL CHECK (method IN ('Cash', 'Card', 'JazzCash', 'EasyPaisa', 'Mixed', 'Other')),
   reference TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

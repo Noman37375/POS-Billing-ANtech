@@ -108,6 +108,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
 
   const { error: lineError } = await supabase.from("sales_invoice_lines").insert(lineItems)
   if (lineError) {
+    await supabase.from("sales_invoices").delete().eq("id", invoice.id)
     return { error: lineError.message, data: null }
   }
 
@@ -125,6 +126,7 @@ export async function createPOSSale(payload: CreatePOSSaleInput) {
     if (paymentRows.length > 0) {
       const { error: payError } = await supabase.from("payments").insert(paymentRows)
       if (payError) {
+        await supabase.from("sales_invoices").delete().eq("id", invoice.id)
         return { error: payError.message, data: null }
       }
     }
@@ -433,7 +435,7 @@ export async function getOrCreateWalkInParty(): Promise<{ id: string }> {
 
   const { data: created } = await supabase
     .from("parties")
-    .insert({ name: "Walk-in Customer", type: "Customer", user_id: currentUser.effectiveUserId })
+    .insert({ name: "Walk-in Customer", phone: "000-000-0000", type: "Customer", user_id: currentUser.effectiveUserId })
     .select("id")
     .single()
 
@@ -942,7 +944,7 @@ export async function updatePOSSale(
     items: Array<{ itemId: string; quantity: number; unitPrice: number }>
     taxRate?: number
     status?: "Draft" | "Credit" | "Paid"
-    payment?: { amount: number; method: string }
+    payment?: { amount: number; method: string; reference?: string }
   }
 ) {
   const currentUser = await getSessionOrRedirect()
@@ -1004,6 +1006,7 @@ export async function updatePOSSale(
       invoice_id: invoiceId,
       amount: payload.payment.amount,
       method: payload.payment.method,
+      reference: payload.payment.reference ?? null,
       user_id: currentUser.effectiveUserId,
     })
   }
@@ -1046,4 +1049,33 @@ export async function updatePOSSale(
   revalidatePath("/pos/sales")
   revalidatePath("/dashboard")
   return { error: null, data: { invoiceId } }
+}
+
+
+export async function quickCreateCustomer(name: string, phone: string, address?: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!name.trim() || !phone.trim()) {
+    return { error: "Name and phone are required", data: null }
+  }
+
+  const { data, error } = await supabase
+    .from("parties")
+    .insert({
+      name: name.trim(),
+      phone: phone.trim(),
+      address: address?.trim() || null,
+      type: "Customer",
+      user_id: currentUser.effectiveUserId,
+    })
+    .select("id, name, address")
+    .single()
+
+  if (error || !data) {
+    return { error: error?.message ?? "Failed to create customer", data: null }
+  }
+
+  revalidatePath("/parties")
+  return { error: null, data: { id: data.id, name: data.name, address: data.address as string | null } }
 }

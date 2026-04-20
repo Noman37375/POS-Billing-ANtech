@@ -1,0 +1,117 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e40] [cursor=pointer]:
+    - img [ref=e41]
+  - alert [ref=e44]
+  - generic [ref=e45]:
+    - complementary [ref=e46]:
+      - generic [ref=e47]:
+        - img "Logo" [ref=e49]
+        - generic [ref=e50]:
+          - paragraph [ref=e51]: InvoSync
+          - paragraph [ref=e52]: Invoice & Billing
+      - navigation [ref=e53]:
+        - link "Dashboard" [ref=e54] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e55]
+          - generic [ref=e57]: Dashboard
+        - button "Parties" [ref=e59]:
+          - generic [ref=e60]:
+            - img [ref=e61]
+            - generic [ref=e66]: Parties
+          - img [ref=e67]
+        - button "Stock Management" [ref=e70]:
+          - generic [ref=e71]:
+            - img [ref=e72]
+            - generic [ref=e75]: Stock Management
+          - img [ref=e76]
+        - button "POS" [ref=e79]:
+          - generic [ref=e80]:
+            - img [ref=e81]
+            - generic [ref=e85]: POS
+          - img [ref=e86]
+        - button "Purchase Management" [ref=e89]:
+          - generic [ref=e90]:
+            - img [ref=e91]
+            - generic [ref=e94]: Purchase Management
+          - img [ref=e95]
+        - button "Accounts Management" [ref=e98]:
+          - generic [ref=e99]:
+            - img [ref=e100]
+            - generic [ref=e102]: Accounts Management
+          - img [ref=e103]
+        - button "Returns & Refunds" [ref=e106]:
+          - generic [ref=e107]:
+            - img [ref=e108]
+            - generic [ref=e111]: Returns & Refunds
+          - img [ref=e112]
+        - button "Employees & Payroll" [ref=e115]:
+          - generic [ref=e116]:
+            - img [ref=e117]
+            - generic [ref=e120]: Employees & Payroll
+          - img [ref=e121]
+        - link "User Management" [ref=e123] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e124]
+          - generic [ref=e136]: User Management
+        - link "Backup" [ref=e137] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e138]
+          - generic [ref=e141]: Backup
+        - button "Keyboard Shortcuts" [ref=e143] [cursor=pointer]:
+          - img
+          - generic [ref=e144]: Keyboard Shortcuts
+    - generic [ref=e145]:
+      - banner [ref=e146]:
+        - generic [ref=e147]:
+          - img "Logo" [ref=e149]
+          - generic [ref=e150]:
+            - heading "Atif Ali" [level=1] [ref=e151]
+            - paragraph [ref=e152]: Invoice & Billing System
+        - generic [ref=e153]:
+          - button "Toggle theme" [ref=e154] [cursor=pointer]:
+            - img
+          - generic [ref=e155]: atif@pos.com
+          - button "Settings" [ref=e156] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e158] [cursor=pointer]:
+            - img
+      - main [ref=e159]:
+        - generic [ref=e161]:
+          - generic [ref=e163]:
+            - heading "Dashboard" [level=2] [ref=e164]
+            - paragraph [ref=e165]: Quick pulse of InvoSync health
+          - generic [ref=e166]:
+            - generic [ref=e168]:
+              - generic [ref=e169]:
+                - paragraph [ref=e170]: Total Sales (MTD)
+                - paragraph [ref=e171]: PKR 193,227.00
+              - img [ref=e173]
+            - generic [ref=e177]:
+              - generic [ref=e178]:
+                - paragraph [ref=e179]: Gross Profit
+                - paragraph [ref=e180]: PKR 37,200.00 (19%)
+              - img [ref=e182]
+            - generic [ref=e185]:
+              - generic [ref=e186]:
+                - paragraph [ref=e187]: Total Customers
+                - paragraph [ref=e188]: "101"
+              - img [ref=e190]
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - paragraph [ref=e198]: Outstanding Receivables
+                - paragraph [ref=e199]: PKR 0.00
+              - img [ref=e201]
+          - generic [ref=e203]:
+            - generic [ref=e204]:
+              - heading "Quick Stats" [level=3] [ref=e205]
+              - generic [ref=e206]: Live snapshot
+            - generic [ref=e207]:
+              - generic [ref=e208]:
+                - paragraph [ref=e209]: Total Inventory Items
+                - paragraph [ref=e210]: "10"
+                - paragraph [ref=e211]: "Stock Value: PKR 1,408,380.00"
+              - generic [ref=e212]:
+                - paragraph [ref=e213]: Total Parties
+                - paragraph [ref=e214]: "102"
+                - paragraph [ref=e215]: "Customers: 101 | Vendors: 1"
+    - region "Notifications alt+T"

@@ -1,0 +1,240 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Parties
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Stock Management
+            - img
+        - generic:
+          - button [expanded]:
+            - generic:
+              - img
+              - generic: POS
+            - img
+          - generic:
+            - link:
+              - /url: /pos
+              - img
+              - generic: New Sale
+            - link:
+              - /url: /pos/sales
+              - img
+              - generic: Sales
+            - link:
+              - /url: /pos/payments
+              - img
+              - generic: Customer Payments
+            - link:
+              - /url: /pos/settings
+              - img
+              - generic: Settings
+            - link:
+              - /url: /pos/reports
+              - img
+              - generic: Gross Profit
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Purchase Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Accounts Management
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Returns & Refunds
+            - img
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: Employees & Payroll
+            - img
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button:
+            - img
+            - generic: Keyboard Shortcuts
+    - generic:
+      - banner:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading [level=1]: Atif Ali
+            - paragraph: Invoice & Billing System
+        - generic:
+          - button:
+            - img
+          - generic: atif@pos.com
+          - button:
+            - img
+          - generic:
+            - button:
+              - img
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /pos
+                - img
+                - text: New Sale
+              - link:
+                - /url: /pos/sales
+                - img
+                - text: Sales
+              - link:
+                - /url: /pos/settings
+                - img
+                - text: Settings
+              - link:
+                - /url: /pos/reports
+                - img
+                - text: Gross Profit
+            - generic:
+              - heading [level=1]: New Sale
+              - paragraph: Add items, select customer, and complete payment.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic: Point of Sale
+                    - generic:
+                      - combobox [expanded]:
+                        - generic: 💵 Cash
+                        - img
+                      - generic:
+                        - button: "%"
+                        - button: PKR
+                      - button: 📊 Margin
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: Customer
+                      - generic:
+                        - textbox:
+                          - /placeholder: Search customer...
+                          - text: Afzal Milk Shop
+                        - button:
+                          - img
+                    - generic:
+                      - generic: Address
+                      - textbox:
+                        - /placeholder: Customer address...
+                        - text: Rafa e Aam
+                    - generic:
+                      - generic: Tax rate (%)
+                      - spinbutton: "0"
+                  - generic:
+                    - generic: Add item
+                    - generic:
+                      - generic:
+                        - textbox:
+                          - /placeholder: Search item...
+                      - spinbutton: "1"
+                      - button [disabled]:
+                        - img
+                        - text: Add
+                  - generic:
+                    - table:
+                      - rowgroup:
+                        - row:
+                          - columnheader: Item
+                          - columnheader: Qty
+                          - columnheader: Price
+                          - columnheader: Disc (%)
+                          - columnheader: Amount
+                          - columnheader
+                      - rowgroup:
+                        - row:
+                          - cell:
+                            - generic: Fruit Tree
+                            - text: cash
+                          - cell:
+                            - spinbutton: "1"
+                          - cell:
+                            - spinbutton: "750"
+                          - cell:
+                            - generic:
+                              - generic:
+                                - spinbutton: "10"
+                              - generic: "-PKR 75.00"
+                          - cell:
+                            - generic: PKR 675.00
+                            - generic: "-PKR 75.00"
+                          - cell:
+                            - button:
+                              - img
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: Subtotal
+                        - generic: PKR 750.00
+                      - generic:
+                        - generic: Item Discounts
+                        - generic: "-PKR 75.00"
+                      - generic:
+                        - generic: Bill Discount (PKR)
+                        - generic:
+                          - spinbutton
+                      - generic:
+                        - generic: Total
+                        - generic: PKR 675.00
+                    - generic:
+                      - generic:
+                        - generic: Mode
+                        - combobox:
+                          - generic: Sale
+                          - img
+                      - generic:
+                        - generic: Payment
+                        - combobox:
+                          - generic: Cash
+                          - img
+                      - button: Complete Sale
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e201] [cursor=pointer]:
+    - img [ref=e202]
+  - alert
+  - listbox [ref=e310]:
+    - option "💵 Cash" [active] [selected] [ref=e311]:
+      - generic [ref=e313]:
+        - img
+      - generic [ref=e314]: 💵 Cash
+    - option "📱 Credit" [ref=e315]:
+      - generic [ref=e317]: 📱 Credit
+    - option "🏢 Supplier" [ref=e318]:
+      - generic [ref=e320]: 🏢 Supplier

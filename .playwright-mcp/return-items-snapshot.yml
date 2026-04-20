@@ -1,0 +1,117 @@
+- generic:
+  - generic:
+    - complementary:
+      - generic:
+        - generic:
+          - img
+        - generic:
+          - paragraph: InvoSync
+          - paragraph: Invoice & Billing
+      - navigation:
+        - link:
+          - /url: /dashboard
+          - img
+          - generic: Dashboard
+        - generic:
+          - button
+        - generic:
+          - button
+        - generic:
+          - button
+        - link:
+          - /url: /cash-book
+          - img
+          - generic: Cash Book
+        - generic:
+          - button
+        - generic:
+          - button
+        - generic:
+          - button [expanded]
+          - generic
+        - generic:
+          - button
+        - link:
+          - /url: /users
+          - img
+          - generic: User Management
+        - link:
+          - /url: /backup
+          - img
+          - generic: Backup
+        - generic:
+          - button
+    - generic:
+      - banner:
+        - generic:
+          - generic
+          - generic
+        - generic:
+          - button
+          - generic: atif@pos.com
+          - button
+          - generic
+      - main:
+        - generic:
+          - generic
+    - region "Notifications alt+T"
+  - generic [ref=e350] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e351]:
+      - img [ref=e352]
+    - generic [ref=e355]:
+      - button "Open issues overlay" [ref=e356]:
+        - generic [ref=e551]:
+          - generic [ref=e552]: "1"
+          - generic [ref=e553]: "2"
+        - generic [ref=e360]:
+          - text: Issue
+          - generic [ref=e554]: s
+      - button "Collapse issues badge" [ref=e361]:
+        - img [ref=e362]
+  - alert
+  - dialog "Create Sale Return" [ref=e556]:
+    - generic [ref=e557]:
+      - heading "Create Sale Return" [level=2] [ref=e558]
+      - paragraph [ref=e559]: Process a return for a sales invoice.
+    - generic [ref=e560]:
+      - generic [ref=e561]:
+        - generic [ref=e562]: Sales Invoice
+        - combobox "Sales Invoice" [active] [ref=e563]:
+          - generic
+          - img
+      - generic [ref=e995]:
+        - generic [ref=e996]: Customer
+        - combobox "Customer" [ref=e997]:
+          - generic: rajo store - 03323767832
+          - img
+      - generic [ref=e564]:
+        - generic [ref=e565]: Return Items
+        - generic [ref=e998]:
+          - generic [ref=e999]
+          - generic [ref=e1011]
+      - generic [ref=e567]:
+        - generic [ref=e568]: Tax Rate (%)
+        - spinbutton "Tax Rate (%)" [ref=e569]: "18"
+      - generic [ref=e570]:
+        - generic [ref=e571]:
+          - generic [ref=e572]: "Subtotal:"
+          - generic [ref=e573]: PKR 1,160.00
+        - generic [ref=e574]:
+          - generic [ref=e575]: "Tax:"
+          - generic [ref=e576]: PKR 208.80
+        - generic [ref=e577]:
+          - generic [ref=e578]: "Total:"
+          - generic [ref=e579]: PKR 1,368.80
+      - generic [ref=e580]:
+        - generic [ref=e581]: Refunds (Optional)
+        - generic [ref=e582]:
+          - spinbutton [ref=e583]
+          - combobox [ref=e584]
+          - textbox "Reference" [ref=e585]
+          - button "Add Refund" [ref=e586] [cursor=pointer]
+    - generic [ref=e587]:
+      - button "Cancel" [ref=e588] [cursor=pointer]
+      - button "Create Return" [ref=e1023] [cursor=pointer]
+    - button "Close" [ref=e589]:
+      - img
+      - generic [ref=e590]: Close

@@ -36,6 +36,9 @@
 
 ## Missing Features (for Market)
 
+- [ ] **Time-based filters** — Today / This Week / This Month / This Year date selector on dashboard cards
+- [ ] **Sales charts** — Line chart (sales trend), Pie chart (category breakdown), Bar chart (top items)
+- [ ] **Sales insight filters** — Top selling items, Least selling items, Best customer by revenue
 - [ ] **Low stock alerts** — red badge on items below `minimum_stock`
 - [ ] **Monthly/yearly comparison charts** — this month vs last month
 - [ ] **Outstanding balance summary** — how much customers owe

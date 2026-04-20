@@ -137,7 +137,7 @@ export async function getPartyBalances() {
   parties.forEach((party) => {
     let balance = 0
 
-    if (party.type === "Customer") {
+    if (party.type === "Customer" || party.type === "Both") {
       // Customer balance: sales - payments - sale returns - refunds (positive = customer owes you)
       // Exclude cancelled invoices from balance calculation
       const partyInvoices =
@@ -154,7 +154,7 @@ export async function getPartyBalances() {
         saleReturns?.filter((ret) => ret.party_id === party.id && ret.status === "Completed") || []
       const totalSaleReturns = partySaleReturns.reduce((sum, ret) => sum + Number(ret.total || 0), 0)
 
-      // Subtract refunds for sale returns
+      // Refunds settle the credit created by returns: reduce negative balance (+ sign)
       const saleReturnIds = partySaleReturns.map((ret) => ret.id)
       const partyRefunds =
         refunds?.filter(
@@ -162,8 +162,10 @@ export async function getPartyBalances() {
         ) || []
       const totalRefunds = partyRefunds.reduce((sum, ref) => sum + Number(ref.amount || 0), 0)
 
-      balance = totalSales - totalPayments - totalSaleReturns - totalRefunds
-    } else if (party.type === "Vendor") {
+      balance = totalSales - totalPayments - totalSaleReturns + totalRefunds
+    }
+
+    if (party.type === "Vendor" || party.type === "Both") {
       // Vendor balance: purchases - payments - purchase returns - refunds (positive = you owe vendor)
       // Exclude cancelled purchases from balance calculation
       const partyPurchases =
@@ -189,7 +191,12 @@ export async function getPartyBalances() {
         ) || []
       const totalRefunds = partyRefunds.reduce((sum, ref) => sum + Number(ref.amount || 0), 0)
 
-      balance = totalPurchases - totalPurchasePayments - totalPurchaseReturns - totalRefunds
+      // For "Both" type: add vendor payables on top of customer receivables
+      if (party.type === "Both") {
+        balance += totalPurchases - totalPurchasePayments - totalPurchaseReturns - totalRefunds
+      } else {
+        balance = totalPurchases - totalPurchasePayments - totalPurchaseReturns - totalRefunds
+      }
     }
 
     balances[party.id] = balance
@@ -218,8 +225,19 @@ export async function getPartyLedger(partyId: string) {
     return { error: "Party not found", data: null }
   }
 
-  // For customers: get sales invoices and payments
-  if (party.type === "Customer") {
+  type LedgerTxn = {
+    date: string
+    description: string
+    debit: number
+    credit: number
+    type: string
+    reference_id: string
+  }
+
+  const combinedTransactions: LedgerTxn[] = []
+
+  // ── Customer-side transactions ─────────────────────────────────────────────
+  if (party.type === "Customer" || party.type === "Both") {
     const { data: invoices } = await supabase
       .from("sales_invoices")
       .select("id, total, created_at, status")
@@ -239,50 +257,32 @@ export async function getPartyLedger(partyId: string) {
       payments = paymentsData || []
     }
 
-    // Combine all transactions into one array
-    const allTransactions: Array<{
-      date: string
-      description: string
-      debit: number
-      credit: number
-      type: "invoice" | "payment"
-      reference_id: string
-    }> = []
+    const { data: saleReturns } = await supabase
+      .from("returns")
+      .select("id, total, created_at")
+      .eq("party_id", partyId)
+      .eq("type", "sale")
+      .eq("user_id", currentUser.effectiveUserId)
+      .order("created_at", { ascending: true })
 
-    // Add invoices (only non-cancelled ones count toward balance)
     invoices?.forEach((inv) => {
-      if (inv.status !== "Cancelled") {
-        allTransactions.push({
-          date: inv.created_at,
-          description: `Invoice #${inv.id.substring(0, 8).toUpperCase()}`,
-          debit: Number(inv.total || 0),
-          credit: 0,
-          type: "invoice",
-          reference_id: inv.id,
-        })
-      } else {
-        // Show cancelled invoices but with 0 debit
-        allTransactions.push({
-          date: inv.created_at,
-          description: `Invoice #${inv.id.substring(0, 8).toUpperCase()} (Cancelled)`,
-          debit: 0,
-          credit: 0,
-          type: "invoice",
-          reference_id: inv.id,
-        })
-      }
+      combinedTransactions.push({
+        date: inv.created_at,
+        description: inv.status === "Cancelled"
+          ? `Invoice #${inv.id.substring(0, 8).toUpperCase()} (Cancelled)`
+          : `Invoice #${inv.id.substring(0, 8).toUpperCase()}`,
+        debit: inv.status !== "Cancelled" ? Number(inv.total || 0) : 0,
+        credit: 0,
+        type: "invoice",
+        reference_id: inv.id,
+      })
     })
 
-    // Add payments (only count payments for non-cancelled invoices)
     payments?.forEach((pay) => {
-      const relatedInvoice = invoices?.find((inv) => inv.id === pay.invoice_id)
-      const isCancelled = relatedInvoice?.status === "Cancelled"
-
-      allTransactions.push({
+      const isCancelled = invoices?.find((inv) => inv.id === pay.invoice_id)?.status === "Cancelled"
+      combinedTransactions.push({
         date: pay.created_at,
-        description: isCancelled
-          ? `Payment (${pay.method}) - Invoice Cancelled`
-          : `Payment (${pay.method})`,
+        description: isCancelled ? `Payment (${pay.method}) - Invoice Cancelled` : `Payment (${pay.method})`,
         debit: 0,
         credit: isCancelled ? 0 : Number(pay.amount || 0),
         type: "payment",
@@ -290,24 +290,43 @@ export async function getPartyLedger(partyId: string) {
       })
     })
 
-    // Sort by date
-    allTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    const saleReturnIds = saleReturns?.map((r) => r.id) || []
+    let saleRefunds: any[] = []
+    if (saleReturnIds.length > 0) {
+      const { data: refundsData } = await supabase
+        .from("refunds")
+        .select("id, return_id, amount, method, created_at")
+        .in("return_id", saleReturnIds)
+        .eq("user_id", currentUser.effectiveUserId)
+        .order("created_at", { ascending: true })
+      saleRefunds = refundsData || []
+    }
 
-    // Calculate running balance
-    let runningBalance = 0
-    const ledgerRows = allTransactions.map((txn) => {
-      runningBalance += txn.debit - txn.credit
-      return {
-        ...txn,
-        balance: runningBalance,
-      }
+    saleReturns?.forEach((ret) => {
+      combinedTransactions.push({
+        date: ret.created_at,
+        description: `Sale Return #${ret.id.substring(0, 8).toUpperCase()}`,
+        debit: 0,
+        credit: Number(ret.total || 0),
+        type: "return",
+        reference_id: ret.id,
+      })
     })
 
-    return { error: null, data: { party, ledgerRows } }
+    saleRefunds.forEach((ref) => {
+      combinedTransactions.push({
+        date: ref.created_at,
+        description: `Refund (${ref.method || "Cash"})`,
+        debit: Number(ref.amount || 0),
+        credit: 0,
+        type: "refund",
+        reference_id: ref.return_id,
+      })
+    })
   }
 
-  // For vendors: get purchase invoices and purchase payments
-  if (party.type === "Vendor") {
+  // ── Vendor-side transactions ───────────────────────────────────────────────
+  if (party.type === "Vendor" || party.type === "Both") {
     const { data: purchases } = await supabase
       .from("purchase_invoices")
       .select("id, total, created_at, status")
@@ -327,52 +346,34 @@ export async function getPartyLedger(partyId: string) {
       purchasePayments = paymentsData || []
     }
 
-    // Combine all transactions into one array
-    const allTransactions: Array<{
-      date: string
-      description: string
-      debit: number
-      credit: number
-      type: "purchase" | "payment"
-      reference_id: string
-    }> = []
+    const { data: purchaseReturns } = await supabase
+      .from("returns")
+      .select("id, total, created_at")
+      .eq("party_id", partyId)
+      .eq("type", "purchase")
+      .eq("user_id", currentUser.effectiveUserId)
+      .order("created_at", { ascending: true })
 
-    // Add purchase invoices (only non-cancelled ones count toward balance)
-    // For vendors (liability): Credit increases, Debit decreases
     purchases?.forEach((purch) => {
-      if (purch.status !== "Cancelled") {
-        allTransactions.push({
-          date: purch.created_at,
-          description: `Purchase #${purch.id.substring(0, 8).toUpperCase()}`,
-          debit: 0,
-          credit: Number(purch.total || 0),
-          type: "purchase",
-          reference_id: purch.id,
-        })
-      } else {
-        // Show cancelled purchases but with 0 debit/credit
-        allTransactions.push({
-          date: purch.created_at,
-          description: `Purchase #${purch.id.substring(0, 8).toUpperCase()} (Cancelled)`,
-          debit: 0,
-          credit: 0,
-          type: "purchase",
-          reference_id: purch.id,
-        })
-      }
+      combinedTransactions.push({
+        date: purch.created_at,
+        description: purch.status === "Cancelled"
+          ? `Purchase #${purch.id.substring(0, 8).toUpperCase()} (Cancelled)`
+          : `Purchase #${purch.id.substring(0, 8).toUpperCase()}`,
+        // Purchase = we owe vendor → stored as credit so debit-credit gives negative (correct for "Both" net)
+        debit: 0,
+        credit: purch.status !== "Cancelled" ? Number(purch.total || 0) : 0,
+        type: "purchase",
+        reference_id: purch.id,
+      })
     })
 
-    // Add purchase payments (only count payments for non-cancelled purchases)
-    // For vendors (liability): Debit decreases, Credit increases
     purchasePayments?.forEach((pay) => {
-      const relatedPurchase = purchases?.find((purch) => purch.id === pay.purchase_invoice_id)
-      const isCancelled = relatedPurchase?.status === "Cancelled"
-
-      allTransactions.push({
+      const isCancelled = purchases?.find((p) => p.id === pay.purchase_invoice_id)?.status === "Cancelled"
+      combinedTransactions.push({
         date: pay.created_at,
-        description: isCancelled
-          ? `Payment (${pay.method}) - Purchase Cancelled`
-          : `Payment (${pay.method})`,
+        description: isCancelled ? `Payment (${pay.method}) - Purchase Cancelled` : `Payment (${pay.method})`,
+        // Payment to vendor = we paid them → stored as debit so debit-credit gives positive (reduces our debt)
         debit: isCancelled ? 0 : Number(pay.amount || 0),
         credit: 0,
         type: "payment",
@@ -380,23 +381,32 @@ export async function getPartyLedger(partyId: string) {
       })
     })
 
-    // Sort by date
-    allTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-
-    // Calculate running balance (positive = you owe vendor)
-    // For vendors (liability): Balance = Credit - Debit (proper accounting)
-    let runningBalance = 0
-    const ledgerRows = allTransactions.map((txn) => {
-      runningBalance += txn.credit - txn.debit
-      return {
-        ...txn,
-        balance: runningBalance,
-      }
+    purchaseReturns?.forEach((ret) => {
+      combinedTransactions.push({
+        date: ret.created_at,
+        description: `Purchase Return #${ret.id.substring(0, 8).toUpperCase()}`,
+        debit: Number(ret.total || 0),
+        credit: 0,
+        type: "return",
+        reference_id: ret.id,
+      })
     })
 
-    return { error: null, data: { party, ledgerRows } }
   }
 
-  return { error: null, data: { party, ledgerRows: [] } }
+  combinedTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  // Vendor-only: positive balance = we owe them (credit-debit). Customer/Both: positive = they owe us (debit-credit).
+  const sign = party.type === "Vendor" ? -1 : 1
+  let runningBalance = 0
+  const ledgerRows = combinedTransactions.map((txn) => {
+    runningBalance += sign * (txn.debit - txn.credit)
+    return {
+      ...txn,
+      balance: runningBalance,
+    }
+  })
+
+  return { error: null, data: { party, ledgerRows } }
 }
 

@@ -2,7 +2,7 @@
 
 export type ReturnType = "sale" | "purchase"
 export type ReturnStatus = "Draft" | "Completed" | "Cancelled"
-export type RefundMethod = "Cash" | "Card" | "Mixed" | "Other"
+export type RefundMethod = "Cash" | "Card" | "JazzCash" | "EasyPaisa" | "Mixed" | "Other"
 
 export interface Return {
   id: string

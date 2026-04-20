@@ -1,0 +1,40 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+        - button "Parties" [ref=e16]
+        - button "Stock Management" [ref=e27]
+        - button "POS" [ref=e36]
+        - link "Cash Book" [ref=e45] [cursor=pointer]:
+          - /url: /cash-book
+        - button "Purchase Management" [ref=e51]
+        - button "Accounts Management" [ref=e60]
+        - button "Returns & Refunds" [ref=e68]
+        - button "Employees & Payroll" [ref=e77]
+        - link "User Management" [ref=e85] [cursor=pointer]:
+          - /url: /users
+        - link "Backup" [ref=e99] [cursor=pointer]:
+          - /url: /backup
+        - button "Keyboard Shortcuts" [ref=e105] [cursor=pointer]
+    - generic [ref=e107]:
+      - banner [ref=e108]:
+        - generic [ref=e109]
+        - generic [ref=e115]
+      - main [ref=e121]:
+        - generic [ref=e3346]
+    - region "Notifications alt+T"
+  - generic [ref=e3341] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e3342]:
+      - img [ref=e3343]
+    - generic [ref=e6560]:
+      - button "Open issues overlay" [ref=e6561]:
+        - generic [ref=e6562]
+        - generic [ref=e6565]: Issue
+      - button "Collapse issues badge" [ref=e6566]:
+        - img [ref=e6567]
+  - alert [ref=e6569]

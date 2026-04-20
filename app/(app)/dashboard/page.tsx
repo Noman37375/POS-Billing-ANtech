@@ -67,6 +67,43 @@ export default async function DashboardPage() {
       grossProfit += (selling - cost) * qty
     }
   }
+
+  // Bug 4 Fix: Subtract returns from gross profit (returns reduce revenue & profit)
+  const { data: saleReturnsThisMonth = [] } = await supabase
+    .from("returns")
+    .select("id, subtotal")
+    .eq("user_id", currentUser.effectiveUserId)
+    .eq("type", "sale")
+    .eq("status", "Completed")
+    .gte("created_at", monthStart)
+
+  const returnIds = (saleReturnsThisMonth || []).map((r) => r.id)
+  if (returnIds.length > 0) {
+    const { data: returnLines = [] } = await supabase
+      .from("return_lines")
+      .select("quantity, unit_price, sales_invoice_line_id")
+      .in("return_id", returnIds)
+
+    // Get cost prices from original invoice lines
+    const origLineIds = (returnLines || []).map((rl) => rl.sales_invoice_line_id).filter(Boolean) as string[]
+    let costMap: Record<string, number> = {}
+    if (origLineIds.length > 0) {
+      const { data: origLines = [] } = await supabase
+        .from("sales_invoice_lines")
+        .select("id, cost_price")
+        .in("id", origLineIds)
+      ;(origLines || []).forEach((l: any) => { costMap[l.id] = Number(l.cost_price || 0) })
+    }
+
+    for (const rl of returnLines || []) {
+      const qty = Number(rl.quantity || 0)
+      const selling = Number((rl as any).unit_price || 0)
+      const cost = rl.sales_invoice_line_id ? (costMap[rl.sales_invoice_line_id] ?? 0) : 0
+      totalSalesForPeriod -= selling * qty
+      grossProfit -= (selling - cost) * qty
+    }
+  }
+
   const grossProfitPercent = totalSalesForPeriod > 0 ? Math.round((grossProfit / totalSalesForPeriod) * 100) : 0
 
   // Ensure we have arrays (handle null cases)

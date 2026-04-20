@@ -33,6 +33,7 @@
 
 ## Missing Features (for Market — SaaS Platform Admin)
 
+- [ ] **Move User Management into Settings nav** — currently a top-level admin module; user preference is to nest it under Settings
 - [ ] **User subscription/plan management** — free trial, paid plan, expired
 - [ ] **Usage statistics per user** — # invoices, # items, storage used
 - [ ] **Trial expiry enforcement** — block login when trial ends

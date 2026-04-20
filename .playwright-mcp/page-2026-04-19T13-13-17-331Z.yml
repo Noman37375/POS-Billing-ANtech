@@ -1,0 +1,386 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - button "Parties" [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - generic [ref=e23]: Parties
+          - img [ref=e24]
+        - generic [ref=e26]:
+          - button "Stock Management" [expanded] [ref=e27]:
+            - generic [ref=e28]:
+              - img [ref=e29]
+              - generic [ref=e32]: Stock Management
+            - img [ref=e33]
+          - generic [ref=e35]:
+            - link "Inventory" [ref=e36] [cursor=pointer]:
+              - /url: /stock-management/inventory
+              - img [ref=e37]
+              - generic [ref=e41]: Inventory
+            - link "Inventory Report" [ref=e42] [cursor=pointer]:
+              - /url: /stock-management/reports
+              - img [ref=e43]
+              - generic [ref=e46]: Inventory Report
+            - link "Categories" [ref=e47] [cursor=pointer]:
+              - /url: /stock-management/categories
+              - img [ref=e48]
+              - generic [ref=e52]: Categories
+            - link "Units" [ref=e53] [cursor=pointer]:
+              - /url: /stock-management/units
+              - img [ref=e54]
+              - generic [ref=e60]: Units
+            - link "Barcode" [ref=e61] [cursor=pointer]:
+              - /url: /stock-management/barcode
+              - img [ref=e62]
+              - generic [ref=e67]: Barcode
+        - button "POS" [ref=e69]:
+          - generic [ref=e70]:
+            - img [ref=e71]
+            - generic [ref=e75]: POS
+          - img [ref=e76]
+        - button "Purchase Management" [ref=e79]:
+          - generic [ref=e80]:
+            - img [ref=e81]
+            - generic [ref=e84]: Purchase Management
+          - img [ref=e85]
+        - button "Accounts Management" [ref=e88]:
+          - generic [ref=e89]:
+            - img [ref=e90]
+            - generic [ref=e92]: Accounts Management
+          - img [ref=e93]
+        - button "Returns & Refunds" [ref=e96]:
+          - generic [ref=e97]:
+            - img [ref=e98]
+            - generic [ref=e101]: Returns & Refunds
+          - img [ref=e102]
+        - button "Employees & Payroll" [ref=e105]:
+          - generic [ref=e106]:
+            - img [ref=e107]
+            - generic [ref=e110]: Employees & Payroll
+          - img [ref=e111]
+        - link "User Management" [ref=e113] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e114]
+          - generic [ref=e126]: User Management
+        - link "Backup" [ref=e127] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e128]
+          - generic [ref=e131]: Backup
+        - button "Keyboard Shortcuts" [ref=e133] [cursor=pointer]:
+          - img
+          - generic [ref=e134]: Keyboard Shortcuts
+    - generic [ref=e135]:
+      - banner [ref=e136]:
+        - generic [ref=e137]:
+          - img "Logo" [ref=e139]
+          - generic [ref=e140]:
+            - heading "Atif Ali" [level=1] [ref=e141]
+            - paragraph [ref=e142]: Invoice & Billing System
+        - generic [ref=e143]:
+          - button "Toggle theme" [ref=e144] [cursor=pointer]:
+            - img
+          - generic [ref=e145]: atif@pos.com
+          - button "Settings" [ref=e146] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e148] [cursor=pointer]:
+            - img
+      - main [ref=e149]:
+        - generic [ref=e151]:
+          - generic [ref=e152]:
+            - generic [ref=e153]:
+              - heading "Inventory" [level=1] [ref=e154]
+              - paragraph [ref=e155]: Track stock and pricing for every SKU/service.
+            - button "Add Item" [ref=e156] [cursor=pointer]:
+              - img
+              - text: Add Item
+          - generic [ref=e157]:
+            - link "Active" [ref=e158] [cursor=pointer]:
+              - /url: /stock-management/inventory
+            - link "Archived" [ref=e159] [cursor=pointer]:
+              - /url: /stock-management/inventory?tab=archived
+          - generic [ref=e160]:
+            - generic [ref=e162]:
+              - generic [ref=e163]:
+                - text: Items
+                - generic [ref=e164]: (13)
+              - generic [ref=e165]:
+                - generic [ref=e166]:
+                  - button "All (13)" [ref=e167]
+                  - button "In Stock (13)" [ref=e168]
+                  - button "Low (0)" [ref=e169]
+                  - button "Out (0)" [ref=e170]
+                - generic [ref=e171]:
+                  - img
+                  - textbox "Name, barcode, category..." [ref=e172]
+            - table [ref=e175]:
+              - rowgroup [ref=e176]:
+                - row "Item Stock Cost 💵 Cash 📱 Credit Value Actions" [ref=e177]:
+                  - columnheader "Item" [ref=e178]
+                  - columnheader "Stock" [ref=e179]
+                  - columnheader "Cost" [ref=e180]
+                  - columnheader "💵 Cash" [ref=e181]
+                  - columnheader "📱 Credit" [ref=e182]
+                  - columnheader "Value" [ref=e183]
+                  - columnheader "Actions" [ref=e184]
+              - rowgroup [ref=e185]:
+                - 'row "Trial Drinks BC: BC2DE7CEEFLUNH 99 PKR 1,000.00 PKR 1,500.00 PKR 1,800.00 PKR 148,500.00" [ref=e186]':
+                  - 'cell "Trial Drinks BC: BC2DE7CEEFLUNH" [ref=e187]':
+                    - generic [ref=e188]:
+                      - generic [ref=e189]: Trial
+                      - generic [ref=e190]:
+                        - generic [ref=e191]: Drinks
+                        - generic [ref=e192]: "BC: BC2DE7CEEFLUNH"
+                  - cell "99" [ref=e193]:
+                    - generic [ref=e195]: "99"
+                  - cell "PKR 1,000.00" [ref=e196]
+                  - cell "PKR 1,500.00" [ref=e197]
+                  - cell "PKR 1,800.00" [ref=e198]
+                  - cell "PKR 148,500.00" [ref=e199]
+                  - cell [ref=e200]:
+                    - generic [ref=e201]:
+                      - button [ref=e202] [cursor=pointer]:
+                        - img
+                      - button [ref=e203] [cursor=pointer]:
+                        - img
+                - 'row "Fruit Tree Drinks BC: BC2BB55128BUH2 25 PKR 600.00 PKR 750.00 PKR 750.00 PKR 18,750.00" [ref=e204]':
+                  - 'cell "Fruit Tree Drinks BC: BC2BB55128BUH2" [ref=e205]':
+                    - generic [ref=e206]:
+                      - generic [ref=e207]: Fruit Tree
+                      - generic [ref=e208]:
+                        - generic [ref=e209]: Drinks
+                        - generic [ref=e210]: "BC: BC2BB55128BUH2"
+                  - cell "25" [ref=e211]:
+                    - generic [ref=e213]: "25"
+                  - cell "PKR 600.00" [ref=e214]
+                  - cell "PKR 750.00" [ref=e215]
+                  - cell "PKR 750.00" [ref=e216]
+                  - cell "PKR 18,750.00" [ref=e217]
+                  - cell [ref=e218]:
+                    - generic [ref=e219]:
+                      - button [ref=e220] [cursor=pointer]:
+                        - img
+                      - button [ref=e221] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy ON 1000ml 12pcs Drinks BC: BCAACE01CD6TM6 80 PKR 1,040.00 PKR 1,440.00 PKR 1,440.00 PKR 115,200.00" [ref=e222]':
+                  - 'cell "Fizzy ON 1000ml 12pcs Drinks BC: BCAACE01CD6TM6" [ref=e223]':
+                    - generic [ref=e224]:
+                      - generic [ref=e225]: Fizzy ON 1000ml 12pcs
+                      - generic [ref=e226]:
+                        - generic [ref=e227]: Drinks
+                        - generic [ref=e228]: "BC: BCAACE01CD6TM6"
+                  - cell "80" [ref=e229]:
+                    - generic [ref=e231]: "80"
+                  - cell "PKR 1,040.00" [ref=e232]
+                  - cell "PKR 1,440.00" [ref=e233]
+                  - cell "PKR 1,440.00" [ref=e234]
+                  - cell "PKR 115,200.00" [ref=e235]
+                  - cell [ref=e236]:
+                    - generic [ref=e237]:
+                      - button [ref=e238] [cursor=pointer]:
+                        - img
+                      - button [ref=e239] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy ON 1000ml (M) Drinks BC: BC6E67EDD5FYQ3 441 PKR 520.00 PKR 720.00 PKR 720.00 PKR 317,520.00" [ref=e240]':
+                  - 'cell "Fizzy ON 1000ml (M) Drinks BC: BC6E67EDD5FYQ3" [ref=e241]':
+                    - generic [ref=e242]:
+                      - generic [ref=e243]: Fizzy ON 1000ml (M)
+                      - generic [ref=e244]:
+                        - generic [ref=e245]: Drinks
+                        - generic [ref=e246]: "BC: BC6E67EDD5FYQ3"
+                  - cell "441" [ref=e247]:
+                    - generic [ref=e249]: "441"
+                  - cell "PKR 520.00" [ref=e250]
+                  - cell "PKR 720.00" [ref=e251]
+                  - cell "PKR 720.00" [ref=e252]
+                  - cell "PKR 317,520.00" [ref=e253]
+                  - cell [ref=e254]:
+                    - generic [ref=e255]:
+                      - button [ref=e256] [cursor=pointer]:
+                        - img
+                      - button [ref=e257] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy ON 250ml 24pcs Drinks BC: BCCF2C58AD39NF 39 PKR 700.00 PKR 920.00 PKR 920.00 PKR 35,880.00" [ref=e258]':
+                  - 'cell "Fizzy ON 250ml 24pcs Drinks BC: BCCF2C58AD39NF" [ref=e259]':
+                    - generic [ref=e260]:
+                      - generic [ref=e261]: Fizzy ON 250ml 24pcs
+                      - generic [ref=e262]:
+                        - generic [ref=e263]: Drinks
+                        - generic [ref=e264]: "BC: BCCF2C58AD39NF"
+                  - cell "39" [ref=e265]:
+                    - generic [ref=e267]: "39"
+                  - cell "PKR 700.00" [ref=e268]
+                  - cell "PKR 920.00" [ref=e269]
+                  - cell "PKR 920.00" [ref=e270]
+                  - cell "PKR 35,880.00" [ref=e271]
+                  - cell [ref=e272]:
+                    - generic [ref=e273]:
+                      - button [ref=e274] [cursor=pointer]:
+                        - img
+                      - button [ref=e275] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy Gold 1000ml Drinks BC: BC889D46E7MZX6 215 PKR 600.00 PKR 810.00 PKR 810.00 PKR 174,150.00" [ref=e276]':
+                  - 'cell "Fizzy Gold 1000ml Drinks BC: BC889D46E7MZX6" [ref=e277]':
+                    - generic [ref=e278]:
+                      - generic [ref=e279]: Fizzy Gold 1000ml
+                      - generic [ref=e280]:
+                        - generic [ref=e281]: Drinks
+                        - generic [ref=e282]: "BC: BC889D46E7MZX6"
+                  - cell "215" [ref=e283]:
+                    - generic [ref=e285]: "215"
+                  - cell "PKR 600.00" [ref=e286]
+                  - cell "PKR 810.00" [ref=e287]
+                  - cell "PKR 810.00" [ref=e288]
+                  - cell "PKR 174,150.00" [ref=e289]
+                  - cell [ref=e290]:
+                    - generic [ref=e291]:
+                      - button [ref=e292] [cursor=pointer]:
+                        - img
+                      - button [ref=e293] [cursor=pointer]:
+                        - img
+                - 'row "Tahora 200ml Tetra Pack Drinks BC: BCBE539963U6WN 134 PKR 600.00 PKR 750.00 PKR 750.00 PKR 100,500.00" [ref=e294]':
+                  - 'cell "Tahora 200ml Tetra Pack Drinks BC: BCBE539963U6WN" [ref=e295]':
+                    - generic [ref=e296]:
+                      - generic [ref=e297]: Tahora 200ml Tetra Pack
+                      - generic [ref=e298]:
+                        - generic [ref=e299]: Drinks
+                        - generic [ref=e300]: "BC: BCBE539963U6WN"
+                  - cell "134" [ref=e301]:
+                    - generic [ref=e303]: "134"
+                  - cell "PKR 600.00" [ref=e304]
+                  - cell "PKR 750.00" [ref=e305]
+                  - cell "PKR 750.00" [ref=e306]
+                  - cell "PKR 100,500.00" [ref=e307]
+                  - cell [ref=e308]:
+                    - generic [ref=e309]:
+                      - button [ref=e310] [cursor=pointer]:
+                        - img
+                      - button [ref=e311] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy ON 1000ml Drinks BC: BCDEC4D2A87MRO 898 PKR 520.00 PKR 720.00 PKR 720.00 PKR 646,560.00" [ref=e312]':
+                  - 'cell "Fizzy ON 1000ml Drinks BC: BCDEC4D2A87MRO" [ref=e313]':
+                    - generic [ref=e314]:
+                      - generic [ref=e315]: Fizzy ON 1000ml
+                      - generic [ref=e316]:
+                        - generic [ref=e317]: Drinks
+                        - generic [ref=e318]: "BC: BCDEC4D2A87MRO"
+                  - cell "898" [ref=e319]:
+                    - generic [ref=e321]: "898"
+                  - cell "PKR 520.00" [ref=e322]
+                  - cell "PKR 720.00" [ref=e323]
+                  - cell "PKR 720.00" [ref=e324]
+                  - cell "PKR 646,560.00" [ref=e325]
+                  - cell [ref=e326]:
+                    - generic [ref=e327]:
+                      - button [ref=e328] [cursor=pointer]:
+                        - img
+                      - button [ref=e329] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy ON 500ml Drinks BC: BCDC3B1FEF4ONV 154 PKR 800.00 PKR 900.00 PKR 900.00 PKR 138,600.00" [ref=e330]':
+                  - 'cell "Fizzy ON 500ml Drinks BC: BCDC3B1FEF4ONV" [ref=e331]':
+                    - generic [ref=e332]:
+                      - generic [ref=e333]: Fizzy ON 500ml
+                      - generic [ref=e334]:
+                        - generic [ref=e335]: Drinks
+                        - generic [ref=e336]: "BC: BCDC3B1FEF4ONV"
+                  - cell "154" [ref=e337]:
+                    - generic [ref=e339]: "154"
+                  - cell "PKR 800.00" [ref=e340]
+                  - cell "PKR 900.00" [ref=e341]
+                  - cell "PKR 900.00" [ref=e342]
+                  - cell "PKR 138,600.00" [ref=e343]
+                  - cell [ref=e344]:
+                    - generic [ref=e345]:
+                      - button [ref=e346] [cursor=pointer]:
+                        - img
+                      - button [ref=e347] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy ON 250ml Drinks BC: BC64C0DD062MA8 188 PKR 400.00 PKR 520.00 PKR 520.00 PKR 97,760.00" [ref=e348]':
+                  - 'cell "Fizzy ON 250ml Drinks BC: BC64C0DD062MA8" [ref=e349]':
+                    - generic [ref=e350]:
+                      - generic [ref=e351]: Fizzy ON 250ml
+                      - generic [ref=e352]:
+                        - generic [ref=e353]: Drinks
+                        - generic [ref=e354]: "BC: BC64C0DD062MA8"
+                  - cell "188" [ref=e355]:
+                    - generic [ref=e357]: "188"
+                  - cell "PKR 400.00" [ref=e358]
+                  - cell "PKR 520.00" [ref=e359]
+                  - cell "PKR 520.00" [ref=e360]
+                  - cell "PKR 97,760.00" [ref=e361]
+                  - cell [ref=e362]:
+                    - generic [ref=e363]:
+                      - button [ref=e364] [cursor=pointer]:
+                        - img
+                      - button [ref=e365] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy Gold 250ml Drinks BC: BC66C6A0D6KTMP 230 PKR 400.00 PKR 520.00 PKR 520.00 PKR 119,600.00" [ref=e366]':
+                  - 'cell "Fizzy Gold 250ml Drinks BC: BC66C6A0D6KTMP" [ref=e367]':
+                    - generic [ref=e368]:
+                      - generic [ref=e369]: Fizzy Gold 250ml
+                      - generic [ref=e370]:
+                        - generic [ref=e371]: Drinks
+                        - generic [ref=e372]: "BC: BC66C6A0D6KTMP"
+                  - cell "230" [ref=e373]:
+                    - generic [ref=e375]: "230"
+                  - cell "PKR 400.00" [ref=e376]
+                  - cell "PKR 520.00" [ref=e377]
+                  - cell "PKR 520.00" [ref=e378]
+                  - cell "PKR 119,600.00" [ref=e379]
+                  - cell [ref=e380]:
+                    - generic [ref=e381]:
+                      - button [ref=e382] [cursor=pointer]:
+                        - img
+                      - button [ref=e383] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy Gold 500ml Drinks BC: BC4016954AY1Y1 89 PKR 760.00 PKR 870.00 PKR 870.00 PKR 77,430.00" [ref=e384]':
+                  - 'cell "Fizzy Gold 500ml Drinks BC: BC4016954AY1Y1" [ref=e385]':
+                    - generic [ref=e386]:
+                      - generic [ref=e387]: Fizzy Gold 500ml
+                      - generic [ref=e388]:
+                        - generic [ref=e389]: Drinks
+                        - generic [ref=e390]: "BC: BC4016954AY1Y1"
+                  - cell "89" [ref=e391]:
+                    - generic [ref=e393]: "89"
+                  - cell "PKR 760.00" [ref=e394]
+                  - cell "PKR 870.00" [ref=e395]
+                  - cell "PKR 870.00" [ref=e396]
+                  - cell "PKR 77,430.00" [ref=e397]
+                  - cell [ref=e398]:
+                    - generic [ref=e399]:
+                      - button [ref=e400] [cursor=pointer]:
+                        - img
+                      - button [ref=e401] [cursor=pointer]:
+                        - img
+                - 'row "Fizzy Gold 500 ml Drinks BC: 0262295747022 886 PKR 50.00 PKR 60.00 PKR 60.00 PKR 53,160.00" [ref=e402]':
+                  - 'cell "Fizzy Gold 500 ml Drinks BC: 0262295747022" [ref=e403]':
+                    - generic [ref=e404]:
+                      - generic [ref=e405]: Fizzy Gold 500 ml
+                      - generic [ref=e406]:
+                        - generic [ref=e407]: Drinks
+                        - generic [ref=e408]: "BC: 0262295747022"
+                  - cell "886" [ref=e409]:
+                    - generic [ref=e411]: "886"
+                  - cell "PKR 50.00" [ref=e412]
+                  - cell "PKR 60.00" [ref=e413]
+                  - cell "PKR 60.00" [ref=e414]
+                  - cell "PKR 53,160.00" [ref=e415]
+                  - cell [ref=e416]:
+                    - generic [ref=e417]:
+                      - button [ref=e418] [cursor=pointer]:
+                        - img
+                      - button [ref=e419] [cursor=pointer]:
+                        - img
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e425] [cursor=pointer]:
+    - img [ref=e426]
+  - alert [ref=e429]

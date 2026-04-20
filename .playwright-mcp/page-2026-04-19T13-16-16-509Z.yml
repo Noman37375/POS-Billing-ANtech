@@ -1,0 +1,141 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img "Logo" [ref=e6]
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: InvoSync
+          - paragraph [ref=e9]: Invoice & Billing
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e12]
+          - generic [ref=e14]: Dashboard
+        - button "Parties" [ref=e16]:
+          - generic [ref=e17]:
+            - img [ref=e18]
+            - generic [ref=e23]: Parties
+          - img [ref=e24]
+        - generic [ref=e26]:
+          - button "Stock Management" [expanded] [ref=e27]:
+            - generic [ref=e28]:
+              - img [ref=e29]
+              - generic [ref=e32]: Stock Management
+            - img [ref=e396]
+          - generic [ref=e398]:
+            - link "Inventory" [ref=e399] [cursor=pointer]:
+              - /url: /stock-management/inventory
+              - img [ref=e400]
+              - generic [ref=e404]: Inventory
+            - link "Inventory Report" [ref=e405] [cursor=pointer]:
+              - /url: /stock-management/reports
+              - img [ref=e406]
+              - generic [ref=e409]: Inventory Report
+            - link "Categories" [ref=e410] [cursor=pointer]:
+              - /url: /stock-management/categories
+              - img [ref=e411]
+              - generic [ref=e415]: Categories
+            - link "Units" [ref=e416] [cursor=pointer]:
+              - /url: /stock-management/units
+              - img [ref=e417]
+              - generic [ref=e423]: Units
+            - link "Barcode" [ref=e424] [cursor=pointer]:
+              - /url: /stock-management/barcode
+              - img [ref=e425]
+              - generic [ref=e430]: Barcode
+        - button "POS" [ref=e36]:
+          - generic [ref=e37]:
+            - img [ref=e38]
+            - generic [ref=e42]: POS
+          - img [ref=e43]
+        - button "Purchase Management" [ref=e46]:
+          - generic [ref=e47]:
+            - img [ref=e48]
+            - generic [ref=e51]: Purchase Management
+          - img [ref=e52]
+        - button "Accounts Management" [ref=e55]:
+          - generic [ref=e56]:
+            - img [ref=e57]
+            - generic [ref=e59]: Accounts Management
+          - img [ref=e60]
+        - button "Returns & Refunds" [ref=e63]:
+          - generic [ref=e64]:
+            - img [ref=e65]
+            - generic [ref=e68]: Returns & Refunds
+          - img [ref=e69]
+        - button "Employees & Payroll" [ref=e72]:
+          - generic [ref=e73]:
+            - img [ref=e74]
+            - generic [ref=e77]: Employees & Payroll
+          - img [ref=e78]
+        - link "User Management" [ref=e80] [cursor=pointer]:
+          - /url: /users
+          - img [ref=e81]
+          - generic [ref=e93]: User Management
+        - link "Backup" [ref=e94] [cursor=pointer]:
+          - /url: /backup
+          - img [ref=e95]
+          - generic [ref=e98]: Backup
+        - button "Keyboard Shortcuts" [ref=e100] [cursor=pointer]:
+          - img
+          - generic [ref=e101]: Keyboard Shortcuts
+    - generic [ref=e102]:
+      - banner [ref=e103]:
+        - generic [ref=e104]:
+          - img "Logo" [ref=e106]
+          - generic [ref=e107]:
+            - heading "Atif Ali" [level=1] [ref=e108]
+            - paragraph [ref=e109]: Invoice & Billing System
+        - generic [ref=e110]:
+          - button "Toggle theme" [ref=e111] [cursor=pointer]:
+            - img
+          - generic [ref=e112]: atif@pos.com
+          - button "Settings" [ref=e113] [cursor=pointer]:
+            - img
+          - button "Sign out" [ref=e115] [cursor=pointer]:
+            - img
+      - main [ref=e116]:
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - generic [ref=e120]:
+              - heading "Inventory" [level=1] [ref=e121]
+              - paragraph [ref=e122]: Track stock and pricing for every SKU/service.
+            - button "Add Item" [ref=e123] [cursor=pointer]:
+              - img
+              - text: Add Item
+          - generic [ref=e124]:
+            - link "Active" [ref=e125] [cursor=pointer]:
+              - /url: /stock-management/inventory
+            - link "Archived" [ref=e126] [cursor=pointer]:
+              - /url: /stock-management/inventory?tab=archived
+          - generic [ref=e127]:
+            - generic [ref=e129]:
+              - generic [ref=e130]:
+                - text: Items
+                - generic [ref=e131]: (0/13)
+              - generic [ref=e132]:
+                - generic [ref=e133]:
+                  - button "All (13)" [ref=e134]
+                  - button "In Stock (13)" [ref=e135]
+                  - button "Low (0)" [ref=e136]
+                  - button "Out (0)" [active] [ref=e137]
+                - generic [ref=e138]:
+                  - img
+                  - textbox "Name, barcode, category..." [ref=e139]
+            - table [ref=e142]:
+              - rowgroup [ref=e143]:
+                - row "Item Stock Cost 💵 Cash 📱 Credit Value Actions" [ref=e144]:
+                  - columnheader "Item" [ref=e145]
+                  - columnheader "Stock" [ref=e146]
+                  - columnheader "Cost" [ref=e147]
+                  - columnheader "💵 Cash" [ref=e148]
+                  - columnheader "📱 Credit" [ref=e149]
+                  - columnheader "Value" [ref=e150]
+                  - columnheader "Actions" [ref=e151]
+              - rowgroup [ref=e152]:
+                - row "No items match your search or filter." [ref=e594]:
+                  - cell "No items match your search or filter." [ref=e595]
+    - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e392] [cursor=pointer]:
+    - img [ref=e393]
+  - alert [ref=e431]

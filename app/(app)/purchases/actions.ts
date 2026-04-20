@@ -76,6 +76,7 @@ export async function createPurchase(payload: {
 
   const { error: lineError } = await supabase.from("purchase_invoice_lines").insert(lineItems)
   if (lineError) {
+    await supabase.from("purchase_invoices").delete().eq("id", purchase.id)
     return { error: lineError.message }
   }
 
@@ -102,6 +103,7 @@ export async function createPurchase(payload: {
       }),
     )
   } catch (error) {
+    await supabase.from("purchase_invoices").delete().eq("id", purchase.id)
     return { error: error instanceof Error ? error.message : "Failed to process inventory" }
   }
 
@@ -453,6 +455,10 @@ export async function deletePurchase(purchaseId: string) {
     return { error: "Purchase not found" }
   }
 
+  if (purchase.status === "Paid") {
+    return { error: "Paid purchase bills cannot be deleted. Cancel it first if needed." }
+  }
+
   // Get existing line items to restore stock
   const { data: existingLines = [], error: fetchError } = await supabase
     .from("purchase_invoice_lines")
@@ -589,7 +595,7 @@ export async function createPurchasePayment(payload: {
   // Verify purchase invoice belongs to user
   const { data: purchase } = await supabase
     .from("purchase_invoices")
-    .select("id")
+    .select("id, total")
     .eq("id", payload.purchaseInvoiceId)
     .eq("user_id", currentUser.effectiveUserId)
     .single()
@@ -610,9 +616,28 @@ export async function createPurchasePayment(payload: {
     return { error: error.message }
   }
 
+  // Auto-update purchase invoice status based on total paid
+  const { data: allPayments } = await supabase
+    .from("purchase_payments")
+    .select("amount")
+    .eq("purchase_invoice_id", payload.purchaseInvoiceId)
+    .eq("user_id", currentUser.effectiveUserId)
+
+  const totalPaid = Math.round((allPayments || []).reduce((sum, p) => sum + Number(p.amount || 0), 0) * 100)
+  const invoiceTotal = Math.round(Number(purchase.total || 0) * 100)
+  const newStatus = totalPaid >= invoiceTotal ? "Paid" : "Partially Paid"
+
+  await supabase
+    .from("purchase_invoices")
+    .update({ status: newStatus })
+    .eq("id", payload.purchaseInvoiceId)
+    .eq("user_id", currentUser.effectiveUserId)
+
   revalidatePath("/purchases")
   revalidatePath("/parties")
   revalidatePath("/purchase-management")
+  revalidatePath("/purchase-management/purchases")
+  revalidatePath("/purchase-management/payments")
   return { error: null }
 }
 
@@ -654,15 +679,61 @@ export async function deletePurchasePayment(paymentId: string) {
     return { error: "Payment ID is required" }
   }
 
-  const { error } = await supabase.from("purchase_payments").delete().eq("id", paymentId).eq("user_id", currentUser.effectiveUserId)
+  // Fetch payment first to get purchase_invoice_id
+  const { data: payment } = await supabase
+    .from("purchase_payments")
+    .select("id, purchase_invoice_id")
+    .eq("id", paymentId)
+    .eq("user_id", currentUser.effectiveUserId)
+    .single()
+
+  if (!payment) {
+    return { error: "Payment not found" }
+  }
+
+  const purchaseInvoiceId = payment.purchase_invoice_id
+
+  const { error } = await supabase
+    .from("purchase_payments")
+    .delete()
+    .eq("id", paymentId)
+    .eq("user_id", currentUser.effectiveUserId)
 
   if (error) {
     return { error: error.message }
   }
 
+  // Auto-update purchase invoice status after deletion
+  const { data: inv } = await supabase
+    .from("purchase_invoices")
+    .select("id, total")
+    .eq("id", purchaseInvoiceId)
+    .eq("user_id", currentUser.effectiveUserId)
+    .single()
+
+  if (inv) {
+    const { data: remaining } = await supabase
+      .from("purchase_payments")
+      .select("amount")
+      .eq("purchase_invoice_id", purchaseInvoiceId)
+      .eq("user_id", currentUser.effectiveUserId)
+
+    const totalPaid = Math.round((remaining || []).reduce((sum, p) => sum + Number(p.amount || 0), 0) * 100)
+    const invoiceTotal = Math.round(Number(inv.total || 0) * 100)
+    const newStatus = totalPaid <= 0 ? "Draft" : totalPaid >= invoiceTotal ? "Paid" : "Partially Paid"
+
+    await supabase
+      .from("purchase_invoices")
+      .update({ status: newStatus })
+      .eq("id", purchaseInvoiceId)
+      .eq("user_id", currentUser.effectiveUserId)
+  }
+
   revalidatePath("/purchases")
   revalidatePath("/parties")
   revalidatePath("/purchase-management")
+  revalidatePath("/purchase-management/purchases")
+  revalidatePath("/purchase-management/payments")
   return { error: null }
 }
 
@@ -794,4 +865,79 @@ export async function getPaidPurchases() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   return { error: null, data: paidPurchases }
+}
+
+export async function quickCreateInventoryItem(
+  name: string,
+  costPrice: number,
+  opts?: { categoryId?: string; unitId?: string; barcode?: string }
+) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!name.trim()) {
+    return { error: "Item name is required", data: null }
+  }
+
+  const payload: Record<string, unknown> = {
+    name: name.trim(),
+    cost_price: costPrice,
+    cash_price: costPrice,
+    credit_price: costPrice,
+    supplier_price: costPrice,
+    stock: 0,
+    profit_value: 0,
+    profit_percentage: 0,
+    user_id: currentUser.effectiveUserId,
+    category_id: opts?.categoryId || null,
+    unit_id: opts?.unitId || null,
+  }
+
+  if (opts?.barcode?.trim()) {
+    payload.barcode = opts.barcode.trim()
+  }
+
+  const { data, error } = await supabase
+    .from("inventory_items")
+    .insert(payload)
+    .select("id, name, cost_price")
+    .single()
+
+  if (error || !data) {
+    return { error: error?.message ?? "Failed to create item", data: null }
+  }
+
+  revalidatePath("/stock-management/inventory")
+  return {
+    error: null,
+    data: { id: data.id, name: data.name, stock: 0, unitPrice: Number(data.cost_price || 0) },
+  }
+}
+
+export async function quickCreateVendor(name: string, phone: string, address?: string) {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+
+  if (!name.trim() || !phone.trim()) {
+    return { error: "Name and phone are required", data: null }
+  }
+
+  const { data, error } = await supabase
+    .from("parties")
+    .insert({
+      name: name.trim(),
+      phone: phone.trim(),
+      address: address?.trim() || null,
+      type: "Vendor",
+      user_id: currentUser.effectiveUserId,
+    })
+    .select("id, name")
+    .single()
+
+  if (error || !data) {
+    return { error: error?.message ?? "Failed to create vendor", data: null }
+  }
+
+  revalidatePath("/parties")
+  return { error: null, data: { id: data.id, name: data.name } }
 }

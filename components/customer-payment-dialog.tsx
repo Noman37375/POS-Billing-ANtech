@@ -136,6 +136,11 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
       return
     }
 
+    if ((method === "JazzCash" || method === "EasyPaisa") && !reference.trim()) {
+      toast.error(`Transaction ID is required for ${method}`)
+      return
+    }
+
     startTransition(async () => {
       const result = await createCustomerPayment({
         invoiceId,
@@ -292,13 +297,15 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
 
           <div className="space-y-2">
             <Label htmlFor="method">Payment Method</Label>
-            <Select value={method} onValueChange={setMethod}>
+            <Select value={method} onValueChange={(v) => { setMethod(v); setReference("") }}>
               <SelectTrigger id="method">
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Cash">Cash</SelectItem>
                 <SelectItem value="Card">Card</SelectItem>
+                <SelectItem value="JazzCash">JazzCash</SelectItem>
+                <SelectItem value="EasyPaisa">EasyPaisa</SelectItem>
                 <SelectItem value="Mixed">Mixed</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
@@ -306,14 +313,20 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reference">Reference (Optional)</Label>
+            <Label htmlFor="reference">
+              {method === "JazzCash" || method === "EasyPaisa" ? "Transaction ID *" : "Reference (Optional)"}
+            </Label>
             <Input
               id="reference"
               type="text"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              placeholder="Payment reference number"
+              placeholder={method === "JazzCash" || method === "EasyPaisa" ? `${method} Transaction ID` : "Payment reference number"}
+              className={method === "JazzCash" || method === "EasyPaisa" ? "border-orange-300 focus:border-orange-500" : ""}
             />
+            {(method === "JazzCash" || method === "EasyPaisa") && (
+              <p className="text-xs text-orange-600">Ask customer for the Transaction ID shown on their {method} app</p>
+            )}
           </div>
         </div>
         <DialogFooter>
@@ -322,7 +335,7 @@ export function CustomerPaymentDialog({ sales, trigger }: CustomerPaymentDialogP
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={pending || !invoiceId || !amount || !method || availableSales.length === 0}
+            disabled={pending || !invoiceId || !amount || !method || availableSales.length === 0 || ((method === "JazzCash" || method === "EasyPaisa") && !reference.trim())}
           >
             {pending ? "Adding..." : "Add Payment"}
           </Button>

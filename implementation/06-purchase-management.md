@@ -22,6 +22,12 @@
 
 | Date | Change | File |
 |------|--------|------|
+| 2026-04 | **Inline vendor creation** — "New Vendor" button in purchase form, no tab switching needed | `components/purchase-form.tsx`, `app/(app)/purchases/actions.ts` |
+| 2026-04 | **Inline item creation** — "New Item" dialog in purchase form includes Category, Unit, Barcode, Selling Price fields | `components/purchase-form.tsx`, `app/(app)/stock-management/inventory/actions.ts` |
+| 2026-04 | **Payment status auto-update** — invoice status changes to Paid/Partial when payment added or deleted | `app/(app)/purchase-management/purchases/actions.ts` |
+| 2026-04 | **Block deletion of Paid bills** — returns error if purchase status is "Paid" | `app/(app)/purchases/actions.ts` |
+| 2026-04 | **Orphaned record cleanup** — if line items or stock update fails during createPurchase, the invoice header is deleted (compensating transaction) | `app/(app)/purchases/actions.ts` |
+| 2026-04 | **Stock atomicity fix** — `decrement_inventory_stock` and `increment_inventory_stock` Supabase RPCs now use atomic `UPDATE WHERE stock >= quantity` + RAISE EXCEPTION pattern | `lib/db/migration-atomicity-fixes.sql` |
 | Previous | Party validation shared helper created | `lib/db/parties-validation.ts` |
 | Previous | Cost price fetching centralized | `lib/db/inventory-pricing.ts` |
 
@@ -33,7 +39,7 @@
 |---|-----|----------|--------|
 | B1 | No search/filter on purchase list | 🟠 HIGH | ❌ Pending |
 | B2 | No confirmation before delete | 🟠 HIGH | ❌ Pending |
-| B3 | Stock increase not atomic — partial failure risk | 🔴 CRITICAL | ❌ Pending |
+| B3 | Stock increase not atomic — partial failure risk | 🔴 CRITICAL | ✅ Fixed (DB RPC + compensating transaction) |
 
 ---
 
@@ -45,6 +51,8 @@
 - [ ] **Search purchases** — by vendor, date, amount
 - [ ] **Filter by payment status** — Paid / Unpaid / Partial
 - [ ] **Cost price auto-update** — when buying at new price, ask to update item cost
+- [ ] **Outstanding balance on vendor payment page** — show current vendor payable before entering payment
+- [ ] **Search on vendor payments list** — filter by vendor, date
 - [ ] **Multi-warehouse** — track which store/location received goods (future)
 
 ---
