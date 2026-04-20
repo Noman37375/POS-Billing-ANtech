@@ -6,15 +6,18 @@ import { BarcodeScanToPOS } from "@/components/barcode-scan-to-pos"
 import { Toaster } from "@/components/ui/sonner"
 import { BackupReminder } from "@/components/backup-reminder"
 import { getBackupStatus } from "@/app/(app)/backup/actions"
+import { getAllSettings } from "@/app/(app)/settings/actions"
+import { ThemeSync } from "@/components/theme-sync"
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await getSessionOrRedirect("/login")
   const businessName = user.name || "InvoSync"
 
-  const { backup_due } = await getBackupStatus()
+  const [{ backup_due }, settings] = await Promise.all([getBackupStatus(), getAllSettings()])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/40 to-background">
+      <ThemeSync theme={settings.theme ?? "system"} />
       <Sidebar user={user} />
       <div className="flex flex-col min-h-screen lg:ml-72">
         <Header businessName={businessName} userEmail={user.email} />
