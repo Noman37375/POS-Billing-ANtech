@@ -1,13 +1,13 @@
 "use client"
 
-import { LogOut, Moon, Sun } from "lucide-react"
+import { LogOut, Moon, Sun, Settings } from "lucide-react"
 import { signOut } from "@/app/(auth)/actions"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
+import Link from "next/link"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
-import { SettingsDialog } from "@/components/settings-dialog"
 
 interface HeaderProps {
   businessName: string
@@ -59,7 +59,11 @@ export function Header({ businessName, userEmail }: HeaderProps) {
         <Badge variant="secondary" className="hidden lg:inline-flex text-xs">
           {userEmail || "Secure session"}
         </Badge>
-        <SettingsDialog />
+        <Link href="/settings/store">
+          <Button variant="ghost" size="icon" aria-label="Settings" className="h-9 w-9 sm:h-10 sm:w-10">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+          </Button>
+        </Link>
         <form action={signOut}>
           <Button variant="ghost" size="icon" type="submit" aria-label="Sign out" className="h-9 w-9 sm:h-10 sm:w-10">
             <LogOut className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
