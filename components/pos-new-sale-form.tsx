@@ -72,7 +72,6 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   const [itemHighlightIndex, setItemHighlightIndex] = useState(0)
   const customerInputRef = useRef<HTMLInputElement>(null)
   const itemInputRef = useRef<HTMLInputElement>(null)
-  const taxRateInputRef = useRef<HTMLInputElement>(null)
   const quantityInputRef = useRef<HTMLInputElement>(null)
   const addButtonRef = useRef<HTMLButtonElement>(null)
   const customerDropdownRef = useRef<HTMLDivElement>(null)
@@ -265,7 +264,6 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
   useEffect(() => {
     const inputRefs: React.RefObject<HTMLInputElement | HTMLButtonElement | null>[] = [
       customerInputRef,
-      taxRateInputRef,
       itemInputRef,
       quantityInputRef,
       addButtonRef,
@@ -449,7 +447,8 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
     setItems((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleCompleteSale = () => {
+  const handleCompleteSale = (modeOverride?: "sale" | "credit" | "draft") => {
+    const effectiveSaleMode = modeOverride ?? saleMode
     if (computed.detailed.length === 0) {
       toast.error("Add at least one item")
       return
@@ -465,7 +464,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
       setCustomerQuery("")
     }
     const needsRef = paymentMethod === "JazzCash" || paymentMethod === "EasyPaisa"
-    if (saleMode === "sale" && needsRef && !transactionRef.trim()) {
+    if (effectiveSaleMode === "sale" && needsRef && !transactionRef.trim()) {
       toast.error(`Transaction ID is required for ${paymentMethod}`)
       return
     }
@@ -480,9 +479,9 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
       // Edit mode — update existing Draft (with optional status change)
       if (editInvoiceId) {
         const updatePayload =
-          saleMode === "sale"
+          effectiveSaleMode === "sale"
             ? { partyId: effectivePartyId, items: lineItems, taxRate, status: "Paid" as const, payment: { amount: computed.total, method: paymentMethod, reference: transactionRef || undefined } }
-            : saleMode === "credit"
+            : effectiveSaleMode === "credit"
             ? { partyId: effectivePartyId, items: lineItems, taxRate, status: "Credit" as const }
             : { partyId: effectivePartyId, items: lineItems, taxRate, status: "Draft" as const }
 
@@ -492,7 +491,7 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
           return
         }
 
-        if (saleMode === "sale") {
+        if (effectiveSaleMode === "sale") {
           const customerName = localParties.find((p) => p.id === partyId)?.name ?? ""
           setLastInvoiceId(editInvoiceId)
           setLastSaleMode("sale")
@@ -503,16 +502,16 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
           setCustomerQuery("")
           setShowCompleteDialog(true)
         } else {
-          toast.success(saleMode === "credit" ? "Saved as Credit (Udhaar)" : "Draft updated")
+          toast.success(effectiveSaleMode === "credit" ? "Saved as Credit (Udhaar)" : "Draft updated")
           router.push("/pos/sales")
         }
         return
       }
 
       const payload =
-        saleMode === "sale"
+        effectiveSaleMode === "sale"
           ? { payments: [{ amount: computed.total, method: paymentMethod, reference: transactionRef || undefined }] }
-          : saleMode === "credit"
+          : effectiveSaleMode === "credit"
           ? { status: "Credit" as const, ...(payingNow > 0 ? { payments: [{ amount: payingNow, method: paymentMethod, reference: transactionRef || undefined }] } : {}) }
           : { status: "Draft" as const }
 
@@ -522,16 +521,16 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         return
       }
       setLastInvoiceId(result.data?.invoiceId ?? null)
-      setLastSaleMode(saleMode)
+      setLastSaleMode(effectiveSaleMode)
       const customerName = localParties.find((p) => p.id === partyId)?.name ?? ""
       setItems([])
       setPartyId("")
       setCustomerQuery("")
-      if (saleMode === "sale") {
+      if (effectiveSaleMode === "sale") {
         setCompletedTotal(computed.total)
         setCompletedCustomer(customerName)
         setShowCompleteDialog(true)
-      } else if (saleMode === "credit") {
+      } else if (effectiveSaleMode === "credit") {
         toast.success("Credit (Udhaar) saved")
       } else {
         toast.success("Draft saved")
@@ -588,15 +587,21 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base sm:text-lg">Point of Sale</CardTitle>
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            {/* Price tier selector */}
-            <Select value={priceType} onValueChange={(v: any) => setPriceType(v)}>
-              <SelectTrigger className="h-8 w-32 text-xs">
+            {/* Bill Type — controls both price tier and sale mode */}
+            <Select
+              value={priceType}
+              onValueChange={(v: "cash" | "credit" | "supplier") => {
+                setPriceType(v)
+                setSaleMode(v === "credit" ? "credit" : "sale")
+              }}
+            >
+              <SelectTrigger className="h-8 w-36 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cash">💵 Cash</SelectItem>
-                <SelectItem value="credit">📱 Credit</SelectItem>
-                <SelectItem value="supplier">🏢 Supplier</SelectItem>
+                <SelectItem value="cash">💵 Cash Bill</SelectItem>
+                <SelectItem value="credit">📱 Credit Bill</SelectItem>
+                <SelectItem value="supplier">🏢 Supplier Bill</SelectItem>
               </SelectContent>
             </Select>
             {/* Discount mode toggle */}
@@ -737,18 +742,6 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                 className="bg-muted/50"
               />
             )}
-          </div>
-          <div className="space-y-2">
-            <Label>Tax rate (%)</Label>
-            <Input
-              ref={taxRateInputRef}
-              type="number"
-              min={0}
-              max={100}
-              step={0.01}
-              value={taxRate}
-              onChange={(e) => setTaxRate(Number(e.target.value) || 0)}
-            />
           </div>
         </div>
 
@@ -986,19 +979,6 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm">Mode</Label>
-                <Select value={saleMode} onValueChange={(v) => setSaleMode(v as "sale" | "credit" | "draft")}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sale">Sale</SelectItem>
-                    <SelectItem value="credit">Credit (Udhaar)</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               {(saleMode === "sale" || (saleMode === "credit" && payingNow > 0)) && (
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
@@ -1031,31 +1011,35 @@ export function POSNewSaleForm({ parties, inventory, initialItemId, autoAdd, ini
                   )}
                 </div>
               )}
-              <Button
-                onClick={handleCompleteSale}
-                disabled={pending || !partyId}
-                className="w-full sm:w-auto"
-                variant={saleMode === "sale" ? "default" : "outline"}
-              >
-                {pending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {saleMode === "sale" ? "Completing..." : "Saving..."}
-                  </>
-                ) : saleMode === "sale" ? (
-                  editInvoiceId ? "Complete Sale" : "Complete Sale"
-                ) : saleMode === "credit" ? (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    {editInvoiceId ? "Save as Credit (Udhaar)" : "Save Credit (Udhaar)"}
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    {editInvoiceId ? "Update Draft" : "Save Draft"}
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => handleCompleteSale()}
+                  disabled={pending || !partyId}
+                  className="w-full sm:w-auto"
+                >
+                  {pending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {saleMode === "sale" ? "Completing..." : "Saving..."}
+                    </>
+                  ) : saleMode === "sale" ? (
+                    editInvoiceId ? "Complete Sale" : "Complete Sale"
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 mr-2" />
+                      {editInvoiceId ? "Save as Credit (Udhaar)" : "Save Credit (Udhaar)"}
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={pending || !partyId}
+                  onClick={() => handleCompleteSale("draft")}
+                >
+                  <FileText className="w-4 h-4 mr-1" />
+                  {editInvoiceId ? "Update Draft" : "Draft"}
+                </Button>
+              </div>
             </div>
           </div>
         )}
