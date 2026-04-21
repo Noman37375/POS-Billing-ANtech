@@ -579,6 +579,105 @@ export async function getCashBook(
   }
 }
 
+export interface PLStatement {
+  dateFrom: string
+  dateTo: string
+  revenue: number
+  salesReturns: number
+  netRevenue: number
+  cogs: number
+  grossProfit: number
+  grossProfitPct: number
+  invoiceCount: number
+  returnCount: number
+}
+
+export async function getPLStatement(
+  dateFrom: string,
+  dateTo: string
+): Promise<{ error: string | null; data: PLStatement | null }> {
+  const currentUser = await getSessionOrRedirect()
+  const supabase = createClient()
+  const userId = currentUser.effectiveUserId
+
+  // Start/end of day in ISO
+  const from = `${dateFrom}T00:00:00`
+  const to = `${dateTo}T23:59:59`
+
+  // 1. Sales invoices in period (Paid status only for revenue)
+  const { data: invoices, error: invErr } = await supabase
+    .from("sales_invoices")
+    .select("id, total, status")
+    .eq("user_id", userId)
+    .in("status", ["Paid", "Credit", "Partial"])
+    .gte("created_at", from)
+    .lte("created_at", to)
+
+  if (invErr) return { error: invErr.message, data: null }
+
+  const invoiceIds = (invoices || []).map((i) => i.id)
+
+  // 2. Sales invoice lines for revenue + COGS
+  let revenue = 0
+  let cogs = 0
+  if (invoiceIds.length > 0) {
+    const { data: lines, error: lineErr } = await supabase
+      .from("sales_invoice_lines")
+      .select("quantity, unit_price, cost_price")
+      .in("invoice_id", invoiceIds)
+    if (lineErr) return { error: lineErr.message, data: null }
+    for (const line of lines || []) {
+      const qty = Number(line.quantity || 0)
+      revenue += Number((line as any).unit_price || 0) * qty
+      cogs += Number((line as any).cost_price || 0) * qty
+    }
+  }
+
+  // 3. Sales returns in period
+  const { data: saleReturns, error: retErr } = await supabase
+    .from("returns")
+    .select("id, subtotal")
+    .eq("user_id", userId)
+    .eq("type", "sale")
+    .eq("status", "Completed")
+    .gte("created_at", from)
+    .lte("created_at", to)
+
+  if (retErr) return { error: retErr.message, data: null }
+
+  let salesReturns = 0
+  const returnIds = (saleReturns || []).map((r) => r.id)
+  if (returnIds.length > 0) {
+    const { data: returnLines } = await supabase
+      .from("return_lines")
+      .select("quantity, unit_price, sales_invoice_line_id")
+      .in("return_id", returnIds)
+    for (const rl of returnLines || []) {
+      salesReturns += Number((rl as any).unit_price || 0) * Number(rl.quantity || 0)
+    }
+  }
+
+  const netRevenue = revenue - salesReturns
+  const grossProfit = netRevenue - cogs
+  const grossProfitPct = netRevenue > 0 ? Math.round((grossProfit / netRevenue) * 100 * 10) / 10 : 0
+
+  return {
+    error: null,
+    data: {
+      dateFrom,
+      dateTo,
+      revenue,
+      salesReturns,
+      netRevenue,
+      cogs,
+      grossProfit,
+      grossProfitPct,
+      invoiceCount: invoiceIds.length,
+      returnCount: (saleReturns || []).length,
+    },
+  }
+}
+
 export async function upsertOpeningOverride(
   date: string,
   amount: number,

@@ -149,6 +149,7 @@ export function Sidebar({ user }: SidebarProps) {
         privilege: "accounts" as ModulePrivilege,
         children: [
           { href: "/accounts-management/overview", label: "Overview", icon: BarChart3, privilege: "accounts" as ModulePrivilege },
+          { href: "/accounts-management/pl-statement", label: "P&L Statement", icon: TrendingUp, privilege: "accounts" as ModulePrivilege },
           { href: "/accounts-management/ledgers", label: "Ledgers", icon: BookOpen, privilege: "accounts" as ModulePrivilege },
           { href: "/accounts-management/customer-ledgers", label: "Customer Ledgers", icon: Users, privilege: "accounts" as ModulePrivilege },
           { href: "/accounts-management/vendor-ledgers", label: "Vendor Ledgers", icon: ShoppingBag, privilege: "accounts" as ModulePrivilege },
