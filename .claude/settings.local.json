@@ -65,7 +65,8 @@
       "Bash(xargs cat *)",
       "Bash(xargs grep *)",
       "Bash(powershell -Command ' *)",
-      "Bash(xargs tail *)"
+      "Bash(xargs tail *)",
+      "Bash(npx next *)"
     ]
   }
 }

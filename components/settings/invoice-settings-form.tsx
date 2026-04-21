@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { updateInvoiceSettings } from "@/app/(app)/settings/actions"
 import type { AppSettings } from "@/app/(app)/settings/actions"
 import { toast } from "sonner"
@@ -18,6 +19,7 @@ export function InvoiceSettingsForm({ settings }: { settings: AppSettings }) {
   const [showTax, setShowTax] = useState(settings.show_tax_col !== "false")
   const [showUnit, setShowUnit] = useState(settings.show_unit_col !== "false")
   const [showNtnStrn, setShowNtnStrn] = useState(settings.show_ntn_strn === "true")
+  const [printFormat, setPrintFormat] = useState(settings.print_format ?? "A4")
   const [footer, setFooter] = useState(settings.invoice_footer ?? "")
   const [pending, startTransition] = useTransition()
 
@@ -26,6 +28,7 @@ export function InvoiceSettingsForm({ settings }: { settings: AppSettings }) {
       const result = await updateInvoiceSettings({
         invoice_prefix: prefix,
         invoice_start_number: startNumber,
+        print_format: printFormat,
         show_discount_col: showDiscount,
         show_tax_col: showTax,
         show_unit_col: showUnit,
@@ -67,6 +70,20 @@ export function InvoiceSettingsForm({ settings }: { settings: AppSettings }) {
               value={startNumber}
               onChange={(e) => setStartNumber(e.target.value)}
             />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Print Format</Label>
+            <Select value={printFormat} onValueChange={setPrintFormat}>
+              <SelectTrigger className="w-56">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="A4">A4 (Standard)</SelectItem>
+                <SelectItem value="Thermal80mm">Thermal 80mm (Retail Receipt)</SelectItem>
+                <SelectItem value="A5">A5 (Half Page)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Thermal 80mm is standard for POS printers in Pakistan</p>
           </div>
         </div>
 

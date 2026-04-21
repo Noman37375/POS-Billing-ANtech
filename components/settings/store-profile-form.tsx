@@ -17,6 +17,7 @@ export function StoreProfileForm({ settings }: { settings: AppSettings }) {
   const [email, setEmail] = useState(settings.store_email ?? "")
   const [ntn, setNtn] = useState(settings.store_ntn ?? "")
   const [strn, setStrn] = useState(settings.store_strn ?? "")
+  const [whatsapp, setWhatsapp] = useState(settings.store_whatsapp ?? "")
   const [pending, startTransition] = useTransition()
 
   const handleSave = () => {
@@ -29,6 +30,7 @@ export function StoreProfileForm({ settings }: { settings: AppSettings }) {
         store_email: email,
         store_ntn: ntn,
         store_strn: strn,
+        store_whatsapp: whatsapp,
       })
       if (result.error) {
         toast.error(result.error)
@@ -111,6 +113,16 @@ export function StoreProfileForm({ settings }: { settings: AppSettings }) {
               onChange={(e) => setStrn(e.target.value)}
               placeholder="e.g. 03-11-9999-999-99"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp">WhatsApp Number</Label>
+            <Input
+              id="whatsapp"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              placeholder="e.g. 923001234567"
+            />
+            <p className="text-xs text-muted-foreground">Used for sharing receipts via WhatsApp (without +)</p>
           </div>
         </div>
         <div className="pt-2">

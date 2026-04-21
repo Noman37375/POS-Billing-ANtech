@@ -20,6 +20,8 @@ export function POSPreferencesForm({ settings }: { settings: AppSettings }) {
   const [allowBelowCost, setAllowBelowCost] = useState(
     settings.allow_below_cost === "true"
   )
+  const [autoPrint, setAutoPrint] = useState(settings.pos_auto_print === "true")
+  const [showSummary, setShowSummary] = useState(settings.pos_show_summary !== "false")
   const [pending, startTransition] = useTransition()
 
   const handleSave = () => {
@@ -28,6 +30,8 @@ export function POSPreferencesForm({ settings }: { settings: AppSettings }) {
         default_payment_method: defaultPayment,
         require_customer: requireCustomer,
         allow_below_cost: allowBelowCost,
+        pos_auto_print: autoPrint,
+        pos_show_summary: showSummary,
       })
       if (result.error) {
         toast.error(result.error)
@@ -77,6 +81,24 @@ export function POSPreferencesForm({ settings }: { settings: AppSettings }) {
               </p>
             </div>
             <Switch checked={allowBelowCost} onCheckedChange={setAllowBelowCost} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Auto-Print Receipt After Sale</Label>
+              <p className="text-xs text-muted-foreground">
+                Automatically trigger print dialog after each completed sale
+              </p>
+            </div>
+            <Switch checked={autoPrint} onCheckedChange={setAutoPrint} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="font-medium">Show Order Summary Before Confirm</Label>
+              <p className="text-xs text-muted-foreground">
+                Show a summary screen before finalizing each sale
+              </p>
+            </div>
+            <Switch checked={showSummary} onCheckedChange={setShowSummary} />
           </div>
         </div>
 

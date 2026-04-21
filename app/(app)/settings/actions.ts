@@ -38,6 +38,20 @@ export type AppSettings = {
   // Notifications
   low_stock_threshold?: string
   email_notifications?: string
+  // Store extras
+  store_whatsapp?: string
+  // Invoice extras
+  print_format?: string
+  // POS extras
+  pos_auto_print?: string
+  pos_show_summary?: string
+  // Hardware
+  hw_printer_type?: string
+  hw_printer_ip?: string
+  hw_printer_port?: string
+  hw_cash_drawer?: string
+  hw_barcode_prefix?: string
+  hw_barcode_suffix?: string
 }
 
 const ALL_KEYS: (keyof AppSettings)[] = [
@@ -49,6 +63,11 @@ const ALL_KEYS: (keyof AppSettings)[] = [
   "default_payment_method", "require_customer", "allow_below_cost",
   "theme",
   "low_stock_threshold", "email_notifications",
+  "store_whatsapp",
+  "print_format",
+  "pos_auto_print", "pos_show_summary",
+  "hw_printer_type", "hw_printer_ip", "hw_printer_port",
+  "hw_cash_drawer", "hw_barcode_prefix", "hw_barcode_suffix",
 ]
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
@@ -114,6 +133,7 @@ export async function updateStoreProfile(data: {
   store_email?: string
   store_ntn?: string
   store_strn?: string
+  store_whatsapp?: string
 }) {
   const currentUser = await getSessionOrRedirect()
   if (!data.store_name?.trim()) return { error: "Store name is required" }
@@ -126,6 +146,7 @@ export async function updateStoreProfile(data: {
     store_email: data.store_email?.trim() || null,
     store_ntn: data.store_ntn?.trim() || null,
     store_strn: data.store_strn?.trim() || null,
+    store_whatsapp: data.store_whatsapp?.trim() || null,
   })
 
   if (result?.error) return { error: result.error }
@@ -136,6 +157,7 @@ export async function updateStoreProfile(data: {
 export async function updateInvoiceSettings(data: {
   invoice_prefix: string
   invoice_start_number: string
+  print_format: string
   show_discount_col: boolean
   show_tax_col: boolean
   show_unit_col: boolean
@@ -147,6 +169,7 @@ export async function updateInvoiceSettings(data: {
   const result = await upsertSettings(currentUser.effectiveUserId, {
     invoice_prefix: data.invoice_prefix.trim() || "INV-",
     invoice_start_number: data.invoice_start_number || "1",
+    print_format: data.print_format || "A4",
     show_discount_col: String(data.show_discount_col),
     show_tax_col: String(data.show_tax_col),
     show_unit_col: String(data.show_unit_col),
@@ -181,6 +204,8 @@ export async function updatePOSPreferences(data: {
   default_payment_method: string
   require_customer: boolean
   allow_below_cost: boolean
+  pos_auto_print: boolean
+  pos_show_summary: boolean
 }) {
   const currentUser = await getSessionOrRedirect()
 
@@ -188,6 +213,8 @@ export async function updatePOSPreferences(data: {
     default_payment_method: data.default_payment_method || "Cash",
     require_customer: String(data.require_customer),
     allow_below_cost: String(data.allow_below_cost),
+    pos_auto_print: String(data.pos_auto_print),
+    pos_show_summary: String(data.pos_show_summary),
   })
 
   if (result?.error) return { error: result.error }
@@ -220,5 +247,29 @@ export async function updateNotifications(data: {
 
   if (result?.error) return { error: result.error }
   revalidatePath("/settings/notifications")
+  return { error: null }
+}
+
+export async function updateHardwareSettings(data: {
+  hw_printer_type: string
+  hw_printer_ip: string
+  hw_printer_port: string
+  hw_cash_drawer: boolean
+  hw_barcode_prefix: string
+  hw_barcode_suffix: string
+}) {
+  const currentUser = await getSessionOrRedirect()
+
+  const result = await upsertSettings(currentUser.effectiveUserId, {
+    hw_printer_type: data.hw_printer_type || "none",
+    hw_printer_ip: data.hw_printer_ip.trim() || null,
+    hw_printer_port: data.hw_printer_port.trim() || null,
+    hw_cash_drawer: String(data.hw_cash_drawer),
+    hw_barcode_prefix: data.hw_barcode_prefix.trim() || null,
+    hw_barcode_suffix: data.hw_barcode_suffix.trim() || null,
+  })
+
+  if (result?.error) return { error: result.error }
+  revalidatePath("/settings/hardware")
   return { error: null }
 }
