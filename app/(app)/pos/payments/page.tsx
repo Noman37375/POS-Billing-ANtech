@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { AlertCircle } from "lucide-react"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { requirePrivilege } from "@/lib/auth/privileges"
 import { getAllCustomerPayments, getUnpaidPOSSales, getPaidSales } from "@/app/(app)/pos/actions"
@@ -32,6 +33,18 @@ export default async function CustomerPaymentsPage() {
   const totalPayments = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
   const totalReceived = paidSales.reduce((sum, s) => sum + Number(s.paid || 0), 0)
 
+  // Group outstanding balance by customer
+  const outstandingByCustomer = unpaidSales.reduce<Record<string, { name: string; balance: number; invoices: number }>>((acc, s) => {
+    const name = s.customerName || "Walk-in"
+    const bal = Number(s.balance ?? s.total ?? 0)
+    if (!acc[name]) acc[name] = { name, balance: 0, invoices: 0 }
+    acc[name].balance += bal
+    acc[name].invoices += 1
+    return acc
+  }, {})
+  const outstandingList = Object.values(outstandingByCustomer).sort((a, b) => b.balance - a.balance)
+  const totalOutstanding = outstandingList.reduce((sum, c) => sum + c.balance, 0)
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-start justify-between">
@@ -53,7 +66,7 @@ export default async function CustomerPaymentsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base sm:text-lg">Total Received</CardTitle>
@@ -77,7 +90,55 @@ export default async function CustomerPaymentsPage() {
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">{payments.length} payment(s) recorded</p>
           </CardContent>
         </Card>
+
+        <Card className="border-amber-200 dark:border-amber-800">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              Outstanding Receivables
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6">
+            <div className="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400">
+              <CurrencyDisplay amount={totalOutstanding} />
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{unpaidSales.length} unpaid invoice(s)</p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Outstanding by Customer */}
+      {outstandingList.length > 0 && (
+        <Card>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Outstanding by Customer</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-6">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground border-b">
+                    <th className="py-2 sm:py-3 px-4 text-xs sm:text-sm">Customer</th>
+                    <th className="py-2 sm:py-3 px-4 text-xs sm:text-sm text-right">Invoices</th>
+                    <th className="py-2 sm:py-3 px-4 text-xs sm:text-sm text-right">Outstanding</th>
+                  </tr>
+                </thead>
+                <tbody className="[&>tr:not(:last-child)]:border-b">
+                  {outstandingList.map((c) => (
+                    <tr key={c.name} className="hover:bg-muted/50">
+                      <td className="py-2 sm:py-3 px-4 font-medium text-xs sm:text-sm">{c.name}</td>
+                      <td className="py-2 sm:py-3 px-4 text-xs sm:text-sm text-right text-muted-foreground">{c.invoices}</td>
+                      <td className="py-2 sm:py-3 px-4 text-xs sm:text-sm text-right font-semibold text-amber-600 dark:text-amber-400">
+                        <CurrencyDisplay amount={c.balance} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Paid Sales */}
       <Card>

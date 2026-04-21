@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useCurrency } from "@/contexts/currency-context"
-import type { Sale } from "@/lib/types/pos"
+import type { Sale, InvoiceForPrint } from "@/lib/types/pos"
 import { toast } from "sonner"
 
 interface POSSalesListProps {
@@ -25,6 +25,8 @@ export function POSSalesList({ sales }: POSSalesListProps) {
   const { formatCurrency } = useCurrency()
   const [printPendingId, setPrintPendingId] = useState<string | null>(null)
   const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null)
+  const [viewInvoiceData, setViewInvoiceData] = useState<InvoiceForPrint | null>(null)
+  const [viewInvoiceLoading, setViewInvoiceLoading] = useState(false)
   const [search, setSearch] = useState("")
   const router = useRouter()
 
@@ -36,6 +38,20 @@ export function POSSalesList({ sales }: POSSalesListProps) {
         return invNo.includes(q) || customer.includes(q)
       })
     : sales
+
+  const handleViewOpen = async (saleId: string) => {
+    setViewInvoiceId(saleId)
+    setViewInvoiceLoading(true)
+    setViewInvoiceData(null)
+    try {
+      const result = await getInvoiceForPrint(saleId)
+      if (result.data) setViewInvoiceData(result.data)
+    } catch {
+      // silently fall back to summary view
+    } finally {
+      setViewInvoiceLoading(false)
+    }
+  }
 
   const handleReprint = async (invoiceId: string) => {
     setPrintPendingId(invoiceId)
@@ -141,37 +157,113 @@ export function POSSalesList({ sales }: POSSalesListProps) {
                       )}
                       <Dialog
                         open={viewInvoiceId === sale.id}
-                        onOpenChange={(open) => setViewInvoiceId(open ? sale.id : null)}
+                        onOpenChange={(open) => {
+                          if (open) {
+                            handleViewOpen(sale.id)
+                          } else {
+                            setViewInvoiceId(null)
+                            setViewInvoiceData(null)
+                          }
+                        }}
                       >
                         <DialogTrigger asChild>
                           <Button variant="ghost" size="icon" title="View">
                             <Eye className="w-4 h-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md">
+                        <DialogContent className="max-w-lg">
                           <DialogHeader>
                             <DialogTitle>Invoice #{sale.id.substring(0, 8).toUpperCase()}</DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-2 text-sm">
-                            <p>
-                              <strong>Date:</strong> {formatDate(sale.created_at)}
-                            </p>
-                            <p>
-                              <strong>Customer:</strong> {sale.party?.name ?? "—"}
-                            </p>
-                            <p>
-                              <strong>Subtotal:</strong> {formatCurrency(sale.subtotal)}
-                            </p>
-                            <p>
-                              <strong>Tax:</strong> {formatCurrency(sale.tax)}
-                            </p>
-                            <p>
-                              <strong>Total:</strong> {formatCurrency(sale.total)}
-                            </p>
-                            <p>
-                              <strong>Status:</strong> {sale.status}
-                            </p>
-                          </div>
+                          {viewInvoiceLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : (
+                            <div className="space-y-4 text-sm">
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                  <p className="text-muted-foreground text-xs">Date</p>
+                                  <p className="font-medium">{formatDate(sale.created_at)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground text-xs">Customer</p>
+                                  <p className="font-medium">{sale.party?.name ?? "Walk-in"}</p>
+                                </div>
+                                <div>
+                                  <p className="text-muted-foreground text-xs">Status</p>
+                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                                    sale.status === "Paid" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                      : sale.status === "Credit" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                      : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                                  }`}>{sale.status}</span>
+                                </div>
+                              </div>
+
+                              {viewInvoiceData?.items && viewInvoiceData.items.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-muted-foreground mb-2">Items</p>
+                                  <div className="rounded-lg border overflow-hidden">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="bg-muted border-b">
+                                          <th className="px-3 py-2 text-left font-medium">Item</th>
+                                          <th className="px-3 py-2 text-right font-medium">Qty</th>
+                                          <th className="px-3 py-2 text-right font-medium">Price</th>
+                                          <th className="px-3 py-2 text-right font-medium">Total</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {viewInvoiceData.items.map((item, i) => (
+                                          <tr key={i} className="border-b last:border-b-0">
+                                            <td className="px-3 py-2">{item.name}</td>
+                                            <td className="px-3 py-2 text-right">{item.quantity}</td>
+                                            <td className="px-3 py-2 text-right">{formatCurrency(item.unitPrice)}</td>
+                                            <td className="px-3 py-2 text-right font-medium">{formatCurrency(item.lineTotal)}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="border-t pt-3 space-y-1">
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>Subtotal</span>
+                                  <span>{formatCurrency(sale.subtotal)}</span>
+                                </div>
+                                {sale.tax > 0 && (
+                                  <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>Tax</span>
+                                    <span>{formatCurrency(sale.tax)}</span>
+                                  </div>
+                                )}
+                                {viewInvoiceData?.discount != null && viewInvoiceData.discount > 0 && (
+                                  <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>Discount</span>
+                                    <span>-{formatCurrency(viewInvoiceData.discount)}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between font-semibold text-sm pt-1 border-t">
+                                  <span>Total</span>
+                                  <span>{formatCurrency(sale.total)}</span>
+                                </div>
+                              </div>
+
+                              {viewInvoiceData?.payments && viewInvoiceData.payments.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-muted-foreground mb-1">Payments</p>
+                                  {viewInvoiceData.payments.map((p, i) => (
+                                    <div key={i} className="flex justify-between text-xs">
+                                      <span className="text-muted-foreground">{p.method}{p.reference ? ` (${p.reference})` : ""}</span>
+                                      <span className="font-medium text-emerald-600">{formatCurrency(Number(p.amount))}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </DialogContent>
                       </Dialog>
                       <Button
