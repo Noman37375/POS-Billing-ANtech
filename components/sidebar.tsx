@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo, useState, useEffect } from "react"
-import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp, HardDriveDownload, BookCheck } from "lucide-react"
+import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp, HardDriveDownload, BookCheck, Building2, Percent, Palette, Bell, Shield, SlidersHorizontal } from "lucide-react"
 import Image from "next/image"
 import { PosUser, ModulePrivilege } from "@/lib/types/user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -185,6 +185,14 @@ export function Sidebar({ user }: SidebarProps) {
         icon: Settings,
         privilege: "dashboard" as ModulePrivilege,
         children: [
+          { href: "/settings/store", label: "Store Profile", icon: Building2, privilege: "dashboard" as ModulePrivilege },
+          { href: "/settings/invoice", label: "Invoice & Receipt", icon: Receipt, privilege: "dashboard" as ModulePrivilege },
+          { href: "/settings/tax", label: "Tax & Finance", icon: Percent, privilege: "dashboard" as ModulePrivilege },
+          { href: "/settings/pos", label: "POS Preferences", icon: ShoppingCart, privilege: "pos" as ModulePrivilege },
+          { href: "/settings/appearance", label: "Appearance", icon: Palette, privilege: "dashboard" as ModulePrivilege },
+          { href: "/settings/notifications", label: "Notifications", icon: Bell, privilege: "dashboard" as ModulePrivilege },
+          { href: "/settings/security", label: "Security", icon: Shield, privilege: "dashboard" as ModulePrivilege },
+          { href: "/settings/advanced", label: "Advanced", icon: SlidersHorizontal, privilege: "pos" as ModulePrivilege },
           { href: "/users", label: "User Management", icon: UserCog, privilege: "user_management" as ModulePrivilege },
           { href: "/backup", label: "Backup", icon: HardDriveDownload, privilege: "dashboard" as ModulePrivilege },
         ],
