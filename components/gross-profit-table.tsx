@@ -10,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ExportButtons } from "@/components/export-buttons"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { GrossProfitRow } from "@/app/(app)/pos/reports/actions"
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Cell, Legend,
+} from "recharts"
 
 type PeriodType = "today" | "week" | "month" | "year" | "custom"
 
@@ -251,7 +255,128 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
 </html>`
   }
 
+  // Chart data — top 10 items by GP value
+  const chartData = !isPending && data.length > 0
+    ? [...data]
+        .sort((a, b) => b.gp_value - a.gp_value)
+        .slice(0, 10)
+        .reverse()
+        .map((row) => ({
+          name: row.item_name.length > 14 ? row.item_name.slice(0, 13) + "…" : row.item_name,
+          GP: parseFloat(row.gp_value.toFixed(2)),
+          Sale: parseFloat(row.sale_amount.toFixed(2)),
+          Cost: parseFloat(row.purchase_amount.toFixed(2)),
+          gpPct: parseFloat(row.gp_pct_sale.toFixed(1)),
+        }))
+    : []
+
+  const tooltipStyle = {
+    background: "#1e293b",
+    border: "1px solid #334155",
+    borderRadius: "8px",
+    fontSize: "12px",
+    color: "#f1f5f9",
+  }
+
+  const fmtK = (v: number) =>
+    v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M`
+    : v >= 1_000 ? `${(v / 1_000).toFixed(1)}k`
+    : v.toFixed(0)
+
   return (
+    <div className="space-y-4">
+      {/* KPI Summary Cards */}
+      {!isPending && data.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: "Total Revenue", value: `PKR ${fmt(totals.sale_amount)}`, color: "text-blue-400" },
+            { label: "Total Cost", value: `PKR ${fmt(totals.purchase_amount)}`, color: "text-amber-400" },
+            { label: "Gross Profit", value: `PKR ${fmt(totals.gp_value)}`, color: totals.gp_value >= 0 ? "text-emerald-400" : "text-red-400" },
+            { label: "GP % (on Sale)", value: `${fmtPct(grandGpPctSale)}`, color: grandGpPctSale >= 0 ? "text-emerald-400" : "text-red-400" },
+          ].map((kpi) => (
+            <div key={kpi.label} className="bg-card/90 backdrop-blur rounded-xl border border-border/70 p-3 sm:p-4 shadow">
+              <p className="text-xs text-muted-foreground">{kpi.label}</p>
+              <p className={`text-sm sm:text-base font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Charts */}
+      {!isPending && chartData.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Top items by GP — horizontal bar */}
+          <div className="bg-card/90 backdrop-blur rounded-xl border border-border/70 p-4 shadow">
+            <p className="text-sm font-semibold text-foreground mb-3">Top Items by Gross Profit</p>
+            <ResponsiveContainer width="100%" height={chartData.length * 34 + 30}>
+              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 50, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                <XAxis
+                  type="number"
+                  tickFormatter={fmtK}
+                  tick={{ fontSize: 9, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: "#cbd5e1" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={90}
+                />
+                <Tooltip
+                  formatter={(v: number) => [`PKR ${fmt(v)}`, "GP Value"]}
+                  contentStyle={tooltipStyle}
+                />
+                <Bar dataKey="GP" radius={[0, 4, 4, 0]} maxBarSize={20}>
+                  {chartData.map((entry, i) => (
+                    <Cell key={i} fill={entry.GP >= 0 ? "#10b981" : "#f87171"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Sale vs Cost comparison — grouped bars */}
+          <div className="bg-card/90 backdrop-blur rounded-xl border border-border/70 p-4 shadow">
+            <p className="text-sm font-semibold text-foreground mb-3">Sale vs Cost — Top Items</p>
+            <ResponsiveContainer width="100%" height={chartData.length * 34 + 50}>
+              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                <XAxis
+                  type="number"
+                  tickFormatter={fmtK}
+                  tick={{ fontSize: 9, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: "#cbd5e1" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={90}
+                />
+                <Tooltip
+                  formatter={(v: number, name: string) => [`PKR ${fmt(v)}`, name]}
+                  contentStyle={tooltipStyle}
+                />
+                <Legend
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }}
+                />
+                <Bar dataKey="Sale" fill="#3b82f6" radius={[0, 3, 3, 0]} maxBarSize={10} />
+                <Bar dataKey="Cost" fill="#f59e0b" radius={[0, 3, 3, 0]} maxBarSize={10} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
     <Card>
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -442,5 +567,6 @@ export function GrossProfitTable({ data, dateFrom, dateTo, timeFrom, timeTo, per
         )}
       </CardContent>
     </Card>
+    </div>
   )
 }

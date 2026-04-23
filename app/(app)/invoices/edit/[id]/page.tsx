@@ -7,7 +7,7 @@ import { notFound } from "next/navigation"
 import { requirePrivilege } from "@/lib/auth/privileges"
 
 export default async function InvoiceEditPage({ params }: { params: Promise<{ id: string }> }) {
-  await requirePrivilege("invoices_create")
+  await requirePrivilege("invoices_list")
   const { id } = await params
   const invoiceId = id
 

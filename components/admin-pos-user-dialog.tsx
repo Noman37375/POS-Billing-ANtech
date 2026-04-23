@@ -30,7 +30,6 @@ interface PosUserFormData {
   units: boolean
   barcode: boolean
   pos: boolean
-  invoices_create: boolean
   invoices_list: boolean
   accounts: boolean
   returns_refunds: boolean
@@ -56,7 +55,6 @@ export function AdminPosUserDialog({ open, onOpenChange, user, onUserSaved }: Ad
       units: false,
       barcode: false,
       pos: false,
-      invoices_create: false,
       invoices_list: false,
       accounts: false,
       returns_refunds: false,
@@ -81,7 +79,6 @@ export function AdminPosUserDialog({ open, onOpenChange, user, onUserSaved }: Ad
         units: user?.privileges.units || false,
         barcode: user?.privileges.barcode || false,
         pos: user?.privileges.pos || false,
-        invoices_create: user?.privileges.invoices_create || false,
         invoices_list: user?.privileges.invoices_list || false,
         accounts: user?.privileges.accounts || false,
         returns_refunds: user?.privileges.returns_refunds || false,
@@ -108,7 +105,6 @@ export function AdminPosUserDialog({ open, onOpenChange, user, onUserSaved }: Ad
       formData.append("privilege_units", data.units ? "on" : "off")
       formData.append("privilege_barcode", data.barcode ? "on" : "off")
       formData.append("privilege_pos", data.pos ? "on" : "off")
-      formData.append("privilege_invoices_create", data.invoices_create ? "on" : "off")
       formData.append("privilege_invoices_list", data.invoices_list ? "on" : "off")
       formData.append("privilege_accounts", data.accounts ? "on" : "off")
       formData.append("privilege_returns_refunds", data.returns_refunds ? "on" : "off")
@@ -238,16 +234,6 @@ export function AdminPosUserDialog({ open, onOpenChange, user, onUserSaved }: Ad
                 />
                 <Label htmlFor="privilege_pos" className="font-normal cursor-pointer">
                   POS
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="privilege_invoices_create"
-                  checked={watch("invoices_create")}
-                  onCheckedChange={(checked) => setValue("invoices_create", checked === true)}
-                />
-                <Label htmlFor="privilege_invoices_create" className="font-normal cursor-pointer">
-                  Create Invoice
                 </Label>
               </div>
               <div className="flex items-center space-x-2">

@@ -1,9 +1,15 @@
 "use client"
 
-import { TrendingUp, Users, AlertCircle, DollarSign, AlertTriangle, ShoppingCart, Package, Plus } from "lucide-react"
+import { TrendingUp, Users, AlertCircle, DollarSign, AlertTriangle, ShoppingCart, Package } from "lucide-react"
 import { useCurrency } from "@/contexts/currency-context"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
+import {
+  LineChart, Line, BarChart, Bar,
+  PieChart, Pie, Cell, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts"
+import { AddCustomerDialog, AddItemDialog } from "@/components/dashboard-add-dialogs"
 
 interface DashboardProps {
   parties: Array<{ id: number; name: string; type: string }>
@@ -13,6 +19,7 @@ interface DashboardProps {
   grossProfitPercent?: number
   period?: string
   lowStockItems?: Array<{ id: string; name: string; stock: number; minimum_stock: number }>
+  dailySales?: Array<{ date: string; total: number }>
 }
 
 const PERIODS = [
@@ -22,6 +29,38 @@ const PERIODS = [
   { value: "year", label: "This Year" },
 ]
 
+const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+const DAY_ABBR = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+
+const CHART_COLORS = {
+  line: "#3b82f6",
+  bar: "#10b981",
+  pie: ["#3b82f6", "#10b981", "#f59e0b", "#f87171", "#a78bfa", "#fb923c"],
+}
+
+function formatChartDate(dateStr: string, period: string): string {
+  if (period === "year") {
+    const month = parseInt(dateStr.split("-")[1]) - 1
+    return MONTH_ABBR[month] ?? dateStr
+  }
+  const d = new Date(dateStr + "T00:00:00")
+  if (period === "week") return DAY_ABBR[d.getDay()] ?? dateStr
+  return `${MONTH_ABBR[d.getMonth()]} ${d.getDate()}`
+}
+
+function PieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) {
+  if (percent < 0.06) return null
+  const RADIAN = Math.PI / 180
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  )
+}
+
 export function Dashboard({
   parties,
   inventory,
@@ -30,6 +69,7 @@ export function Dashboard({
   grossProfitPercent = 0,
   period = "month",
   lowStockItems = [],
+  dailySales = [],
 }: DashboardProps) {
   const { formatCurrency } = useCurrency()
   const router = useRouter()
@@ -70,6 +110,28 @@ export function Dashboard({
   const totalStockValue = inventory.reduce((sum, item) => sum + item.stock * item.unitPrice, 0)
   const customerCount = parties.filter((p) => p.type === "Customer").length
   const vendorCount = parties.filter((p) => p.type === "Vendor").length
+
+  // Chart data derived from existing props — no extra queries
+  const invoiceStatusData = [
+    { name: "Paid", value: invoices.filter(i => i.status === "Paid").length },
+    { name: "Credit", value: invoices.filter(i => i.status === "Credit").length },
+    { name: "Partial", value: invoices.filter(i => i.status === "Partial").length },
+    { name: "Draft", value: invoices.filter(i => i.status === "Draft").length },
+  ].filter(d => d.value > 0)
+
+  const adequateItems = Math.max(0, inventory.length - lowStockItems.length)
+  const stockHealthData = [
+    { name: "Healthy", value: adequateItems },
+    { name: "Low Stock", value: lowStockItems.length },
+  ].filter(d => d.value > 0)
+
+  const tooltipStyle = {
+    background: "#1e293b",
+    border: "1px solid #334155",
+    borderRadius: "8px",
+    fontSize: "12px",
+    color: "#f1f5f9",
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -123,24 +185,14 @@ export function Dashboard({
             New Sale
           </button>
         </Link>
-        <Link href="/stock-management/inventory">
-          <button className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors">
-            <Plus className="w-4 h-4" />
-            Add Item
-          </button>
-        </Link>
+        <AddItemDialog />
         <Link href="/purchase-management/create">
           <button className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors">
             <Package className="w-4 h-4" />
             New Purchase
           </button>
         </Link>
-        <Link href="/parties/add">
-          <button className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors">
-            <Users className="w-4 h-4" />
-            Add Customer
-          </button>
-        </Link>
+        <AddCustomerDialog />
       </div>
 
       {/* KPIs */}
@@ -165,6 +217,162 @@ export function Dashboard({
           )
         })}
       </div>
+
+      {/* Sales Charts — line + histogram side by side */}
+      {dailySales.length > 1 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Sales Trend Line */}
+          <div className="bg-card/90 backdrop-blur rounded-xl shadow-lg border border-border/70 p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground">Sales Trend</h3>
+              <span className="text-[10px] text-muted-foreground">{PERIODS.find((p) => p.value === period)?.label}</span>
+            </div>
+            <ResponsiveContainer width="100%" height={180}>
+              <LineChart data={dailySales} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(v) => formatChartDate(v, period)}
+                  tick={{ fontSize: 10, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tickFormatter={(v) => formatCurrency(v)}
+                  tick={{ fontSize: 9, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={82}
+                />
+                <Tooltip
+                  formatter={(value: number) => [formatCurrency(value), "Sales"]}
+                  labelFormatter={(label) => formatChartDate(label, period)}
+                  contentStyle={tooltipStyle}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="total"
+                  stroke={CHART_COLORS.line}
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: CHART_COLORS.line, strokeWidth: 0 }}
+                  activeDot={{ r: 5, strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Sales Histogram Bar */}
+          <div className="bg-card/90 backdrop-blur rounded-xl shadow-lg border border-border/70 p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground">Daily Sales</h3>
+              <span className="text-[10px] text-muted-foreground">Histogram</span>
+            </div>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={dailySales} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(v) => formatChartDate(v, period)}
+                  tick={{ fontSize: 10, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tickFormatter={(v) => formatCurrency(v)}
+                  tick={{ fontSize: 9, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={82}
+                />
+                <Tooltip
+                  formatter={(value: number) => [formatCurrency(value), "Sales"]}
+                  labelFormatter={(label) => formatChartDate(label, period)}
+                  contentStyle={tooltipStyle}
+                />
+                <Bar dataKey="total" fill={CHART_COLORS.bar} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Pie Charts — invoice status + stock health */}
+      {(invoiceStatusData.length > 0 || stockHealthData.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Invoice Status */}
+          {invoiceStatusData.length > 0 && (
+            <div className="bg-card/90 backdrop-blur rounded-xl shadow-lg border border-border/70 p-4 sm:p-5">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground mb-1">Invoice Status</h3>
+              <p className="text-[10px] text-muted-foreground mb-3">
+                {PERIODS.find((p) => p.value === period)?.label} breakdown
+              </p>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={invoiceStatusData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={70}
+                    dataKey="value"
+                    labelLine={false}
+                    label={PieLabel}
+                  >
+                    {invoiceStatusData.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS.pie[i % CHART_COLORS.pie.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [value + " invoices", name]}
+                    contentStyle={tooltipStyle}
+                  />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Stock Health */}
+          {stockHealthData.length > 0 && (
+            <div className="bg-card/90 backdrop-blur rounded-xl shadow-lg border border-border/70 p-4 sm:p-5">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground mb-1">Stock Health</h3>
+              <p className="text-[10px] text-muted-foreground mb-3">
+                {inventory.length} total items · {lowStockItems.length} low
+              </p>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={stockHealthData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={70}
+                    dataKey="value"
+                    labelLine={false}
+                    label={PieLabel}
+                  >
+                    <Cell fill="#10b981" />
+                    <Cell fill="#f87171" />
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, name: string) => [value + " items", name]}
+                    contentStyle={tooltipStyle}
+                  />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="bg-card/90 backdrop-blur rounded-xl shadow-lg border border-border/70 p-4 sm:p-5 space-y-3">

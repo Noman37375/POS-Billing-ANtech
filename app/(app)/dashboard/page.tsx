@@ -43,6 +43,7 @@ export default async function DashboardPage({
         grossProfitPercent={mockGrossPercent}
         period={period}
         lowStockItems={[]}
+        dailySales={[]}
       />
     )
   }
@@ -153,6 +154,20 @@ export default async function DashboardPage({
     status: inv.status ?? "Draft",
   }))
 
+  // Group invoices by date (day for non-year periods, month for year)
+  const salesAccumulator: Record<string, number> = {}
+  for (const inv of invoices || []) {
+    if (!inv.created_at) continue
+    const pktDate = new Date(new Date(inv.created_at).getTime() + 5 * 60 * 60 * 1000)
+    const key = period === "year"
+      ? pktDate.toISOString().substring(0, 7)
+      : pktDate.toISOString().split("T")[0]
+    salesAccumulator[key] = (salesAccumulator[key] ?? 0) + (inv.total ?? 0)
+  }
+  const dailySales = Object.entries(salesAccumulator)
+    .map(([date, total]) => ({ date, total }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
   return (
     <Dashboard
       parties={parties || []}
@@ -162,6 +177,7 @@ export default async function DashboardPage({
       grossProfitPercent={grossProfitPercent}
       period={period}
       lowStockItems={lowStockItems.map((i) => ({ id: i.id, name: i.name, stock: Number(i.stock), minimum_stock: Number(i.minimum_stock) }))}
+      dailySales={dailySales}
     />
   )
 }

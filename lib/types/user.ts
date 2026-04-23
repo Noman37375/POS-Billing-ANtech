@@ -11,7 +11,6 @@ export type ModulePrivilege =
   | "units"
   | "barcode"
   | "pos"
-  | "invoices_create"
   | "invoices_list"
   | "accounts"
   | "returns_refunds"
@@ -29,7 +28,6 @@ export interface UserPrivileges {
   units: boolean
   barcode: boolean
   pos: boolean
-  invoices_create: boolean
   invoices_list: boolean
   accounts: boolean
   returns_refunds: boolean

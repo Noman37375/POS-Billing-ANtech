@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS pos_users (
     "inventory_report": false,
     "categories": false,
     "barcode": false,
-    "invoices_create": false,
     "invoices_list": false,
     "accounts": false,
     "returns_refunds": false

@@ -43,7 +43,6 @@ interface UserFormData {
   units: boolean
   barcode: boolean
   pos: boolean
-  invoices_create: boolean
   invoices_list: boolean
   accounts: boolean
   returns_refunds: boolean
@@ -90,14 +89,11 @@ const PRIVILEGE_GROUPS = [
     subPrivileges: [] as { key: keyof UserFormData; label: string }[],
   },
   {
-    key: "invoices",
+    key: "invoices_list",
     label: "Invoices",
     icon: FileText,
-    description: "Create and view invoices",
-    subPrivileges: [
-      { key: "invoices_create" as keyof UserFormData, label: "Create Invoice" },
-      { key: "invoices_list" as keyof UserFormData, label: "Invoices List" },
-    ],
+    description: "View all invoices created via POS",
+    subPrivileges: [] as { key: keyof UserFormData; label: string }[],
   },
   {
     key: "purchases",
@@ -161,7 +157,6 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
       units: false,
       barcode: false,
       pos: false,
-      invoices_create: false,
       invoices_list: false,
       accounts: false,
       returns_refunds: false,
@@ -186,7 +181,6 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
         units: user?.privileges.units || false,
         barcode: user?.privileges.barcode || false,
         pos: user?.privileges.pos || false,
-        invoices_create: user?.privileges.invoices_create || false,
         invoices_list: user?.privileges.invoices_list || false,
         accounts: user?.privileges.accounts || false,
         returns_refunds: user?.privileges.returns_refunds || false,
@@ -230,7 +224,6 @@ export function UserDialog({ open, onOpenChange, user, onUserSaved }: UserDialog
       formData.append("privilege_units", data.units ? "on" : "off")
       formData.append("privilege_barcode", data.barcode ? "on" : "off")
       formData.append("privilege_pos", data.pos ? "on" : "off")
-      formData.append("privilege_invoices_create", data.invoices_create ? "on" : "off")
       formData.append("privilege_invoices_list", data.invoices_list ? "on" : "off")
       formData.append("privilege_accounts", data.accounts ? "on" : "off")
       formData.append("privilege_returns_refunds", data.returns_refunds ? "on" : "off")

@@ -423,15 +423,17 @@ export async function getOrCreateWalkInParty(): Promise<{ id: string }> {
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
 
-  const { data: existing } = await supabase
+  // Use limit(1) so multiple duplicates don't break maybeSingle()
+  const { data: rows } = await supabase
     .from("parties")
     .select("id")
     .eq("user_id", currentUser.effectiveUserId)
     .eq("name", "Walk-in Customer")
     .eq("type", "Customer")
-    .maybeSingle()
+    .order("created_at", { ascending: true })
+    .limit(1)
 
-  if (existing) return { id: existing.id }
+  if (rows && rows.length > 0) return { id: rows[0].id }
 
   const { data: created } = await supabase
     .from("parties")
