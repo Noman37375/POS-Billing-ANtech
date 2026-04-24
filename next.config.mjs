@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // standalone only for Docker/Hostinger — Vercel manages its own output
+  ...(process.env.NEXT_BUILD_STANDALONE === 'true' ? { output: 'standalone' } : {}),
   typescript: {
     ignoreBuildErrors: true,
   },
