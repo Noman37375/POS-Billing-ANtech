@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useMemo, useState, useEffect } from "react"
-import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, Keyboard, TrendingUp, HardDriveDownload, BookCheck, Building2, Percent, Palette, Bell, Shield, SlidersHorizontal, Cpu } from "lucide-react"
+import { BarChart3, Users, Package, Plus, Menu, X, UserCog, Warehouse, FileText as FileTextIcon, Tags, ScanLine, ChevronDown, ChevronRight, Ruler, ShoppingCart, Receipt, Settings, ShoppingBag, CreditCard, DollarSign, BookOpen, RotateCcw, Wallet, TrendingUp, HardDriveDownload, BookCheck, Building2, Percent, Palette, Bell, Shield, SlidersHorizontal, Cpu } from "lucide-react"
 import Image from "next/image"
 import { PosUser, ModulePrivilege } from "@/lib/types/user"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -130,7 +130,6 @@ export function Sidebar({ user }: SidebarProps) {
         ],
       },
       { href: "/cash-book", label: "Cash Book", icon: BookCheck, privilege: "accounts" as ModulePrivilege },
-      { href: "/expenses", label: "Expenses", icon: Wallet, privilege: "accounts" as ModulePrivilege },
       {
         href: "/purchase-management",
         label: "Purchase Management",
@@ -250,7 +249,6 @@ export function Sidebar({ user }: SidebarProps) {
     if (href === "/parties") return pathname.startsWith("/parties")
     if (href === "/accounts-management") return pathname.startsWith("/accounts-management")
     if (href === "/cash-book") return pathname.startsWith("/cash-book")
-    if (href === "/expenses") return pathname.startsWith("/expenses")
     if (href === "/returns") return pathname.startsWith("/returns")
     if (href === "/employee-management") return pathname.startsWith("/employee-management")
     if (href === "/settings-group") return pathname.startsWith("/users") || pathname.startsWith("/backup") || pathname.startsWith("/settings")

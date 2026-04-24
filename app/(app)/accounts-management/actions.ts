@@ -664,22 +664,9 @@ export async function getPLStatement(
   const grossProfit = netRevenue - cogs
   const grossProfitPct = netRevenue > 0 ? Math.round((grossProfit / netRevenue) * 100 * 10) / 10 : 0
 
-  // 4. Expenses for period (optional — table may not exist)
-  let totalExpenses = 0
-  try {
-    const { data: expensesData } = await supabase
-      .from("expenses")
-      .select("amount")
-      .eq("user_id", userId)
-      .gte("date", dateFrom)
-      .lte("date", dateTo)
-    totalExpenses = (expensesData || []).reduce((s, e) => s + Number(e.amount || 0), 0)
-  } catch {
-    // expenses table not yet migrated
-  }
-
-  const netProfit = grossProfit - totalExpenses
-  const netProfitPct = netRevenue > 0 ? Math.round((netProfit / netRevenue) * 100 * 10) / 10 : 0
+  const totalExpenses = 0
+  const netProfit = grossProfit
+  const netProfitPct = grossProfitPct
 
   return {
     error: null,

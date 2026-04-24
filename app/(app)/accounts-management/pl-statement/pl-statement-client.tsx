@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Printer, TrendingUp, TrendingDown, DollarSign, ShoppingBag, Receipt } from "lucide-react"
+import { Printer, TrendingUp, TrendingDown, DollarSign, ShoppingBag } from "lucide-react"
 import { getPLStatement, type PLStatement } from "../actions"
 import { CurrencyDisplay } from "@/components/currency-display"
 import { toast } from "sonner"
@@ -112,12 +112,6 @@ export function PLStatementClient({ initialData, initialError, initialDateFrom, 
   <tr><td class="label">Cost of Goods Sold (COGS)</td><td class="amount red">(${fmt(data.cogs)})</td></tr>
 
   <tr class="total"><td>Gross Profit</td><td class="amount ${data.grossProfit >= 0 ? "green" : "red"}">₨ ${fmt(data.grossProfit)} (${data.grossProfitPct}%)</td></tr>
-
-  ${data.totalExpenses > 0 ? `
-  <tr><td class="section-head" colspan="2">Operating Expenses</td></tr>
-  <tr><td class="label">Total Expenses</td><td class="amount red">(${fmt(data.totalExpenses)})</td></tr>
-  <tr class="total"><td>Net Profit</td><td class="amount ${data.netProfit >= 0 ? "green" : "red"}">₨ ${fmt(data.netProfit)} (${data.netProfitPct}%)</td></tr>
-  ` : ""}
 </table>
 <div class="footer">Transactions: ${data.invoiceCount} invoices${data.returnCount > 0 ? `, ${data.returnCount} returns` : ""} | Printed: ${new Date().toLocaleString("en-PK")}</div>
 </body></html>`)
@@ -236,40 +230,6 @@ export function PLStatementClient({ initialData, initialError, initialDateFrom, 
             </Card>
           </div>
 
-          {/* Net Profit KPI when expenses exist */}
-          {data.totalExpenses > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Card className="border-red-200 dark:border-red-800">
-                <CardHeader className="pb-1 pt-3 px-4">
-                  <CardTitle className="text-xs text-red-600 uppercase tracking-wide flex items-center gap-1">
-                    <Receipt className="w-3.5 h-3.5" />
-                    Operating Expenses
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-3">
-                  <p className="text-xl font-bold text-red-600"><CurrencyDisplay amount={data.totalExpenses} /></p>
-                  <p className="text-xs text-muted-foreground mt-0.5">All expense categories</p>
-                </CardContent>
-              </Card>
-              <Card className={data.netProfit >= 0 ? "border-emerald-200" : "border-red-200"}>
-                <CardHeader className="pb-1 pt-3 px-4">
-                  <CardTitle className={`text-xs uppercase tracking-wide flex items-center gap-1 ${data.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                    {data.netProfit >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                    Net Profit
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-3">
-                  <p className={`text-xl font-bold ${data.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                    <CurrencyDisplay amount={data.netProfit} />
-                  </p>
-                  <p className={`text-xs mt-0.5 font-medium ${data.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                    {data.netProfitPct}% net margin
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
           {/* P&L Statement Table */}
           <Card>
             <CardHeader className="p-4 sm:p-6">
@@ -321,29 +281,6 @@ export function PLStatementClient({ initialData, initialError, initialDateFrom, 
                     </td>
                   </tr>
 
-                  {/* Expenses + Net Profit (only if expenses exist) */}
-                  {data.totalExpenses > 0 && (
-                    <>
-                      <tr className="bg-muted/50">
-                        <td colSpan={2} className="px-4 py-2 font-semibold text-sm uppercase tracking-wide text-muted-foreground">Operating Expenses</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="px-4 py-2.5">Total Operating Expenses</td>
-                        <td className="px-4 py-2.5 text-right text-red-600">(<CurrencyDisplay amount={data.totalExpenses} />)</td>
-                      </tr>
-                      <tr className={`border-t-2 ${data.netProfit >= 0 ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-red-50 dark:bg-red-950/30"}`}>
-                        <td className="px-4 py-3 font-bold text-base">
-                          Net Profit
-                          <span className={`ml-2 text-sm font-normal ${data.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                            ({data.netProfitPct}% net margin)
-                          </span>
-                        </td>
-                        <td className={`px-4 py-3 text-right font-bold text-base ${data.netProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                          <CurrencyDisplay amount={data.netProfit} />
-                        </td>
-                      </tr>
-                    </>
-                  )}
                 </tbody>
               </table>
             </CardContent>
