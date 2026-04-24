@@ -34,7 +34,13 @@ export async function signIn(formData: FormData) {
     }
   }
 
-  const user = await authenticateUser(email, password)
+  let user = null
+  try {
+    user = await authenticateUser(email, password)
+  } catch (err) {
+    console.error("authenticateUser error:", err)
+    return { error: "Login service unavailable. Check server configuration." }
+  }
 
   if (!user) {
     await recordFailedLoginAttempt(email, ipAddress, "Invalid credentials")
