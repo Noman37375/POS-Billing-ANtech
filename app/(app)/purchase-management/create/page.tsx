@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory, mockParties } from "@/lib/supabase/mock"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 
 export default async function PurchaseCreatePage() {
   await requirePrivilege("purchases")
@@ -16,7 +17,6 @@ export default async function PurchaseCreatePage() {
     )
   }
 
-  const { getSessionOrRedirect } = await import("@/lib/auth")
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
   const [{ data: parties = [] }, { data: inventory = [] }] = await Promise.all([

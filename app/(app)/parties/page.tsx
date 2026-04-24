@@ -7,6 +7,7 @@ import PartyDialog from "./party-dialog"
 import { Button } from "@/components/ui/button"
 import { Users, UserCheck, Building2, DollarSign } from "lucide-react"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { getPartyBalances } from "./actions"
 import { CurrencyDisplay } from "@/components/currency-display"
 import { PartiesPageClient } from "./parties-page-client"
@@ -22,7 +23,6 @@ export default async function PartiesPage({
 
   const parties = await (async () => {
     if (!isSupabaseReady()) return mockParties
-    const { getSessionOrRedirect } = await import("@/lib/auth")
     const currentUser = await getSessionOrRedirect()
     const supabase = createClient()
     const { data = [] } = await supabase

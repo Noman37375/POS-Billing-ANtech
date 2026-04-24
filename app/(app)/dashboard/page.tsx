@@ -3,6 +3,7 @@ import { Dashboard } from "@/components/dashboard"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory, mockInvoices, mockParties } from "@/lib/supabase/mock"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 
 function getPKTStart(period: string): Date {
   const now = new Date()
@@ -48,7 +49,6 @@ export default async function DashboardPage({
     )
   }
 
-  const { getSessionOrRedirect } = await import("@/lib/auth")
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Pencil } from "lucide-react"
 import { DeleteUnitButton } from "@/components/delete-unit-button"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { fetchUnits } from "./actions"
 
 export default async function UnitsPage() {
@@ -21,7 +22,6 @@ export default async function UnitsPage() {
   const unitsWithCounts = await Promise.all(
     units.map(async (unit) => {
       if (!isSupabaseReady()) return { ...unit, itemCount: 0 }
-      const { getSessionOrRedirect } = await import("@/lib/auth")
       const currentUser = await getSessionOrRedirect()
       const supabase = createClient()
       const { count } = await supabase

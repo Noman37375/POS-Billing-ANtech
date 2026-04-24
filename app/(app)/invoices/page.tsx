@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInvoices } from "@/lib/supabase/mock"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { InvoicesPageClient } from "./invoices-page-client"
 
 export default async function InvoicesListPage() {
@@ -9,7 +10,6 @@ export default async function InvoicesListPage() {
   await requirePrivilege("invoices_list")
   const invoices = await (async () => {
     if (!isSupabaseReady()) return mockInvoices
-    const { getSessionOrRedirect } = await import("@/lib/auth")
     const currentUser = await getSessionOrRedirect()
     const supabase = createClient()
     const { data = [] } = await supabase

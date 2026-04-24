@@ -3,6 +3,7 @@ import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory } from "@/lib/supabase/mock"
 import InventoryDialog from "./inventory-dialog"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { InventoryPageClient } from "./inventory-page-client"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -16,7 +17,6 @@ export default async function InventoryPage({ searchParams }: { searchParams: Pr
 
   const items = await (async () => {
     if (!isSupabaseReady()) return mockInventory
-    const { getSessionOrRedirect } = await import("@/lib/auth")
     const currentUser = await getSessionOrRedirect()
     const supabase = createClient()
     const { data = [] } = await supabase

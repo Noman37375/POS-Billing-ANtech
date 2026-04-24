@@ -5,6 +5,7 @@ import { mockInventory, mockParties, mockInvoices } from "@/lib/supabase/mock"
 import { getInvoiceForEdit } from "@/app/(app)/invoices/actions"
 import { notFound } from "next/navigation"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 
 export default async function InvoiceEditPage({ params }: { params: Promise<{ id: string }> }) {
   await requirePrivilege("invoices_list")
@@ -43,7 +44,6 @@ export default async function InvoiceEditPage({ params }: { params: Promise<{ id
   // Fetch parties and inventory
   const parties = await (async () => {
     if (!isSupabaseReady()) return mockParties.map((p) => ({ id: p.id, name: p.name }))
-    const { getSessionOrRedirect } = await import("@/lib/auth")
     const currentUser = await getSessionOrRedirect()
     const supabase = createClient()
     const { data = [] } = await supabase.from("parties").select("id, name").eq("user_id", currentUser.effectiveUserId)
@@ -53,7 +53,6 @@ export default async function InvoiceEditPage({ params }: { params: Promise<{ id
   const inventory = await (async () => {
     if (!isSupabaseReady())
       return mockInventory.map((i) => ({ id: i.id, name: i.name, stock: i.stock, unitPrice: (i as { selling_price?: number }).selling_price ?? i.unit_price }))
-    const { getSessionOrRedirect } = await import("@/lib/auth")
     const currentUser = await getSessionOrRedirect()
     const supabase = createClient()
     const { data = [] } = await supabase

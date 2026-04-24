@@ -3,6 +3,7 @@ import { isSupabaseReady } from "@/lib/supabase/config"
 import { mockInventory, mockParties } from "@/lib/supabase/mock"
 import { POSNewSaleForm } from "@/components/pos-new-sale-form"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { getPOSSaleForEdit, getOrCreateWalkInParty } from "@/app/(app)/pos/actions"
 
 export default async function POSNewSalePage({
@@ -32,7 +33,6 @@ export default async function POSNewSalePage({
     )
   }
 
-  const { getSessionOrRedirect } = await import("@/lib/auth")
   const currentUser = await getSessionOrRedirect()
   const supabase = createClient()
   const [{ data: parties = [] }, { data: inventory = [] }, walkIn] = await Promise.all([

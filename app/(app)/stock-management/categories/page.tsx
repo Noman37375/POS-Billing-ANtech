@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Pencil } from "lucide-react"
 import { DeleteCategoryButton } from "@/components/delete-category-button"
 import { requirePrivilege } from "@/lib/auth/privileges"
+import { getSessionOrRedirect } from "@/lib/auth"
 import { fetchCategories } from "./actions"
 
 export default async function CategoriesPage() {
@@ -21,7 +22,6 @@ export default async function CategoriesPage() {
   const categoriesWithCounts = await Promise.all(
     categories.map(async (category) => {
       if (!isSupabaseReady()) return { ...category, itemCount: 0 }
-      const { getSessionOrRedirect } = await import("@/lib/auth")
       const currentUser = await getSessionOrRedirect()
       const supabase = createClient()
       const { count } = await supabase
